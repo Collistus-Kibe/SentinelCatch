@@ -1,0 +1,21 @@
+{
+  "name": "sentinelcatch",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Dark vessel detection and alerting system for Kenya's EEZ",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:web\"",
+    "dev:server": "cd server && npm run dev",
+    "dev:web": "cd web && npm run dev",
+    "build": "cd web && npm run build",
+    "start": "cd server && npm start",
+    "migrate": "cd server && npm run migrate",
+    "validate": "cd server && npm run validate",
+    "test": "cd server && npm test",
+    "postinstall": "cd server && npm install && cd ../web && npm install"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

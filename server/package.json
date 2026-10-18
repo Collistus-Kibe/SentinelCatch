@@ -1,0 +1,35 @@
+{
+  "name": "sentinelcatch-server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "SentinelCatch API server, scheduler, and integrations",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "migrate": "node src/db/migrate.js",
+    "validate": "node src/validation/run.js",
+    "test": "node --test src/tests/**/*.test.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.0",
+    "express": "^4.21.0",
+    "express-rate-limit": "^7.4.0",
+    "helmet": "^8.0.0",
+    "mysql2": "^3.24.6",
+    "node-cron": "^3.0.3",
+    "pg": "^8.13.0",
+    "pino": "^9.4.0",
+    "pino-pretty": "^11.2.0",
+    "undici": "^6.19.0",
+    "ws": "^8.18.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
