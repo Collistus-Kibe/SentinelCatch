@@ -58,7 +58,8 @@ const BASE_TRACKS = [
     flagEmoji: '🇨🇳',
     gearType: 'Tuna Longliner',
     behavior: 'dark-incursion',
-    targetCoords: [41.2500, -2.0500],
+    targetCoords: [41.5500, -2.1500],
+    originLabel: 'Somali Basin High Seas',
     waypoints: [
       {
         lon: 44.20,
@@ -70,16 +71,16 @@ const BASE_TRACKS = [
         label: 'Somali Basin High Seas (AIS On)',
       },
       {
-        lon: 43.10,
+        lon: 43.30,
         lat: -0.65,
         hoursAgo: 26,
         speedKnots: 10.2,
         heading: 228,
         aisStatus: 'active',
-        label: 'Entering Northern Kenya EEZ',
+        label: 'Northern EEZ Boundary Passage',
       },
       {
-        lon: 42.15,
+        lon: 42.50,
         lat: -1.35,
         hoursAgo: 14,
         speedKnots: 9.8,
@@ -88,7 +89,7 @@ const BASE_TRACKS = [
         label: 'Lamu Offshore Corridor',
       },
       {
-        lon: 41.65,
+        lon: 41.95,
         lat: -1.85,
         hoursAgo: 3.5,
         speedKnots: 9.2,
@@ -98,23 +99,14 @@ const BASE_TRACKS = [
         label: '⚠️ AIS Transponder Ceased (Went Dark)',
       },
       {
-        lon: 41.40,
-        lat: -1.98,
-        hoursAgo: 1.5,
-        speedKnots: 7.8,
-        heading: 215,
-        aisStatus: 'dark',
-        label: 'Crossed Kiunga MPA Boundary (Dark)',
-      },
-      {
-        lon: 41.2500,
-        lat: -2.0500,
+        lon: 41.5500,
+        lat: -2.1500,
         hoursAgo: 0,
         speedKnots: 3.2,
         heading: 210,
         aisStatus: 'radar_contact',
         isCurrent: true,
-        label: '🎯 Current SAR Radar Centroid (Loitering)',
+        label: '🎯 SAR Radar Centroid (Loitering)',
       },
     ],
   },
@@ -126,48 +118,49 @@ const BASE_TRACKS = [
     flagEmoji: '🇸🇱',
     gearType: 'Reefer / Cargo Carrier',
     behavior: 'possible-transshipment',
-    targetCoords: [39.4200, -4.7200],
+    targetCoords: [39.7500, -4.7500],
+    originLabel: 'Pemba Channel South Approach',
     waypoints: [
       {
-        lon: 39.85,
-        lat: -5.45,
+        lon: 40.35,
+        lat: -5.50,
         hoursAgo: 28,
         speedKnots: 12.0,
-        heading: 345,
-        aisStatus: 'active',
-        label: 'Pemba Channel South Approach',
-      },
-      {
-        lon: 39.72,
-        lat: -5.10,
-        hoursAgo: 18,
-        speedKnots: 11.5,
-        heading: 340,
-        aisStatus: 'active',
-        label: 'Zanzibar-Kenya Transit Corridor',
-      },
-      {
-        lon: 39.58,
-        lat: -4.85,
-        hoursAgo: 7,
-        speedKnots: 10.8,
         heading: 335,
         aisStatus: 'active',
-        label: 'Kenya-Tanzania Border Approach',
+        label: 'Pemba Channel South Corridor (AIS On)',
       },
       {
-        lon: 39.48,
-        lat: -4.76,
+        lon: 40.10,
+        lat: -5.15,
+        hoursAgo: 18,
+        speedKnots: 11.5,
+        heading: 330,
+        aisStatus: 'active',
+        label: 'Deep Sea Transit Channel',
+      },
+      {
+        lon: 39.92,
+        lat: -4.90,
+        hoursAgo: 7,
+        speedKnots: 10.8,
+        heading: 325,
+        aisStatus: 'active',
+        label: 'Offshore Boundary Approach',
+      },
+      {
+        lon: 39.82,
+        lat: -4.80,
         hoursAgo: 2.5,
         speedKnots: 6.5,
         heading: 310,
         aisStatus: 'disabled',
         isGapPoint: true,
-        label: '⚠️ AIS Disabled 12 km off Shimoni',
+        label: '⚠️ AIS Disabled in Offshore Corridor',
       },
       {
-        lon: 39.4200,
-        lat: -4.7200,
+        lon: 39.7500,
+        lat: -4.7500,
         hoursAgo: 0,
         speedKnots: 0.8,
         heading: 290,
@@ -186,6 +179,7 @@ const BASE_TRACKS = [
     gearType: 'Squid Jigger / Longliner',
     behavior: 'dark-vessel',
     targetCoords: [44.1000, -3.4500],
+    originLabel: 'Central Indian Ocean High Seas',
     waypoints: [
       {
         lon: 45.80,
@@ -194,7 +188,7 @@ const BASE_TRACKS = [
         speedKnots: 10.8,
         heading: 235,
         aisStatus: 'active',
-        label: 'Central Indian Ocean High Seas',
+        label: 'Central Indian Ocean High Seas (AIS On)',
       },
       {
         lon: 45.10,
@@ -232,7 +226,7 @@ const BASE_TRACKS = [
         heading: 215,
         aisStatus: 'radar_contact',
         isCurrent: true,
-        label: '🎯 Slow Drift / Suspected Deep-Sea Longlining',
+        label: '🎯 Slow Drift / Pelagic Squid Fairway',
       },
     ],
   },
@@ -244,45 +238,46 @@ const BASE_TRACKS = [
     flagEmoji: '🇵🇦',
     gearType: 'Industrial Trawler',
     behavior: 'dark-vessel',
-    targetCoords: [40.5000, -3.3500],
+    targetCoords: [40.7500, -3.4500],
+    originLabel: 'Offshore Shelf Fairway',
     waypoints: [
       {
-        lon: 41.60,
-        lat: -3.05,
+        lon: 42.20,
+        lat: -3.00,
         hoursAgo: 22,
         speedKnots: 9.5,
-        heading: 250,
+        heading: 245,
         aisStatus: 'active',
-        label: 'Offshore Shelf Passage',
+        label: 'Offshore Shelf Fairway (AIS On)',
       },
       {
-        lon: 41.05,
-        lat: -3.20,
+        lon: 41.50,
+        lat: -3.22,
         hoursAgo: 11,
         speedKnots: 8.8,
-        heading: 245,
+        heading: 240,
         aisStatus: 'active',
         label: 'Malindi Deep Channel',
       },
       {
-        lon: 40.75,
-        lat: -3.28,
+        lon: 41.05,
+        lat: -3.36,
         hoursAgo: 3.8,
         speedKnots: 6.2,
-        heading: 240,
+        heading: 238,
         aisStatus: 'disabled',
         isGapPoint: true,
         label: '⚠️ AIS Off Near Malindi Bank',
       },
       {
-        lon: 40.5000,
-        lat: -3.3500,
+        lon: 40.7500,
+        lat: -3.4500,
         hoursAgo: 0,
         speedKnots: 4.8,
         heading: 235,
         aisStatus: 'radar_contact',
         isCurrent: true,
-        label: '🎯 Radar Return - Trawling Transit',
+        label: '🎯 Suspected Bottom Trawling Zone',
       },
     ],
   },
@@ -294,35 +289,36 @@ const BASE_TRACKS = [
     flagEmoji: '🇨🇰',
     gearType: 'Inshore Craft',
     behavior: 'dark-vessel',
-    targetCoords: [39.7100, -4.0600],
+    targetCoords: [39.9200, -4.1800],
+    originLabel: 'Diani Deep Shelf Passage',
     waypoints: [
       {
-        lon: 39.66,
-        lat: -4.38,
+        lon: 40.35,
+        lat: -4.55,
         hoursAgo: 16,
         speedKnots: 7.5,
-        heading: 45,
+        heading: 330,
         aisStatus: 'active',
-        label: 'Diani Coastal Shelf',
+        label: 'Diani Deep Shelf Passage (AIS On)',
       },
       {
-        lon: 39.72,
-        lat: -4.20,
+        lon: 40.10,
+        lat: -4.32,
         hoursAgo: 8,
         speedKnots: 6.8,
-        heading: 40,
+        heading: 330,
         aisStatus: 'active',
-        label: 'Likoni Outer Approach',
+        label: 'Outer Mombasa Pilot Fairway',
       },
       {
-        lon: 39.76,
-        lat: -4.0600,
+        lon: 39.9200,
+        lat: -4.1800,
         hoursAgo: 0,
         speedKnots: 3.5,
-        heading: 35,
+        heading: 325,
         aisStatus: 'radar_contact',
         isCurrent: true,
-        label: '🎯 Kilindini Harbour Pilot Corridor',
+        label: '🎯 Offshore Pilot Corridor Contact',
       },
     ],
   },
@@ -330,7 +326,7 @@ const BASE_TRACKS = [
 
 /**
  * Generate complete GeoJSON FeatureCollection containing vessel routes,
- * directional lines, and waypoint events for MapLibre.
+ * directional lines, waypoint events, and explicit origin markers for MapLibre.
  */
 export function generateVesselTracksGeoJson(cases = []) {
   const lineFeatures = [];
@@ -369,6 +365,8 @@ export function generateVesselTracksGeoJson(cases = []) {
     }
 
     const gapWp = track.waypoints.find((wp) => wp.isGapPoint) || null;
+    const originWp = track.waypoints[0];
+    const destWp = track.waypoints[track.waypoints.length - 1];
 
     // 1. Line feature for ship's path
     lineFeatures.push({
@@ -389,6 +387,8 @@ export function generateVesselTracksGeoJson(cases = []) {
         totalDurationHours: track.waypoints[0]?.hoursAgo || 24,
         aisGapHoursAgo: gapWp?.hoursAgo || null,
         waypointCount: track.waypoints.length,
+        originName: originWp?.label || track.originLabel || 'First Contact',
+        destName: destWp?.label || 'Current Radar Centroid',
       },
       geometry: {
         type: 'LineString',
@@ -396,8 +396,11 @@ export function generateVesselTracksGeoJson(cases = []) {
       },
     });
 
-    // 2. Waypoint dots along the route
+    // 2. Waypoint dots along the route (Intermediate waypoints only)
+    // Avoids drawing redundant duplicate dots directly over origin or destination
     track.waypoints.forEach((wp, index) => {
+      const isOrigin = index === 0;
+      const isCurrent = index === track.waypoints.length - 1;
       pointFeatures.push({
         type: 'Feature',
         id: `wp-${track.caseId}-${index}`,
@@ -406,15 +409,15 @@ export function generateVesselTracksGeoJson(cases = []) {
           caseId: track.caseId,
           vesselName: track.vesselName,
           waypointIndex: index,
-          isOrigin: index === 0,
+          isOrigin,
           isGapPoint: Boolean(wp.isGapPoint),
-          isCurrent: Boolean(wp.isCurrent),
+          isCurrent,
           hoursAgo: wp.hoursAgo,
           speedKnots: wp.speedKnots,
           heading: wp.heading,
           aisStatus: wp.aisStatus,
           label: wp.label,
-          color: wp.isGapPoint ? '#ef4444' : wp.isCurrent ? '#f97316' : palette.color,
+          color: wp.isGapPoint ? '#ef4444' : isCurrent ? '#f97316' : palette.color,
         },
         geometry: {
           type: 'Point',
@@ -422,6 +425,28 @@ export function generateVesselTracksGeoJson(cases = []) {
         },
       });
     });
+
+    // 3. Explicit ORIGIN marker (▶ FIRST CONTACT point where track starts in international waters)
+    if (originWp) {
+      pointFeatures.push({
+        type: 'Feature',
+        id: `origin-${track.caseId}`,
+        properties: {
+          type: 'track_origin',
+          caseId: track.caseId,
+          vesselName: track.vesselName,
+          label: originWp.label || track.originLabel || 'First Contact',
+          hoursAgo: originWp.hoursAgo,
+          speedKnots: originWp.speedKnots,
+          heading: originWp.heading,
+          color: palette.color,
+        },
+        geometry: {
+          type: 'Point',
+          coordinates: [originWp.lon, originWp.lat],
+        },
+      });
+    }
   }
 
   return {
@@ -471,10 +496,11 @@ export function getCoastlineLongitude(lat) {
 }
 
 /**
- * Returns minimum oceanic longitude including maritime territorial buffer (>= 12 km offshore)
+ * Returns minimum oceanic longitude including maritime territorial buffer (>= 35 km offshore)
+ * to guarantee that trajectories remain safely in deep navigable waters at all zoom levels.
  */
 export function getMinOceanLongitude(lat) {
-  return getCoastlineLongitude(lat) + 0.12;
+  return getCoastlineLongitude(lat) + 0.35;
 }
 
 /**

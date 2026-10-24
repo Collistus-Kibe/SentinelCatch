@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import vesselPhotoService from '../integrations/vesselPhotos.js';
+import iuuDatabaseService from '../integrations/iuuDatabase.js';
 import reasoningAgent from '../agents/reasoning.js';
 import { query } from '../db/index.js';
 import logger from '../logger.js';
@@ -112,18 +113,51 @@ router.get('/vessels/gallery', (_req, res) => {
 });
 
 /**
+ * GET /api/vessels/iuu
+ * Check if a vessel is on the Combined IUU Fishing Vessel List (Trygg Mat Tracking / RFMOs).
+ */
+router.get('/vessels/iuu', (req, res) => {
+  const name = req.query.name || '';
+  const mmsi = req.query.mmsi || '';
+  const imo = req.query.imo || '';
+
+  const match = iuuDatabaseService.findIuuMatch({ name, mmsi, imo });
+  if (match) {
+    return res.json({
+      listed: true,
+      match,
+    });
+  }
+
+  res.json({
+    listed: false,
+    message: 'Vessel is not listed on the Combined IUU Fishing Vessel List',
+  });
+});
+
+/**
  * GET /api/vessels/status
  * Check configuration status for vessel photo providers and API keys.
  */
-router.get('/vessels/status', (_req, res) => {
+router.get('/vessels/status', async (_req, res) => {
+  const verification = await vesselPhotoService.verifyVesselFinderKey();
   res.json({
     provider: vesselPhotoService.provider,
     hasVesselFinderApiKey: vesselPhotoService.isVesselFinderConfigured(),
+    hasMyShipTrackingApiKey: vesselPhotoService.isMyShipTrackingConfigured(),
     apiKeyConfigured: vesselPhotoService.isApiKeyConfigured(),
+    vesselFinderVerification: verification,
     providersAvailable: {
       localSurveillanceArchive: true,
+      combinedIuuVesselList: true,
       vesselFinder: vesselPhotoService.isVesselFinderConfigured(),
+      myShipTracking: true,
       wikimediaCommons: true,
+    },
+    openDatabases: {
+      combinedIuuList: 'https://iuu-vessels.org (Trygg Mat Tracking / RFMO International IUU Database)',
+      myShipTracking: 'https://www.myshiptracking.com (AIS Open Fleet Registry)',
+      wikimediaCommons: 'https://commons.wikimedia.org (Open Maritime Commons)',
     },
     sampleEndpoint: '/api/vessels/photo?name=LU%20RONG%20YUAN%20YU%20188&mmsi=412349012',
   });

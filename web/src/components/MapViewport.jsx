@@ -367,12 +367,16 @@ export default function MapViewport({
         },
       });
 
-      // 3. Historical Waypoints along the Route
+      // 3. Historical Intermediate Waypoints along the Route
       map.addLayer({
         id: 'tracks-waypoints',
         type: 'circle',
         source: 'sentinelcatch-data',
-        filter: ['==', ['get', 'type'], 'vessel_track_waypoint'],
+        filter: ['all',
+          ['==', ['get', 'type'], 'vessel_track_waypoint'],
+          ['!=', ['get', 'isOrigin'], true],
+          ['!=', ['get', 'isCurrent'], true],
+        ],
         layout: {
           visibility: visibleLayers.tracks ? 'visible' : 'none',
         },
@@ -380,17 +384,76 @@ export default function MapViewport({
           'circle-radius': [
             'case',
             ['get', 'isGapPoint'],
-            7,
-            ['get', 'isCurrent'],
             6,
-            ['get', 'isOrigin'],
-            5,
             3.5,
           ],
           'circle-color': ['get', 'color'],
           'circle-stroke-width': 2,
           'circle-stroke-color': '#080d1a',
           'circle-opacity': 0.95,
+        },
+      });
+
+      // 4. Origin Markers (▶ START - First satellite/radar contact in high seas)
+      map.addLayer({
+        id: 'tracks-origin-markers',
+        type: 'circle',
+        source: 'sentinelcatch-data',
+        filter: ['==', ['get', 'type'], 'track_origin'],
+        layout: {
+          visibility: visibleLayers.tracks ? 'visible' : 'none',
+        },
+        paint: {
+          'circle-radius': 7.5,
+          'circle-color': ['get', 'color'],
+          'circle-stroke-width': 2.5,
+          'circle-stroke-color': '#080d1a',
+          'circle-opacity': 1.0,
+        },
+      });
+
+      // 5. Origin Labels (▶ START label)
+      map.addLayer({
+        id: 'tracks-origin-labels',
+        type: 'symbol',
+        source: 'sentinelcatch-data',
+        filter: ['==', ['get', 'type'], 'track_origin'],
+        layout: {
+          'text-field': ['concat', '▶ START · ', ['get', 'label']],
+          'text-size': 10,
+          'text-anchor': 'left',
+          'text-offset': [1.2, 0],
+          'text-allow-overlap': false,
+          'text-max-width': 20,
+          visibility: visibleLayers.tracks ? 'visible' : 'none',
+        },
+        paint: {
+          'text-color': ['get', 'color'],
+          'text-halo-color': '#080d1a',
+          'text-halo-width': 2.5,
+          'text-opacity': 0.95,
+        },
+      });
+
+      // 6. AIS Gap Warning Labels (⚠️ markers where transponder was disabled)
+      map.addLayer({
+        id: 'tracks-gap-labels',
+        type: 'symbol',
+        source: 'sentinelcatch-data',
+        filter: ['all',
+          ['==', ['get', 'type'], 'vessel_track_waypoint'],
+          ['==', ['get', 'isGapPoint'], true],
+        ],
+        layout: {
+          'text-field': '⚠️',
+          'text-size': 15,
+          'text-anchor': 'bottom',
+          'text-offset': [0, -0.6],
+          'text-allow-overlap': true,
+          visibility: visibleLayers.tracks ? 'visible' : 'none',
+        },
+        paint: {
+          'text-opacity': 0.95,
         },
       });
 
@@ -407,12 +470,16 @@ export default function MapViewport({
           .setHTML(`
             <div class="track-popup-card" style="border-left: 4px solid ${props.color}">
               <div class="track-popup-title">${props.flagEmoji || '🚢'} <strong>${props.vesselName}</strong></div>
+              <div class="track-endpoints-badge">
+                <div class="ep-row">▶ <strong>Origin:</strong> ${props.originName || 'High Seas'}</div>
+                <div class="ep-row">🎯 <strong>Target:</strong> ${props.destName || 'Radar Contact Centroid'}</div>
+              </div>
               <div class="track-popup-meta">
                 <span>📏 Traversed: <strong>${props.totalDistanceNm} nm</strong></span>
                 <span>⏱️ Window: <strong>${props.totalDurationHours}h</strong></span>
               </div>
               ${props.aisGapHoursAgo ? `<div class="track-popup-gap">⚠️ Transponder Ceased: <strong>${props.aisGapHoursAgo}h ago</strong></div>` : ''}
-              <div class="track-popup-hint">Click line to inspect case intel</div>
+              <div class="track-popup-hint">Click route line to inspect full intelligence</div>
             </div>
           `)
           .addTo(map);
@@ -430,7 +497,33 @@ export default function MapViewport({
         }
       });
 
-      // Interactive hover on waypoints
+      // Interactive hover on route origin (▶ START)
+      map.on('mouseenter', 'tracks-origin-markers', (e) => {
+        map.getCanvas().style.cursor = 'pointer';
+        const props = e.features?.[0]?.properties;
+        if (!props) return;
+        if (!popupRef.current) {
+          popupRef.current = new maplibregl.Popup({ closeButton: false, closeOnClick: false, offset: 12 });
+        }
+        popupRef.current
+          .setLngLat(e.lngLat)
+          .setHTML(`
+            <div class="waypoint-popup-card" style="border-top: 3px solid ${props.color}">
+              <div class="wp-origin-tag">▶ ROUTE ORIGIN · FIRST CONTACT</div>
+              <div class="wp-title"><strong>${props.vesselName}</strong></div>
+              <div class="wp-label">${props.label}</div>
+              <div class="wp-meta">⏱️ ${props.hoursAgo}h ago · ⚡ ${props.speedKnots} kn · 🧭 ${props.heading}°</div>
+            </div>
+          `)
+          .addTo(map);
+      });
+
+      map.on('mouseleave', 'tracks-origin-markers', () => {
+        map.getCanvas().style.cursor = '';
+        if (popupRef.current) popupRef.current.remove();
+      });
+
+      // Interactive hover on intermediate waypoints
       map.on('mouseenter', 'tracks-waypoints', (e) => {
         map.getCanvas().style.cursor = 'pointer';
         const props = e.features?.[0]?.properties;
@@ -479,6 +572,9 @@ export default function MapViewport({
     setVis('tracks-glow', visibleLayers.tracks);
     setVis('tracks-line', visibleLayers.tracks);
     setVis('tracks-waypoints', visibleLayers.tracks);
+    setVis('tracks-origin-markers', visibleLayers.tracks);
+    setVis('tracks-origin-labels', visibleLayers.tracks);
+    setVis('tracks-gap-labels', visibleLayers.tracks);
     setVis('ships-circle', visibleLayers.ships);
     setVis('coverage-fill', visibleLayers.coverage);
     setVis('ports-circle', visibleLayers.ports);
@@ -571,6 +667,7 @@ export default function MapViewport({
         <div class="pin-card-bubble">
           <div class="pin-photo-header">
             <img src="${vesselPhoto}" alt="${vesselName}" class="pin-vessel-img" loading="lazy" />
+            <div class="pin-real-photo-badge">📷 REAL VESSEL PHOTO</div>
             <div class="pin-band-chip ${(c.band || 'high').toLowerCase()}">
               <span class="chip-pulse-dot"></span>
               ${band} · ${score}
@@ -661,6 +758,9 @@ export default function MapViewport({
       colorName: f.properties.colorName,
       totalDistanceNm: f.properties.totalDistanceNm,
       totalDurationHours: f.properties.totalDurationHours,
+      originName: f.properties.originName,
+      destName: f.properties.destName,
+      aisGapHoursAgo: f.properties.aisGapHoursAgo,
       coordinates: f.geometry.coordinates,
     }));
 
@@ -768,24 +868,31 @@ export default function MapViewport({
               {trackList.map((tr) => (
                 <div
                   key={tr.caseId}
-                  className={`legend-item-row ${selectedCaseId === tr.caseId ? 'is-active' : ''}`}
+                  className={`legend-item-card ${selectedCaseId === tr.caseId ? 'is-active' : ''}`}
                   onClick={() => {
                     onSelectCase(tr.caseId);
                     flyToTrack(tr);
                   }}
-                  title={`Trace back ${tr.vesselName} route (${tr.totalDistanceNm} nm)`}
+                  title={`Trace ${tr.vesselName} route from start to end (${tr.totalDistanceNm} nm)`}
                 >
-                  <span
-                    className="legend-color-bar"
-                    style={{
-                      backgroundColor: tr.color,
-                      boxShadow: `0 0 10px ${tr.color}`,
-                    }}
-                  />
-                  <span className="legend-vessel-name">
-                    {tr.flagEmoji} {tr.vesselName}
-                  </span>
-                  <span className="legend-distance-tag">{tr.totalDistanceNm} nm</span>
+                  <div className="legend-row-top">
+                    <span
+                      className="legend-color-dot"
+                      style={{
+                        backgroundColor: tr.color,
+                        boxShadow: `0 0 8px ${tr.color}`,
+                      }}
+                    />
+                    <span className="legend-vessel-name">
+                      {tr.flagEmoji} {tr.vesselName}
+                    </span>
+                    <span className="legend-distance-badge">{tr.totalDistanceNm} nm</span>
+                  </div>
+                  <div className="legend-endpoints-flow">
+                    <span className="ep-tag ep-start" title={tr.originName}>▶ {tr.originName || 'High Seas'}</span>
+                    <span className="ep-sep">➔</span>
+                    <span className="ep-tag ep-target" title={tr.destName}>🎯 {tr.destName || 'Active Target'}</span>
+                  </div>
                 </div>
               ))}
             </div>

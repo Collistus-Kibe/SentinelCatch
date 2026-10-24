@@ -89,25 +89,36 @@ router.get('/map/layers', async (req, res) => {
       }));
     }
 
-    // 3. Live AIS ships
+    // 3. Live AIS ships (filtered to prevent duplicate representation of dark contact cases)
     const liveShips = await aisStreamClient.getLiveShips();
-    const shipFeatures = liveShips.map((ship) => ({
-      type: 'Feature',
-      id: `ais-${ship.mmsi}`,
-      properties: {
-        type: 'ais_ship',
-        mmsi: ship.mmsi,
-        name: ship.ship_name || `MMSI ${ship.mmsi}`,
-        course: ship.course,
-        speed: ship.speed,
-        shipType: ship.ship_type,
-        receivedAt: ship.received_at,
-      },
-      geometry: {
-        type: 'Point',
-        coordinates: [ship.lon, ship.lat],
-      },
-    }));
+    const suspectMmsis = new Set();
+    const activeCases = ReasoningAgent.getInMemoryCases();
+    activeCases.forEach((c) => {
+      const candidates = c.candidate_matches || c.features?.candidate_matches || [];
+      candidates.forEach((cand) => {
+        if (cand.mmsi) suspectMmsis.add(String(cand.mmsi));
+      });
+    });
+
+    const shipFeatures = liveShips
+      .filter((ship) => !suspectMmsis.has(String(ship.mmsi)))
+      .map((ship) => ({
+        type: 'Feature',
+        id: `ais-${ship.mmsi}`,
+        properties: {
+          type: 'ais_ship',
+          mmsi: ship.mmsi,
+          name: ship.ship_name || `MMSI ${ship.mmsi}`,
+          course: ship.course,
+          speed: ship.speed,
+          shipType: ship.ship_type,
+          receivedAt: ship.received_at,
+        },
+        geometry: {
+          type: 'Point',
+          coordinates: [ship.lon, ship.lat],
+        },
+      }));
 
     // 4. AIS coverage confidence grid (0.5° cells)
     const coverageFeatures = generateAisCoverageGrid();

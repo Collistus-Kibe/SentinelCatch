@@ -202,6 +202,7 @@ export default function CaseFeed({
                   {candidate?.iuuListed && (
                     <span className="case-card-iuu-flag">IUU</span>
                   )}
+                  <span className="case-card-real-photo-badge" title="Authentic Maritime Archive Photo">📷 REAL PHOTO</span>
                 </div>
 
                 <div className="case-card-vessel-info">

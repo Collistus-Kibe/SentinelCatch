@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { getVesselPhoto, getVesselPhotoMetadata } from '../utils/vesselAssets.js';
 
 export default function EvidenceDossierModal({ caseItem, onClose }) {
   const [dossier, setDossier] = useState(null);
@@ -156,35 +157,71 @@ export default function EvidenceDossierModal({ caseItem, onClose }) {
 
                 {dossier.candidateMatches && dossier.candidateMatches.length > 0 ? (
                   <div className="candidate-dossier-cards">
-                    {dossier.candidateMatches.map((cand, idx) => (
-                      <div key={cand.mmsi || idx} className="candidate-dossier-card">
-                        <div className="cand-top">
-                          <span className="cand-rank">Probable Match #{idx + 1}</span>
-                          <span className="cand-conf">{cand.confidencePct}% Confidence</span>
+                    {dossier.candidateMatches.map((cand, idx) => {
+                      const photoUrl = getVesselPhoto(cand.vesselName, cand.gearType, cand.mmsi);
+                      const photoMeta = getVesselPhotoMetadata(cand.vesselName, cand.gearType, cand.mmsi);
+                      return (
+                        <div key={cand.mmsi || idx} className="candidate-dossier-card">
+                          <div className="cand-top">
+                            <span className="cand-rank">Probable Match #{idx + 1}</span>
+                            <span className="cand-conf">{cand.confidencePct}% Confidence</span>
+                          </div>
+                          <div className="cand-dossier-body">
+                            <div className="cand-dossier-photo-wrap">
+                              <img
+                                src={photoUrl}
+                                alt={cand.vesselName}
+                                className="cand-dossier-photo"
+                              />
+                              <div className="cand-dossier-photo-tag">📷 Authentic Maritime Photo</div>
+                            </div>
+                            <div className="cand-dossier-details">
+                              <div className="cand-main-info">
+                                <h5>{cand.vesselName}</h5>
+                                <span className="cand-flag">Flag: {cand.flag} · MMSI: {cand.mmsi} · Type: {cand.gearType || 'Fishing Vessel'}</span>
+                              </div>
+                              <div className="cand-tags-row">
+                                <span className={`cand-tag ${cand.iotcAuthorized ? 'tag-ok' : 'tag-warn'}`}>
+                                  IOTC Registry: {cand.iotcAuthorized ? '✓ Authorized' : '✗ NOT AUTHORIZED'}
+                                </span>
+                                {cand.iuuListed && (
+                                  <a
+                                    href={photoMeta?.iuuUrl || 'https://iuu-vessels.org/Home/Search'}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="cand-tag tag-danger"
+                                    title="Open official record on Combined IUU Fishing Vessel List (Trygg Mat Tracking)"
+                                  >
+                                    ⚠️ RFMO IUU Blacklisted ({cand.iuuListingBody || 'IOTC'}) ↗
+                                  </a>
+                                )}
+                                {cand.mmsi && (
+                                  <a
+                                    href={`https://www.myshiptracking.com/vessels?name=${encodeURIComponent(cand.mmsi)}`}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="cand-tag"
+                                    title="View live transponder telemetry on MyShipTracking open registry"
+                                  >
+                                    📡 MyShipTracking AIS ↗
+                                  </a>
+                                )}
+                                <span className="cand-tag">
+                                  AIS Gaps (60d): {cand.historicalAisOffCount60d}
+                                </span>
+                                <span className="cand-tag">
+                                  AIS Coverage: {cand.aisCoverageMetricPct}%
+                                </span>
+                              </div>
+                              <p className="cand-rationale">{cand.summaryRationale}</p>
+                              <div className="cand-photo-provenance-caption">
+                                <strong>Photographic Record:</strong> {photoMeta.photoTitle} · <span className="cand-credit-text">Attribution: {photoMeta.credit}</span>
+                              </div>
+                            </div>
+                          </div>
                         </div>
-                        <div className="cand-main-info">
-                          <h5>{cand.vesselName}</h5>
-                          <span className="cand-flag">Flag: {cand.flag} · MMSI: {cand.mmsi} · Type: {cand.gearType || 'Fishing Vessel'}</span>
-                        </div>
-                        <div className="cand-tags-row">
-                          <span className={`cand-tag ${cand.iotcAuthorized ? 'tag-ok' : 'tag-warn'}`}>
-                            IOTC Registry: {cand.iotcAuthorized ? '✓ Authorized' : '✗ NOT AUTHORIZED'}
-                          </span>
-                          {cand.iuuListed && (
-                            <span className="cand-tag tag-danger">
-                              ⚠️ RFMO IUU Blacklisted ({cand.iuuListingBody || 'IOTC'})
-                            </span>
-                          )}
-                          <span className="cand-tag">
-                            AIS Gaps (60d): {cand.historicalAisOffCount60d}
-                          </span>
-                          <span className="cand-tag">
-                            AIS Coverage: {cand.aisCoverageMetricPct}%
-                          </span>
-                        </div>
-                        <p className="cand-rationale">{cand.summaryRationale}</p>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 ) : (
                   <p style={{ fontStyle: 'italic', color: 'var(--text-muted)' }}>

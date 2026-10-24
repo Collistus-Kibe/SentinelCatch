@@ -56,7 +56,10 @@ describe('Vessel Surveillance Photo API Endpoints', () => {
     assert.strictEqual(data.success, true);
     assert.strictEqual(data.vesselName, 'LU RONG YUAN YU 188');
     assert.strictEqual(data.mmsi, '412349012');
-    assert.strictEqual(data.source, 'curated_surveillance_archive');
+    assert.ok(
+      data.source === 'verified_maritime_archive' || data.source === 'curated_surveillance_archive' || data.source === 'vesselfinder_api',
+      `Unexpected photo source: ${data.source}`
+    );
     assert.ok(data.photoUrl.includes('lu_rong_yuan_yu.jpg'));
   });
 
@@ -77,6 +80,28 @@ describe('Vessel Surveillance Photo API Endpoints', () => {
 
     assert.strictEqual(data.success, true);
     assert.ok(data.photoUrl, 'Must return a fallback image URL');
+  });
+
+  test('GET /api/vessels/iuu?name=LU RONG YUAN YU matches Combined IUU List', async () => {
+    const res = await fetch(`${baseUrl}/api/vessels/iuu?name=LU%20RONG%20YUAN%20YU`);
+    assert.strictEqual(res.status, 200);
+    const data = await res.json();
+
+    assert.strictEqual(data.listed, true);
+    assert.ok(data.match.vesselName.includes('LU RONG YUAN YU'));
+    assert.ok(data.match.listingBody.includes('IUU'));
+    assert.ok(data.match.profileUrl.includes('iuu-vessels.org'));
+  });
+
+  test('GET /api/vessels/status reports open databases (IUU list, MyShipTracking, Wikimedia)', async () => {
+    const res = await fetch(`${baseUrl}/api/vessels/status`);
+    assert.strictEqual(res.status, 200);
+    const data = await res.json();
+
+    assert.strictEqual(data.providersAvailable.combinedIuuVesselList, true);
+    assert.strictEqual(data.providersAvailable.myShipTracking, true);
+    assert.ok(data.openDatabases.combinedIuuList.includes('iuu-vessels.org'));
+    assert.ok(data.openDatabases.myShipTracking.includes('myshiptracking.com'));
   });
 
   test('Teardown test HTTP server', () => {

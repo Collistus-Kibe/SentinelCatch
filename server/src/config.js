@@ -41,10 +41,11 @@ const envSchema = z.object({
   // MapTiler (Optional)
   MAPTILER_KEY: z.string().optional().default(''),
 
-  // Vessel Photo Intelligence (VesselFinder API key)
+  // Vessel Photo Intelligence (VesselFinder, MyShipTracking, Combined IUU List)
   VESSELFINDER_API_KEY: z.string().optional().default(''),
+  MYSHIPTRACKING_API_KEY: z.string().optional().default(''),
   VESSEL_PHOTO_API_KEY: z.string().optional().default(''),
-  VESSEL_PHOTO_PROVIDER: z.enum(['auto', 'local', 'vesselfinder', 'wikimedia']).default('auto'),
+  VESSEL_PHOTO_PROVIDER: z.enum(['auto', 'local', 'vesselfinder', 'iuu_list', 'myshiptracking', 'wikimedia']).default('auto'),
 
   // Access gate (Optional)
   ACCESS_CODE: z.string().optional().default(''),

@@ -1457,6 +1457,24 @@ body {
   box-shadow: 0 0 6px rgba(239, 68, 68, 0.6);
 }
 
+.case-card-real-photo-badge {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  background: rgba(8, 13, 26, 0.88);
+  backdrop-filter: blur(4px);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  font-size: 0.50rem;
+  font-weight: 800;
+  padding: 1px 4px;
+  border-radius: 3px;
+  letter-spacing: 0.03em;
+  pointer-events: none;
+  z-index: 2;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+
 .case-card-vessel-info {
   flex: 1;
   min-width: 0;
@@ -2077,6 +2095,78 @@ body {
   border-radius: 4px;
 }
 
+/* Real Vessel Photo Provenance Bar in Intel Panel */
+.vessel-photo-provenance-bar {
+  padding: 9px 12px;
+  background: rgba(8, 13, 26, 0.95);
+  border-top: 1px solid rgba(56, 189, 248, 0.18);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.provenance-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.provenance-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(6, 182, 212, 0.12);
+  border: 1px solid rgba(6, 182, 212, 0.35);
+  color: #38bdf8;
+  font-size: 0.64rem;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 4px;
+  letter-spacing: 0.04em;
+}
+
+.provenance-pill-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #38bdf8;
+  box-shadow: 0 0 6px #38bdf8;
+}
+
+.provenance-source {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+}
+
+.provenance-desc {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.provenance-credit-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.70rem;
+}
+
+.provenance-credit-label {
+  color: var(--text-muted);
+}
+
+.provenance-credit-val {
+  color: #94a3b8;
+  font-style: italic;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* ── Case Intel Drawer Panel ────────────────────────────────── */
 .intel-panel-overlay {
   position: absolute;
@@ -2511,6 +2601,30 @@ body {
   font-weight: 700;
 }
 
+a.cand-tag {
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+a.cand-tag:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.cand-tag.cand-mst-link {
+  border-color: rgba(56, 189, 248, 0.4);
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.1);
+}
+
+.cand-tag.cand-iuu-link {
+  border-color: rgba(239, 68, 68, 0.6);
+  color: #fca5a5;
+  background: rgba(239, 68, 68, 0.2);
+}
+
 .candidate-rationale-text {
   font-size: 0.82rem;
   color: var(--text-secondary);
@@ -2848,6 +2962,65 @@ body {
   color: #334155;
   margin: 4px 0 0 0;
   line-height: 1.4;
+}
+
+.cand-dossier-body {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+  align-items: flex-start;
+}
+
+.cand-dossier-photo-wrap {
+  position: relative;
+  width: 140px;
+  height: 94px;
+  flex-shrink: 0;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid #94a3b8;
+  background: #0f172a;
+}
+
+.cand-dossier-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.cand-dossier-photo-tag {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(15, 23, 42, 0.85);
+  color: #38bdf8;
+  font-size: 0.58rem;
+  font-weight: 700;
+  text-align: center;
+  padding: 2px 4px;
+  letter-spacing: 0.02em;
+}
+
+.cand-dossier-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.cand-photo-provenance-caption {
+  margin-top: 6px;
+  padding: 4px 6px;
+  background: #e2e8f0;
+  border-radius: 4px;
+  font-size: 0.70rem;
+  color: #334155;
+  line-height: 1.3;
+}
+
+.cand-credit-text {
+  color: #64748b;
+  font-style: italic;
 }
 
 .deliberation-box-grid {
@@ -3745,5 +3918,305 @@ body {
   color: var(--text-muted);
 }
 
+/* ── Track Line Hover Popup Cards ────────────────────────────── */
+.track-popup-card {
+  background: rgba(10, 16, 30, 0.96);
+  border-radius: 8px;
+  padding: 10px 12px;
+  min-width: 200px;
+  max-width: 280px;
+}
+
+.track-popup-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  margin-bottom: 6px;
+}
+
+.track-popup-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.track-popup-meta strong {
+  color: #e2e8f0;
+}
+
+.track-popup-gap {
+  font-size: 0.75rem;
+  color: #f87171;
+  margin-top: 4px;
+  font-weight: 600;
+}
+
+.track-popup-hint {
+  font-size: 0.68rem;
+  color: #64748b;
+  margin-top: 6px;
+  font-style: italic;
+}
+
+/* ── Waypoint Hover Popup Cards ──────────────────────────────── */
+.waypoint-popup-card {
+  background: rgba(10, 16, 30, 0.96);
+  border-radius: 8px;
+  padding: 8px 10px;
+  min-width: 180px;
+  max-width: 260px;
+}
+
+.wp-title {
+  font-size: 0.82rem;
+  color: #f1f5f9;
+  margin-bottom: 3px;
+}
+
+.wp-label {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin-bottom: 4px;
+  line-height: 1.3;
+}
+
+.wp-meta {
+  font-size: 0.7rem;
+  color: #64748b;
+}
+
+/* ── MapLibre Popup Global Overrides ─────────────────────────── */
+.maplibregl-popup-content {
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  border-radius: 8px !important;
+}
+
+.maplibregl-popup-tip {
+  border-top-color: rgba(10, 16, 30, 0.96) !important;
+  border-bottom-color: rgba(10, 16, 30, 0.96) !important;
+}
+
+/* ── Destination Marker Pulse Animation ──────────────────────── */
+@keyframes dest-ping {
+  0% { box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.6); }
+  70% { box-shadow: 0 0 0 12px rgba(249, 115, 22, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(249, 115, 22, 0); }
+}
+
+/* ── Vessel Legend Enhancement ───────────────────────────────── */
+.map-vessel-legend {
+  position: absolute;
+  bottom: 30px;
+  left: 14px;
+  z-index: 50;
+  background: rgba(13, 20, 36, 0.94);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-md);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.6);
+  min-width: 230px;
+  max-width: 320px;
+  transition: all 0.2s ease;
+  overflow: hidden;
+}
+
+.map-vessel-legend.collapsed {
+  min-width: auto;
+}
+
+.legend-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  transition: background 0.15s;
+}
+
+.legend-header:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.legend-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.legend-pulse-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #22c55e;
+  animation: pulse-dot 1.5s infinite;
+}
+
+.legend-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+
+.legend-toggle-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 2px 6px;
+}
+
+.legend-items-list {
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.legend-item-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 7px 9px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.legend-item-card:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.16);
+  transform: translateY(-1px);
+}
+
+.legend-item-card.is-active {
+  background: rgba(59, 130, 246, 0.16);
+  border-color: rgba(59, 130, 246, 0.45);
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.2);
+}
+
+.legend-row-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.legend-color-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.legend-vessel-name {
+  flex: 1;
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 0.78rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.legend-distance-badge {
+  font-size: 0.68rem;
+  color: #38bdf8;
+  font-weight: 700;
+  background: rgba(56, 189, 248, 0.1);
+  padding: 1px 5px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.legend-endpoints-flow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.68rem;
+  padding-left: 16px;
+  color: #94a3b8;
+}
+
+.ep-tag {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
+}
+
+.ep-start {
+  color: #a7f3d0;
+  font-weight: 600;
+}
+
+.ep-sep {
+  color: #64748b;
+  font-size: 0.65rem;
+  flex-shrink: 0;
+}
+
+.ep-target {
+  color: #fed7aa;
+  font-weight: 600;
+}
+
+/* ── Tactical Pin Real Photo Badge ────────────────────────────── */
+.pin-real-photo-badge {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  background: rgba(15, 23, 42, 0.88);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: #34d399;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 2px 6px;
+  border-radius: 4px;
+  backdrop-filter: blur(4px);
+  z-index: 5;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+}
+
+/* ── Track Popup Endpoints Badge ─────────────────────────────── */
+.track-endpoints-badge {
+  margin: 6px 0;
+  padding: 5px 7px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 5px;
+  border-left: 2px solid #38bdf8;
+  font-size: 0.72rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ep-row {
+  color: #cbd5e1;
+}
+
+.ep-row strong {
+  color: #93c5fd;
+}
+
+.wp-origin-tag {
+  font-size: 0.65rem;
+  color: #34d399;
+  font-weight: 700;
+  margin-bottom: 4px;
+  letter-spacing: 0.03em;
+}
 
 
