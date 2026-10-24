@@ -65,9 +65,12 @@ export default function MapViewport({
 
   const [isGlobe, setIsGlobe] = useState(false);
   const [layersLoaded, setLayersLoaded] = useState(false);
+  const popupRef = useRef(null);
+  const [legendCollapsed, setLegendCollapsed] = useState(false);
   const [visibleLayers, setVisibleLayers] = useState({
     eez: true,
     mpas: true,
+    tracks: true,
     cases: true,
     ships: true,
     coverage: false,
@@ -249,10 +252,152 @@ export default function MapViewport({
           'circle-stroke-color': '#0284c7',
         },
       });
+
+      // ── Vessel Route Trajectories (Each Ship with Distinct Color) ──
+      // 1. Neon Glow Layer (Halo blur behind the track line)
+      map.addLayer({
+        id: 'tracks-glow',
+        type: 'line',
+        source: 'sentinelcatch-data',
+        filter: ['==', ['get', 'type'], 'vessel_track'],
+        layout: {
+          'line-cap': 'round',
+          'line-join': 'round',
+          visibility: visibleLayers.tracks ? 'visible' : 'none',
+        },
+        paint: {
+          'line-color': ['get', 'color'],
+          'line-width': [
+            'case',
+            ['==', ['get', 'caseId'], selectedCaseId || -1],
+            10,
+            6,
+          ],
+          'line-opacity': [
+            'case',
+            ['==', ['get', 'caseId'], selectedCaseId || -1],
+            0.7,
+            0.3,
+          ],
+          'line-blur': 4,
+        },
+      });
+
+      // 2. Crisp Route Vector Line
+      map.addLayer({
+        id: 'tracks-line',
+        type: 'line',
+        source: 'sentinelcatch-data',
+        filter: ['==', ['get', 'type'], 'vessel_track'],
+        layout: {
+          'line-cap': 'round',
+          'line-join': 'round',
+          visibility: visibleLayers.tracks ? 'visible' : 'none',
+        },
+        paint: {
+          'line-color': ['get', 'color'],
+          'line-width': [
+            'case',
+            ['==', ['get', 'caseId'], selectedCaseId || -1],
+            4.6,
+            2.6,
+          ],
+          'line-opacity': 0.95,
+        },
+      });
+
+      // 3. Historical Waypoints along the Route
+      map.addLayer({
+        id: 'tracks-waypoints',
+        type: 'circle',
+        source: 'sentinelcatch-data',
+        filter: ['==', ['get', 'type'], 'vessel_track_waypoint'],
+        layout: {
+          visibility: visibleLayers.tracks ? 'visible' : 'none',
+        },
+        paint: {
+          'circle-radius': [
+            'case',
+            ['get', 'isGapPoint'],
+            7,
+            ['get', 'isCurrent'],
+            6,
+            ['get', 'isOrigin'],
+            5,
+            3.5,
+          ],
+          'circle-color': ['get', 'color'],
+          'circle-stroke-width': 2,
+          'circle-stroke-color': '#080d1a',
+          'circle-opacity': 0.95,
+        },
+      });
+
+      // Interactive hover & click on track lines
+      map.on('mouseenter', 'tracks-line', (e) => {
+        map.getCanvas().style.cursor = 'pointer';
+        const props = e.features?.[0]?.properties;
+        if (!props) return;
+        if (!popupRef.current) {
+          popupRef.current = new maplibregl.Popup({ closeButton: false, closeOnClick: false, offset: 12 });
+        }
+        popupRef.current
+          .setLngLat(e.lngLat)
+          .setHTML(`
+            <div class="track-popup-card" style="border-left: 4px solid ${props.color}">
+              <div class="track-popup-title">${props.flagEmoji || '🚢'} <strong>${props.vesselName}</strong></div>
+              <div class="track-popup-meta">
+                <span>📏 Traversed: <strong>${props.totalDistanceNm} nm</strong></span>
+                <span>⏱️ Window: <strong>${props.totalDurationHours}h</strong></span>
+              </div>
+              ${props.aisGapHoursAgo ? `<div class="track-popup-gap">⚠️ Transponder Ceased: <strong>${props.aisGapHoursAgo}h ago</strong></div>` : ''}
+              <div class="track-popup-hint">Click line to inspect case intel</div>
+            </div>
+          `)
+          .addTo(map);
+      });
+
+      map.on('mouseleave', 'tracks-line', () => {
+        map.getCanvas().style.cursor = '';
+        if (popupRef.current) popupRef.current.remove();
+      });
+
+      map.on('click', 'tracks-line', (e) => {
+        const caseId = e.features?.[0]?.properties?.caseId;
+        if (caseId) {
+          onSelectCase(Number(caseId));
+        }
+      });
+
+      // Interactive hover on waypoints
+      map.on('mouseenter', 'tracks-waypoints', (e) => {
+        map.getCanvas().style.cursor = 'pointer';
+        const props = e.features?.[0]?.properties;
+        if (!props) return;
+        if (!popupRef.current) {
+          popupRef.current = new maplibregl.Popup({ closeButton: false, closeOnClick: false, offset: 10 });
+        }
+        const coords = e.features[0].geometry.coordinates;
+        popupRef.current
+          .setLngLat(coords)
+          .setHTML(`
+            <div class="waypoint-popup-card" style="border-top: 3px solid ${props.color}">
+              <div class="wp-title"><strong>${props.vesselName}</strong></div>
+              <div class="wp-label">${props.label}</div>
+              <div class="wp-meta">⏱️ ${props.hoursAgo === 0 ? 'Current Position' : `${props.hoursAgo}h ago`} · ⚡ ${props.speedKnots} kn · 🧭 ${props.heading}°</div>
+            </div>
+          `)
+          .addTo(map);
+      });
+
+      map.on('mouseleave', 'tracks-waypoints', () => {
+        map.getCanvas().style.cursor = '';
+        if (popupRef.current) popupRef.current.remove();
+      });
     } else {
       map.getSource('sentinelcatch-data').setData(mapLayersData);
     }
-  }, [layersLoaded, mapLayersData, visibleLayers.coverage]);
+  }, [layersLoaded, mapLayersData, visibleLayers.coverage, visibleLayers.tracks, selectedCaseId, onSelectCase]);
 
   // Update visibility of vector layers
   useEffect(() => {
@@ -269,10 +414,43 @@ export default function MapViewport({
     setVis('eez-line', visibleLayers.eez);
     setVis('mpas-fill', visibleLayers.mpas);
     setVis('mpas-line', visibleLayers.mpas);
+    setVis('tracks-glow', visibleLayers.tracks);
+    setVis('tracks-line', visibleLayers.tracks);
+    setVis('tracks-waypoints', visibleLayers.tracks);
     setVis('ships-circle', visibleLayers.ships);
     setVis('coverage-fill', visibleLayers.coverage);
     setVis('ports-circle', visibleLayers.ports);
   }, [visibleLayers, layersLoaded]);
+
+  // Highlight selected vessel's route when selectedCaseId changes
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !layersLoaded) return;
+
+    if (map.getLayer('tracks-glow')) {
+      map.setPaintProperty('tracks-glow', 'line-width', [
+        'case',
+        ['==', ['get', 'caseId'], selectedCaseId || -1],
+        11,
+        6,
+      ]);
+      map.setPaintProperty('tracks-glow', 'line-opacity', [
+        'case',
+        ['==', ['get', 'caseId'], selectedCaseId || -1],
+        0.75,
+        0.28,
+      ]);
+    }
+
+    if (map.getLayer('tracks-line')) {
+      map.setPaintProperty('tracks-line', 'line-width', [
+        'case',
+        ['==', ['get', 'caseId'], selectedCaseId || -1],
+        4.8,
+        2.6,
+      ]);
+    }
+  }, [selectedCaseId, layersLoaded]);
 
   // Render Custom Tactical Vessel Pins on the Map
   useEffect(() => {
@@ -397,6 +575,40 @@ export default function MapViewport({
     });
   }, [flyToCoords]);
 
+  // Extract vessel tracks for interactive legend & track zoom
+  const trackList = (mapLayersData?.features || [])
+    .filter((f) => f.properties?.type === 'vessel_track')
+    .map((f) => ({
+      caseId: f.properties.caseId,
+      vesselName: f.properties.vesselName,
+      flagEmoji: f.properties.flagEmoji,
+      gearType: f.properties.gearType,
+      color: f.properties.color,
+      colorName: f.properties.colorName,
+      totalDistanceNm: f.properties.totalDistanceNm,
+      totalDurationHours: f.properties.totalDurationHours,
+      coordinates: f.geometry.coordinates,
+    }));
+
+  const flyToTrack = useCallback((track) => {
+    const map = mapRef.current;
+    if (!map || !track?.coordinates?.length) return;
+    const coords = track.coordinates;
+    let minLon = coords[0][0], maxLon = coords[0][0];
+    let minLat = coords[0][1], maxLat = coords[0][1];
+    coords.forEach(([lon, lat]) => {
+      if (lon < minLon) minLon = lon;
+      if (lon > maxLon) maxLon = lon;
+      if (lat < minLat) minLat = lat;
+      if (lat > maxLat) maxLat = lat;
+    });
+    map.fitBounds([[minLon, minLat], [maxLon, maxLat]], {
+      padding: { top: 90, bottom: 90, left: 90, right: 90 },
+      maxZoom: 9.5,
+      duration: 1400,
+    });
+  }, []);
+
   return (
     <div className="map-wrapper" style={{ position: 'relative', width: '100%', height: '100%' }}>
       <div ref={mapContainerRef} style={{ width: '100%', height: '100%' }} />
@@ -430,6 +642,14 @@ export default function MapViewport({
             />
             🌿 MPAs
           </label>
+          <label className={`layer-pill ${visibleLayers.tracks ? 'active' : ''}`}>
+            <input
+              type="checkbox"
+              checked={visibleLayers.tracks}
+              onChange={(e) => setVisibleLayers((p) => ({ ...p, tracks: e.target.checked }))}
+            />
+            〰️ Vessel Routes
+          </label>
           <label className={`layer-pill ${visibleLayers.cases ? 'active' : ''}`}>
             <input
               type="checkbox"
@@ -456,6 +676,48 @@ export default function MapViewport({
           </label>
         </div>
       </div>
+
+      {/* Floating Tactical Vessel Routes Legend (Distinct Color & Line per Ship) */}
+      {visibleLayers.tracks && trackList.length > 0 && (
+        <div className={`map-vessel-legend ${legendCollapsed ? 'collapsed' : ''}`}>
+          <div className="legend-header" onClick={() => setLegendCollapsed((p) => !p)}>
+            <div className="legend-header-left">
+              <span className="legend-pulse-dot"></span>
+              <span className="legend-title">Vessel Route Tracks ({trackList.length})</span>
+            </div>
+            <button className="legend-toggle-btn" title="Toggle Legend" type="button">
+              {legendCollapsed ? '▲ Expand' : '▼ Minimize'}
+            </button>
+          </div>
+          {!legendCollapsed && (
+            <div className="legend-items-list">
+              {trackList.map((tr) => (
+                <div
+                  key={tr.caseId}
+                  className={`legend-item-row ${selectedCaseId === tr.caseId ? 'is-active' : ''}`}
+                  onClick={() => {
+                    onSelectCase(tr.caseId);
+                    flyToTrack(tr);
+                  }}
+                  title={`Trace back ${tr.vesselName} route (${tr.totalDistanceNm} nm)`}
+                >
+                  <span
+                    className="legend-color-bar"
+                    style={{
+                      backgroundColor: tr.color,
+                      boxShadow: `0 0 10px ${tr.color}`,
+                    }}
+                  />
+                  <span className="legend-vessel-name">
+                    {tr.flagEmoji} {tr.vesselName}
+                  </span>
+                  <span className="legend-distance-tag">{tr.totalDistanceNm} nm</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

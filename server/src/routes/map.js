@@ -6,6 +6,7 @@ import DetectionAgent from '../agents/detection.js';
 import ReasoningAgent from '../agents/reasoning.js';
 import { query } from '../db/index.js';
 import logger from '../logger.js';
+import { generateVesselTracksGeoJson, getTrackByCaseId } from '../geo/tracks.js';
 
 const router = Router();
 
@@ -111,18 +112,27 @@ router.get('/map/layers', async (req, res) => {
     // 4. AIS coverage confidence grid (0.5° cells)
     const coverageFeatures = generateAisCoverageGrid();
 
+    // 5. Vessel historical tracks & trajectories (each ship with distinct line and color)
+    let rawCases = [];
+    try {
+      rawCases = ReasoningAgent.getInMemoryCases();
+    } catch {}
+    const trackCollection = generateVesselTracksGeoJson(rawCases);
+
     res.json({
       type: 'FeatureCollection',
       features: [
         ...baseLayers.features,
         ...portFeatures,
         ...coverageFeatures,
+        ...trackCollection.features,
         ...caseFeatures,
         ...shipFeatures,
       ],
       meta: {
         casesCount: caseFeatures.length,
         shipsCount: shipFeatures.length,
+        tracksCount: trackCollection.features.filter((f) => f.properties?.type === 'vessel_track').length,
         portsCount: portFeatures.length,
         timestamp: new Date().toISOString(),
       },
@@ -131,6 +141,34 @@ router.get('/map/layers', async (req, res) => {
     logger.error({ err }, 'Failed to generate map layers GeoJSON');
     res.status(500).json({ error: 'Failed to generate map layers' });
   }
+});
+
+/**
+ * GET /api/map/tracks
+ * Returns all reconstructed vessel tracks and distinct color assignments
+ */
+router.get('/map/tracks', (_req, res) => {
+  try {
+    const rawCases = ReasoningAgent.getInMemoryCases();
+    const tracksGeoJson = generateVesselTracksGeoJson(rawCases);
+    res.json(tracksGeoJson);
+  } catch (err) {
+    logger.error({ err }, 'Failed to fetch vessel tracks');
+    res.status(500).json({ error: 'Failed to retrieve tracks' });
+  }
+});
+
+/**
+ * GET /api/map/tracks/:caseId
+ * Returns historical route details and waypoints for a specific case
+ */
+router.get('/map/tracks/:caseId', (req, res) => {
+  const caseId = Number(req.params.caseId);
+  const track = getTrackByCaseId(caseId);
+  if (!track) {
+    return res.status(404).json({ error: 'Track not found for case ID' });
+  }
+  res.json({ success: true, track });
 });
 
 /**
