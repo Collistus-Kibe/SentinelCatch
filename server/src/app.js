@@ -13,6 +13,8 @@ import mapRouter from './routes/map.js';
 import runRouter from './routes/run.js';
 import patrolRouter from './routes/patrol.js';
 import chatRouter from './routes/chat.js';
+import objectivesRouter from './routes/objectives.js';
+import vesselsRouter from './routes/vessels.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -40,6 +42,11 @@ app.use(helmet({
         "https://*.cartocdn.com",
         "https://cartocdn.com",
         "https://*.maptiler.com",
+        "https://upload.wikimedia.org",
+        "https://*.wikimedia.org",
+        "https://static.vesselfinder.net",
+        "https://*.vesselfinder.net",
+        "https://www.vesselfinder.com",
       ],
       connectSrc: [
         "'self'",
@@ -58,6 +65,7 @@ app.use(helmet({
         "https://demotiles.maplibre.org",
         "https://marine-api.open-meteo.com",
         "https://generativelanguage.googleapis.com",
+        "https://api.vesselfinder.com",
         "wss://stream.aisstream.io",
       ],
       workerSrc: ["'self'", "blob:"],
@@ -143,6 +151,12 @@ app.get('/api/status', async (_req, res) => {
         status: config.MAPTILER_KEY ? 'active' : 'using-carto-dark-matter',
         optional: true,
       },
+      vesselPhotos: {
+        configured: !!(config.VESSELFINDER_API_KEY || config.VESSEL_PHOTO_API_KEY),
+        provider: config.VESSEL_PHOTO_PROVIDER || 'auto',
+        status: 'ready',
+        note: 'Curated high-res surveillance archive & Wikimedia active; VesselFinder API userkey supported',
+      },
     },
     notifications: {
       channel: 'onsite',
@@ -164,6 +178,8 @@ app.use('/api', mapRouter);
 app.use('/api', patrolRouter);
 app.use('/api', chatRouter);
 app.use('/api', runRouter);
+app.use('/api', objectivesRouter);
+app.use('/api', vesselsRouter);
 
 // ── Serve static frontend ────────────────────
 const staticDir = join(__dirname, '..', '..', 'web', 'dist');
@@ -186,6 +202,10 @@ if (existsSync(staticDir)) {
         '/api/stream',
         '/api/notifications',
         '/api/cases',
+        '/api/cases/:id/photo',
+        '/api/vessels/photo',
+        '/api/vessels/gallery',
+        '/api/vessels/status',
         '/api/map/layers',
         '/api/patrol/plan',
         '/api/chat',

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { getTranslation } from '../services/i18n.js';
+import { getVesselPhoto, getFlagEmoji } from '../utils/vesselAssets.js';
 
 // Self-contained Dark Ocean Style using ESRI World Dark Gray Canvas (No API key required)
 const DARK_OCEAN_STYLE = {
@@ -60,6 +61,7 @@ export default function MapViewport({
   const t = getTranslation(language);
   const mapContainerRef = useRef(null);
   const mapRef = useRef(null);
+  const markersRef = useRef([]);
 
   const [isGlobe, setIsGlobe] = useState(false);
   const [layersLoaded, setLayersLoaded] = useState(false);
@@ -96,7 +98,7 @@ export default function MapViewport({
       style: DARK_OCEAN_STYLE,
       center: [41.2, -2.8], // Center of Kenya EEZ
       zoom: 6.2,
-      pitch: 20,
+      pitch: 22,
       bearing: 0,
       attributionControl: false,
     });
@@ -105,7 +107,6 @@ export default function MapViewport({
     map.addControl(new maplibregl.ScaleControl({ unit: 'nautical' }), 'bottom-left');
 
     map.on('error', (e) => {
-      // Log minor tile warning without stopping rendering
       console.warn('MapLibre tile event:', e.error?.message || e);
     });
 
@@ -115,13 +116,14 @@ export default function MapViewport({
       map.resize();
     });
 
-    // Ensure proper canvas size after layout mount
     const resizeTimer = setTimeout(() => {
       map.resize();
-    }, 200);
+    }, 250);
 
     return () => {
       clearTimeout(resizeTimer);
+      markersRef.current.forEach((m) => m.remove());
+      markersRef.current = [];
       map.remove();
       mapRef.current = null;
     };
@@ -146,12 +148,11 @@ export default function MapViewport({
     }
   }, [isGlobe]);
 
-  // Add / Update Layers on Map
+  // Add / Update Base GeoJSON Layers (EEZ, MPAs, Ports, AIS Ships)
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !layersLoaded || !mapLayersData) return;
 
-    // 1. Add GeoJSON Source if not exists
     if (!map.getSource('sentinelcatch-data')) {
       map.addSource('sentinelcatch-data', {
         type: 'geojson',
@@ -248,82 +249,12 @@ export default function MapViewport({
           'circle-stroke-color': '#0284c7',
         },
       });
-
-      // Dark Vessel Cases
-      map.addLayer({
-        id: 'cases-pulse',
-        type: 'circle',
-        source: 'sentinelcatch-data',
-        filter: ['==', ['get', 'type'], 'case'],
-        paint: {
-          'circle-radius': [
-            'interpolate',
-            ['linear'],
-            ['zoom'],
-            5, 12,
-            10, 24
-          ],
-          'circle-color': [
-            'match',
-            ['get', 'band'],
-            'High', '#ef4444',
-            'Medium', '#f59e0b',
-            '#22c55e',
-          ],
-          'circle-opacity': 0.35,
-          'circle-stroke-width': 2.5,
-          'circle-stroke-color': [
-            'match',
-            ['get', 'band'],
-            'High', '#ef4444',
-            'Medium', '#f59e0b',
-            '#22c55e',
-          ],
-        },
-      });
-
-      map.addLayer({
-        id: 'cases-center',
-        type: 'circle',
-        source: 'sentinelcatch-data',
-        filter: ['==', ['get', 'type'], 'case'],
-        paint: {
-          'circle-radius': 7,
-          'circle-color': '#ffffff',
-          'circle-stroke-width': 2.5,
-          'circle-stroke-color': [
-            'match',
-            ['get', 'band'],
-            'High', '#ef4444',
-            'Medium', '#f59e0b',
-            '#22c55e',
-          ],
-        },
-      });
-
-      // Click to select case
-      map.on('click', 'cases-pulse', (e) => {
-        const feature = e.features?.[0];
-        if (feature) {
-          const caseId = feature.properties?.caseId;
-          if (caseId && onSelectCase) {
-            onSelectCase(Number(caseId));
-          }
-        }
-      });
-
-      map.on('mouseenter', 'cases-pulse', () => {
-        map.getCanvas().style.cursor = 'pointer';
-      });
-      map.on('mouseleave', 'cases-pulse', () => {
-        map.getCanvas().style.cursor = '';
-      });
     } else {
       map.getSource('sentinelcatch-data').setData(mapLayersData);
     }
-  }, [layersLoaded, mapLayersData, onSelectCase, visibleLayers.coverage]);
+  }, [layersLoaded, mapLayersData, visibleLayers.coverage]);
 
-  // Update visibility toggles
+  // Update visibility of vector layers
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !layersLoaded) return;
@@ -338,12 +269,119 @@ export default function MapViewport({
     setVis('eez-line', visibleLayers.eez);
     setVis('mpas-fill', visibleLayers.mpas);
     setVis('mpas-line', visibleLayers.mpas);
-    setVis('cases-pulse', visibleLayers.cases);
-    setVis('cases-center', visibleLayers.cases);
     setVis('ships-circle', visibleLayers.ships);
     setVis('coverage-fill', visibleLayers.coverage);
     setVis('ports-circle', visibleLayers.ports);
   }, [visibleLayers, layersLoaded]);
+
+  // Render Custom Tactical Vessel Pins on the Map
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !layersLoaded) return;
+
+    // Clear previous markers
+    markersRef.current.forEach((m) => m.remove());
+    markersRef.current = [];
+
+    // Only render pins if the detections layer is toggled on
+    if (!visibleLayers.cases || !cases || cases.length === 0) return;
+
+    const filteredCases = cases.filter((c) => {
+      if (activeSector && activeSector !== 'all' && c.sector !== activeSector) {
+        return false;
+      }
+      return true;
+    });
+
+    filteredCases.forEach((c) => {
+      const lat = c.features?.lat ?? c.lat;
+      const lon = c.features?.lon ?? c.lon;
+      if (lat === undefined || lon === undefined) return;
+
+      const isSelected = selectedCaseId === c.id;
+      const candidate = c.candidate_matches?.[0] || c.features?.candidate_matches?.[0] || null;
+      const vesselName = candidate?.vesselName || 'Unidentified Dark Contact';
+      const flagEmoji = getFlagEmoji(candidate?.flag || '');
+      const vesselPhoto = getVesselPhoto(vesselName, candidate?.gearType || '');
+      const band = (c.band || 'High').toUpperCase();
+      const score = c.score_final ?? 85;
+      const matchPct = candidate?.confidencePct || 85;
+      const locLabel = c.features?.locationLabel || c.sector || 'Kenya Waters';
+      const inMPA = Boolean(c.features?.inMPA);
+      const isIUU = Boolean(candidate?.iuuListed);
+
+      // Create custom DOM element for tactical pin
+      const el = document.createElement('div');
+      el.className = `tactical-map-pin ${isSelected ? 'is-selected' : ''} band-${(c.band || 'high').toLowerCase()}`;
+      el.setAttribute('data-case-id', c.id);
+
+      el.innerHTML = `
+        <div class="pin-card-bubble">
+          <div class="pin-photo-header">
+            <img src="${vesselPhoto}" alt="${vesselName}" class="pin-vessel-img" loading="lazy" />
+            <div class="pin-band-chip ${(c.band || 'high').toLowerCase()}">
+              <span class="chip-pulse-dot"></span>
+              ${band} · ${score}
+            </div>
+            ${isIUU ? '<span class="pin-iuu-badge">⚠️ IUU LISTED</span>' : ''}
+            ${inMPA ? '<span class="pin-mpa-badge">🌿 IN MPA</span>' : ''}
+          </div>
+          <div class="pin-details-body">
+            <div class="pin-title-row">
+              <span class="pin-flag-icon">${flagEmoji}</span>
+              <span class="pin-vessel-title" title="${vesselName}">${vesselName}</span>
+            </div>
+            <div class="pin-meta-row">
+              <span class="pin-loc-text">📍 ${locLabel}</span>
+              <span class="pin-match-chip">🎯 ${matchPct}% match</span>
+            </div>
+            ${isSelected ? `
+              <div class="pin-selected-indicator">
+                <span class="sel-pulse-dot"></span>
+                <span class="sel-text">ACTIVE TARGET · INTEL OPEN</span>
+              </div>
+            ` : ''}
+          </div>
+        </div>
+        <div class="pin-pointer-stem">
+          <div class="stem-line"></div>
+          <div class="stem-arrow"></div>
+        </div>
+        <div class="pin-water-target">
+          <div class="water-ripple ring-1"></div>
+          <div class="water-ripple ring-2"></div>
+          <div class="water-crosshair"></div>
+        </div>
+      `;
+
+      // Click to select case and center smoothly
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        onSelectCase(c.id);
+        map.flyTo({
+          center: [lon, lat],
+          zoom: 9.8,
+          pitch: 35,
+          essential: true,
+          duration: 1200,
+        });
+      });
+
+      const marker = new maplibregl.Marker({
+        element: el,
+        anchor: 'bottom',
+      })
+        .setLngLat([lon, lat])
+        .addTo(map);
+
+      markersRef.current.push(marker);
+    });
+
+    return () => {
+      markersRef.current.forEach((m) => m.remove());
+      markersRef.current = [];
+    };
+  }, [cases, activeSector, selectedCaseId, visibleLayers.cases, layersLoaded, onSelectCase]);
 
   // Fly to coordinates when requested
   useEffect(() => {
@@ -352,9 +390,10 @@ export default function MapViewport({
 
     map.flyTo({
       center: [flyToCoords.lon, flyToCoords.lat],
-      zoom: 9.5,
+      zoom: 9.8,
+      pitch: 35,
       essential: true,
-      duration: 1500,
+      duration: 1400,
     });
   }, [flyToCoords]);
 
@@ -362,7 +401,7 @@ export default function MapViewport({
     <div className="map-wrapper" style={{ position: 'relative', width: '100%', height: '100%' }}>
       <div ref={mapContainerRef} style={{ width: '100%', height: '100%' }} />
 
-      {/* Projection & Layer Controls Toolbar */}
+      {/* Modern HUD Projection & Layer Controls Toolbar */}
       <div className="map-overlay-controls">
         <button
           className={`btn-projection ${isGlobe ? 'btn-active' : ''}`}
@@ -397,7 +436,7 @@ export default function MapViewport({
               checked={visibleLayers.cases}
               onChange={(e) => setVisibleLayers((p) => ({ ...p, cases: e.target.checked }))}
             />
-            🚨 Detections
+            🚨 Vessel Pins
           </label>
           <label className={`layer-pill ${visibleLayers.ships ? 'active' : ''}`}>
             <input

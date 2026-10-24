@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { getTranslation } from '../services/i18n.js';
 import EvidenceDossierModal from './EvidenceDossierModal.jsx';
+import { getVesselPhoto, getFlagEmoji } from '../utils/vesselAssets.js';
 
 export default function CaseIntelPanel({
   caseItem,
@@ -37,6 +38,8 @@ export default function CaseIntelPanel({
   const locLabel = features.locationLabel || `${lat.toFixed(4)}°, ${lon.toFixed(4)}°`;
   const primaryCandidate = (topCandidates && topCandidates[0]) || null;
   const deliberation = deliberationData || features.deliberation || null;
+  const vesselPhoto = getVesselPhoto(primaryCandidate?.vesselName || '', primaryCandidate?.gearType || '');
+  const flagEmoji = getFlagEmoji(primaryCandidate?.flag || '');
 
   const dateEat = new Date(createdAt).toLocaleString('en-GB', {
     timeZone: 'Africa/Nairobi',
@@ -162,6 +165,35 @@ export default function CaseIntelPanel({
           </div>
         </div>
 
+        {/* Suspected Vessel Surveillance Photo Reconnaissance Card */}
+        <div className="intel-vessel-photo-card">
+          <div className="vessel-recon-container">
+            <img
+              src={vesselPhoto}
+              alt={primaryCandidate?.vesselName || 'Suspected Dark Vessel'}
+              className="vessel-recon-img"
+            />
+            <div className="vessel-recon-overlay">
+              <div className="recon-reticle reticle-tl"></div>
+              <div className="recon-reticle reticle-tr"></div>
+              <div className="recon-reticle reticle-bl"></div>
+              <div className="recon-reticle reticle-br"></div>
+              
+              <div className="recon-top-badge">
+                <span className="recon-pulse-dot"></span>
+                <span>RECON MATCH · {primaryCandidate?.confidencePct || 85}% CONFIDENCE</span>
+              </div>
+
+              <div className="recon-bottom-telemetry">
+                <span className="recon-vessel-label">
+                  {flagEmoji} {primaryCandidate?.vesselName || 'Unidentified Contact'}
+                </span>
+                <span className="recon-sensor-tag">🛰️ SENTINEL-1 SAR</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Location & Times */}
         <div className="intel-location-bar">
           <div className="intel-loc-text">
@@ -213,7 +245,7 @@ export default function CaseIntelPanel({
             <div className="candidate-lead-card">
               <div className="candidate-lead-header">
                 <div>
-                  <h4 className="candidate-name">{primaryCandidate.vesselName}</h4>
+                  <h4 className="candidate-name">{flagEmoji} {primaryCandidate.vesselName}</h4>
                   <span className="candidate-meta">
                     Flag: {primaryCandidate.flag} · MMSI: {primaryCandidate.mmsi} · Type: {primaryCandidate.gearType}
                   </span>

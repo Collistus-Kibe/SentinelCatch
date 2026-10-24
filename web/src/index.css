@@ -52,6 +52,36 @@
   padding: 0;
 }
 
+/* ── Global Maritime Dark Scrollbars (Eliminates OS white bars) ── */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.18) rgba(10, 15, 26, 0.5);
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(10, 15, 26, 0.5);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(6, 182, 212, 0.5);
+  box-shadow: 0 0 8px rgba(6, 182, 212, 0.4);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
 html {
   font-size: 16px;
   -webkit-text-size-adjust: 100%;
@@ -1153,65 +1183,160 @@ body {
   border-bottom: 1px solid var(--border);
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
   background: var(--bg-primary);
+}
+
+.sector-nav-container {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
 }
 
 .sector-scroll-bar {
   display: flex;
   gap: 6px;
   overflow-x: auto;
-  padding-bottom: 4px;
+  overflow-y: hidden;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE / Edge */
+  padding: 2px 2px 4px 2px;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+.sector-scroll-bar::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
 .sector-tab-btn {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
+  background: rgba(26, 35, 50, 0.7);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   color: var(--text-secondary);
-  padding: 5px 10px;
+  padding: 6px 11px;
   border-radius: var(--radius-full);
   font-size: 0.74rem;
   font-weight: 600;
   white-space: nowrap;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  user-select: none;
 }
 
 .sector-tab-btn:hover {
   color: var(--text-primary);
-  border-color: var(--border-focus);
+  border-color: rgba(6, 182, 212, 0.4);
+  background: rgba(31, 43, 61, 0.9);
+  transform: translateY(-1px);
 }
 
 .sector-tab-btn.active {
-  background: var(--accent-blue);
+  background: linear-gradient(135deg, #2563eb, #06b6d4);
   color: #ffffff;
-  border-color: var(--accent-blue);
+  border-color: rgba(6, 182, 212, 0.8);
+  box-shadow: 0 0 14px rgba(6, 182, 212, 0.45);
+}
+
+.sector-btn-icon {
+  font-size: 0.82rem;
+}
+
+.sector-btn-text {
+  font-size: 0.74rem;
+}
+
+.sector-btn-badge {
+  font-size: 0.65rem;
+  padding: 1px 6px;
+  border-radius: 9999px;
+  background: rgba(0, 0, 0, 0.28);
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 700;
+}
+
+.sector-tab-btn.active .sector-btn-badge {
+  background: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
 }
 
 .feed-filter-row {
   display: flex;
+  flex-direction: column;
   gap: 6px;
 }
 
+.search-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.search-icon {
+  position: absolute;
+  left: 9px;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
 .feed-search-input {
-  flex: 1;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
+  width: 100%;
+  background: rgba(17, 24, 39, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: var(--radius-sm);
   color: var(--text-primary);
   font-size: 0.78rem;
-  padding: 6px 10px;
+  padding: 7px 28px 7px 28px;
   outline: none;
+  transition: all 0.15s;
+}
+
+.feed-search-input:focus {
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 10px rgba(6, 182, 212, 0.25);
+}
+
+.search-clear-btn {
+  position: absolute;
+  right: 8px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.75rem;
+}
+
+.search-clear-btn:hover {
+  color: var(--text-primary);
+}
+
+.filter-selects-group {
+  display: flex;
+  gap: 6px;
 }
 
 .feed-filter-select {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
+  flex: 1;
+  background: rgba(17, 24, 39, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: var(--radius-sm);
   color: var(--text-secondary);
-  font-size: 0.75rem;
+  font-size: 0.74rem;
   padding: 6px 8px;
   outline: none;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.feed-filter-select:focus {
+  border-color: var(--accent-blue);
 }
 
 .case-cards-list {
@@ -1229,19 +1354,20 @@ body {
   border-radius: var(--radius-md);
   padding: 12px;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .case-card:hover {
   background: var(--bg-card-hover);
   border-color: var(--border-focus);
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
 }
 
 .case-card-selected {
   background: rgba(59, 130, 246, 0.12) !important;
   border-color: var(--accent-blue) !important;
-  box-shadow: 0 0 16px rgba(59, 130, 246, 0.2);
+  box-shadow: 0 0 18px rgba(59, 130, 246, 0.3) !important;
 }
 
 .case-card-top {
@@ -1257,6 +1383,7 @@ body {
   background: rgba(6, 182, 212, 0.1);
   padding: 2px 6px;
   border-radius: var(--radius-sm);
+  font-weight: 600;
 }
 
 .case-time-ago {
@@ -1264,17 +1391,107 @@ body {
   color: var(--text-muted);
 }
 
+/* Vessel Preview Thumbnail inside Card */
+.case-card-vessel-preview {
+  display: flex;
+  gap: 10px;
+  margin: 6px 0 8px 0;
+}
+
+.case-thumb-container {
+  position: relative;
+  width: 86px;
+  height: 58px;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #080d1a;
+}
+
+.case-card-vessel-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.3s;
+}
+
+.case-card:hover .case-card-vessel-img {
+  transform: scale(1.08);
+}
+
+.case-card-iuu-flag {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  background: #ef4444;
+  color: #ffffff;
+  font-size: 0.58rem;
+  font-weight: 800;
+  padding: 1px 4px;
+  border-radius: 3px;
+  letter-spacing: 0.04em;
+  box-shadow: 0 0 6px rgba(239, 68, 68, 0.6);
+}
+
+.case-card-vessel-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
 .case-location-title {
-  font-size: 0.88rem;
+  font-size: 0.85rem;
   font-weight: 700;
   color: var(--text-primary);
-  margin-bottom: 4px;
+  margin-bottom: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.case-candidate-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.76rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 3px;
+}
+
+.candidate-flag-emoji {
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.candidate-vessel-title {
+  color: #38bdf8;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.candidate-match-pill {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.14);
+  padding: 1px 5px;
+  border-radius: 4px;
+  margin-left: auto;
+  flex-shrink: 0;
 }
 
 .case-rationale-snippet {
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   color: var(--text-secondary);
-  line-height: 1.4;
+  line-height: 1.35;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -1284,12 +1501,13 @@ body {
 .case-card-footer {
   display: flex;
   gap: 6px;
-  margin-top: 8px;
+  margin-top: 6px;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .status-pill {
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 700;
   text-transform: uppercase;
   padding: 2px 6px;
@@ -1311,13 +1529,403 @@ body {
   font-weight: 600;
 }
 
-.badge-loiter-tag {
+.badge-recurrence-tag {
   font-size: 0.68rem;
-  background: rgba(245, 158, 11, 0.15);
-  color: var(--medium);
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
   padding: 2px 6px;
   border-radius: var(--radius-sm);
   font-weight: 600;
+}
+
+.badge-delib-tag {
+  font-size: 0.68rem;
+  background: rgba(168, 85, 247, 0.15);
+  color: #c084fc;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+}
+
+.feed-status-msg {
+  padding: 24px;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.feed-empty-state {
+  padding: 36px 16px;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.empty-icon {
+  font-size: 1.8rem;
+  margin-bottom: 6px;
+}
+
+.empty-sub {
+  font-size: 0.8rem;
+  margin-top: 4px;
+}
+
+/* ── Tactical Vessel Map Pins on MapLibre ────────────────────── */
+.tactical-map-pin {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  transform-origin: bottom center;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), z-index 0.1s;
+  z-index: 20;
+}
+
+.tactical-map-pin:hover {
+  transform: translateY(-8px) scale(1.08);
+  z-index: 100 !important;
+}
+
+.tactical-map-pin.is-selected {
+  transform: translateY(-10px) scale(1.12);
+  z-index: 200 !important;
+}
+
+.pin-card-bubble {
+  width: 216px;
+  background: rgba(13, 20, 36, 0.94);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1.5px solid rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.7), 0 0 15px rgba(59, 130, 246, 0.2);
+  overflow: hidden;
+  transition: all 0.2s;
+}
+
+.band-high .pin-card-bubble {
+  border-color: rgba(239, 68, 68, 0.65);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.75), 0 0 20px rgba(239, 68, 68, 0.35);
+}
+
+.band-medium .pin-card-bubble {
+  border-color: rgba(245, 158, 11, 0.65);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.75), 0 0 20px rgba(245, 158, 11, 0.35);
+}
+
+.is-selected .pin-card-bubble {
+  border: 2px solid #06b6d4 !important;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.85), 0 0 26px rgba(6, 182, 212, 0.65) !important;
+}
+
+.pin-photo-header {
+  position: relative;
+  width: 100%;
+  height: 96px;
+  background: #080d1a;
+  overflow: hidden;
+}
+
+.pin-vessel-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.pin-band-chip {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  backdrop-filter: blur(8px);
+}
+
+.pin-band-chip.high {
+  background: rgba(239, 68, 68, 0.9);
+  color: #ffffff;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.6);
+}
+
+.pin-band-chip.medium {
+  background: rgba(245, 158, 11, 0.9);
+  color: #ffffff;
+}
+
+.pin-band-chip.low {
+  background: rgba(34, 197, 94, 0.9);
+  color: #ffffff;
+}
+
+.chip-pulse-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ffffff;
+  animation: pulse-dot 1.2s infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.7); }
+}
+
+.pin-iuu-badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: #dc2626;
+  color: #ffffff;
+  font-size: 0.58rem;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.03em;
+  box-shadow: 0 0 8px rgba(220, 38, 38, 0.6);
+}
+
+.pin-mpa-badge {
+  position: absolute;
+  bottom: 6px;
+  left: 6px;
+  background: rgba(16, 185, 129, 0.9);
+  color: #ffffff;
+  font-size: 0.6rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.02em;
+}
+
+.pin-details-body {
+  padding: 8px 10px;
+  background: rgba(17, 24, 39, 0.96);
+}
+
+.pin-title-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pin-flag-icon {
+  font-size: 0.9rem;
+}
+
+.pin-vessel-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pin-meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.pin-match-chip {
+  color: #38bdf8;
+  font-weight: 700;
+  background: rgba(56, 189, 248, 0.12);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+.pin-selected-indicator {
+  margin-top: 6px;
+  padding-top: 4px;
+  border-top: 1px solid rgba(6, 182, 212, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.62rem;
+  font-weight: 800;
+  color: #06b6d4;
+  letter-spacing: 0.03em;
+}
+
+.sel-pulse-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #06b6d4;
+  animation: pulse-dot 1s infinite;
+}
+
+/* Pointer Stem & Arrow */
+.pin-pointer-stem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stem-line {
+  width: 2px;
+  height: 22px;
+  background: linear-gradient(to bottom, rgba(59, 130, 246, 0.9), rgba(6, 182, 212, 1));
+  box-shadow: 0 0 8px rgba(6, 182, 212, 0.6);
+}
+
+.stem-arrow {
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 7px solid #06b6d4;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+}
+
+/* Water Radar / Sonar Target Beacon */
+.pin-water-target {
+  position: relative;
+  width: 24px;
+  height: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.water-crosshair {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #06b6d4;
+  box-shadow: 0 0 10px #06b6d4;
+  z-index: 2;
+}
+
+.water-ripple {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1.5px solid #06b6d4;
+  animation: sonar-ripple 2.4s infinite cubic-bezier(0.2, 0.6, 0.35, 1);
+  pointer-events: none;
+}
+
+.water-ripple.ring-2 {
+  animation-delay: 1.2s;
+}
+
+@keyframes sonar-ripple {
+  0% { transform: scale(0.2); opacity: 0.95; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+
+/* ── Intel Panel Vessel Surveillance Photo Recon Card ────────── */
+.intel-vessel-photo-card {
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #080d1a;
+  box-shadow: var(--shadow-md);
+}
+
+.vessel-recon-container {
+  position: relative;
+  width: 100%;
+  height: 180px;
+  background: #050914;
+  overflow: hidden;
+}
+
+.vessel-recon-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.vessel-recon-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 10px;
+  background: linear-gradient(180deg, rgba(10, 15, 26, 0.5) 0%, transparent 40%, rgba(10, 15, 26, 0.85) 100%);
+}
+
+.recon-reticle {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-color: rgba(6, 182, 212, 0.8);
+}
+
+.reticle-tl { top: 8px; left: 8px; border-top: 2px solid; border-left: 2px solid; }
+.reticle-tr { top: 8px; right: 8px; border-top: 2px solid; border-right: 2px solid; }
+.reticle-bl { bottom: 8px; left: 8px; border-bottom: 2px solid; border-left: 2px solid; }
+.reticle-br { bottom: 8px; right: 8px; border-bottom: 2px solid; border-right: 2px solid; }
+
+.recon-top-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(10, 15, 26, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(6, 182, 212, 0.4);
+  color: #38bdf8;
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  align-self: flex-start;
+  letter-spacing: 0.04em;
+}
+
+.recon-pulse-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #06b6d4;
+  animation: pulse-dot 1s infinite;
+}
+
+.recon-bottom-telemetry {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.recon-vessel-label {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #ffffff;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.8);
+}
+
+.recon-sensor-tag {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #94a3b8;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 2px 6px;
+  border-radius: 4px;
 }
 
 /* ── Case Intel Drawer Panel ────────────────────────────────── */

@@ -15,7 +15,20 @@ let dbInitialized = false;
 // Initialize connection pool based on URL
 try {
   if (isMysql) {
-    const cleanUrl = config.DATABASE_URL.replace(/^tidb:\/\//, 'mysql://');
+    let cleanUrl = config.DATABASE_URL.replace(/^tidb:\/\//, 'mysql://');
+    try {
+      const parsed = new URL(cleanUrl);
+      if (!parsed.pathname || parsed.pathname === '/' || parsed.pathname === '/sys') {
+        parsed.pathname = '/test';
+        cleanUrl = parsed.toString();
+        logger.info('TiDB connection redirected to application database "/test"');
+      }
+    } catch {
+      if (!cleanUrl.includes('/test') && !cleanUrl.includes('/sentinelcatch')) {
+        cleanUrl = cleanUrl.replace(/:4000(\/?)(?:sys)?(\?|$)/, ':4000/test$2');
+      }
+    }
+
     mysqlPool = mysql.createPool({
       uri: cleanUrl,
       waitForConnections: true,
@@ -56,6 +69,13 @@ try {
 async function initMysqlSchema() {
   if (!mysqlPool || dbInitialized) return;
   try {
+    try {
+      await mysqlPool.query(`CREATE DATABASE IF NOT EXISTS test`);
+    } catch {}
+    try {
+      await mysqlPool.query(`USE test`);
+    } catch {}
+
     await mysqlPool.query(`
       CREATE TABLE IF NOT EXISTS detections (
         id BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -146,6 +166,8 @@ export async function query(text, params = []) {
     // Adapt common postgres syntax differences
     mysqlSql = mysqlSql.replace(/NOW\(\)\s*-\s*INTERVAL\s*'(\d+)\s*hours'/gi, 'NOW() - INTERVAL $1 HOUR');
     mysqlSql = mysqlSql.replace(/NOW\(\)\s*-\s*INTERVAL\s*'(\d+)\s*days'/gi, 'NOW() - INTERVAL $1 DAY');
+    mysqlSql = mysqlSql.replace(/INTERVAL\s*'(\d+)\s*days'/gi, 'INTERVAL $1 DAY');
+    mysqlSql = mysqlSql.replace(/INTERVAL\s*'(\d+)\s*hours'/gi, 'INTERVAL $1 HOUR');
     mysqlSql = mysqlSql.replace(/COUNT\(\*\)\s+FILTER\s*\(WHERE\s+([^)]+)\)/gi, 'SUM(CASE WHEN $1 THEN 1 ELSE 0 END)');
     mysqlSql = mysqlSql.replace(/RETURNING\s+\*/gi, '');
     mysqlSql = mysqlSql.replace(/RETURNING\s+id/gi, '');

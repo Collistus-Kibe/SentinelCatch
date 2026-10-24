@@ -239,11 +239,13 @@ export class ReasoningAgent {
 
     // Try DB query if available
     try {
+      const targetTime = new Date(detectedAt).getTime();
+      const fourteenDaysAgo = new Date(targetTime - 14 * 24 * 60 * 60 * 1000).toISOString();
       const res = await query(
         `SELECT COUNT(*) as count FROM detections
-         WHERE detected_at < $1 AND detected_at >= ($1 - INTERVAL '14 days')
-           AND ABS(lat - $2) < 0.1 AND ABS(lon - $3) < 0.1`,
-        [detectedAt, lat, lon]
+         WHERE detected_at < $1 AND detected_at >= $2
+           AND ABS(lat - $3) < 0.1 AND ABS(lon - $4) < 0.1`,
+        [detectedAt, fourteenDaysAgo, lat, lon]
       );
       const dbCount = Number(res.rows[0]?.count || 0);
       return Math.max(count, dbCount + 1);
