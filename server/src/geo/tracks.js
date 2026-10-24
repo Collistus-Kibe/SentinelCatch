@@ -296,7 +296,7 @@ const BASE_TRACKS = [
     targetCoords: [39.7100, -4.0600],
     waypoints: [
       {
-        lon: 39.52,
+        lon: 39.66,
         lat: -4.38,
         hoursAgo: 16,
         speedKnots: 7.5,
@@ -305,7 +305,7 @@ const BASE_TRACKS = [
         label: 'Diani Coastal Shelf',
       },
       {
-        lon: 39.63,
+        lon: 39.72,
         lat: -4.20,
         hoursAgo: 8,
         speedKnots: 6.8,
@@ -314,7 +314,7 @@ const BASE_TRACKS = [
         label: 'Likoni Outer Approach',
       },
       {
-        lon: 39.7100,
+        lon: 39.76,
         lat: -4.0600,
         hoursAgo: 0,
         speedKnots: 3.5,
@@ -430,30 +430,116 @@ export function generateVesselTracksGeoJson(cases = []) {
 }
 
 /**
- * Generate synthetic historical route for dynamic cases
+ * Calculate the westernmost (coastal) longitude for Kenya's maritime boundary at a given latitude.
+ * Anything west of this longitude is land (Kenya / Tanzania mainland).
+ */
+export function getCoastlineLongitude(lat) {
+  if (lat <= -4.68) {
+    return 39.22;
+  }
+  if (lat <= -4.50) {
+    const t = (lat - (-4.68)) / (-4.50 - (-4.68));
+    return 39.22 + t * (39.40 - 39.22);
+  }
+  if (lat <= -4.05) {
+    const t = (lat - (-4.50)) / (-4.05 - (-4.50));
+    return 39.40 + t * (39.67 - 39.40);
+  }
+  if (lat <= -3.65) {
+    const t = (lat - (-4.05)) / (-3.65 - (-4.05));
+    return 39.67 + t * (39.85 - 39.67);
+  }
+  if (lat <= -3.20) {
+    const t = (lat - (-3.65)) / (-3.20 - (-3.65));
+    return 39.85 + t * (40.15 - 39.85);
+  }
+  if (lat <= -2.25) {
+    const t = (lat - (-3.20)) / (-2.25 - (-3.20));
+    return 40.15 + t * (40.90 - 40.15);
+  }
+  if (lat <= -1.90) {
+    const t = (lat - (-2.25)) / (-1.90 - (-2.25));
+    return 40.90 + t * (41.30 - 40.90);
+  }
+  if (lat <= -1.65) {
+    const t = (lat - (-1.90)) / (-1.65 - (-1.90));
+    return 41.30 + t * (41.57 - 41.30);
+  }
+  // Slanting northeast along Somali coast
+  return 41.57 + (lat - (-1.65)) * 0.50;
+}
+
+/**
+ * Returns minimum oceanic longitude including maritime territorial buffer (>= 12 km offshore)
+ */
+export function getMinOceanLongitude(lat) {
+  return getCoastlineLongitude(lat) + 0.12;
+}
+
+/**
+ * Generate synthetic historical route for dynamic cases.
+ * Strictly guarantees that all waypoints and trajectories remain in the Indian Ocean / EEZ,
+ * approaching along real maritime shipping corridors, never over Kenya's landmass.
  */
 function createSyntheticTrack(caseId, vesselName, currentLon, currentLat) {
   const palette = getVesselColor(vesselName, caseId);
-  const offsetAngle = ((caseId * 47) % 360) * (Math.PI / 180);
+
+  // 1. Ensure current radar location is offshore in navigable water
+  const safeCurrentLat = Math.max(-5.0, Math.min(0.8, currentLat));
+  const minCurrentLon = getMinOceanLongitude(safeCurrentLat);
+  const safeCurrentLon = Math.max(currentLon, minCurrentLon);
+
+  // 2. Select one of 3 realistic oceanic approach corridors:
+  //    Corridor 0: Somali Basin / Northeast approach (bearing back in time ~ 35°-55° into high seas)
+  //    Corridor 1: Eastern High Seas incursion (bearing back in time ~ 75°-95° into pelagic waters)
+  //    Corridor 2: Southern Channel transit (bearing back in time ~ 135°-155° off Pemba/Zanzibar)
+  const corridorType = Math.abs(caseId) % 3;
+  let baseBearingDeg;
+  if (corridorType === 0) {
+    baseBearingDeg = 45 + ((caseId * 11) % 16) - 8;
+  } else if (corridorType === 1) {
+    baseBearingDeg = 85 + ((caseId * 13) % 18) - 9;
+  } else {
+    baseBearingDeg = 145 + ((caseId * 17) % 16) - 8;
+  }
+
+  const bearingRad = (baseBearingDeg * Math.PI) / 180;
+  const heading = Math.round((baseBearingDeg + 180) % 360); // Inbound heading
   const waypoints = [];
 
-  // Generate 4 historical steps leading to the current radar position
+  // Generate 4 historical steps leading up to the current radar position (step 0)
   for (let step = 3; step >= 0; step--) {
     const hoursAgo = step * 6;
-    const distKm = (step * 35) + 8;
-    const lon = currentLon + (distKm / (111 * Math.cos((currentLat * Math.PI) / 180))) * Math.cos(offsetAngle + step * 0.15);
-    const lat = currentLat + (distKm / 111) * Math.sin(offsetAngle + step * 0.15);
+    const distKm = (step * 34) + 6;
+
+    // Project backward along the oceanic bearing
+    const latDelta = (distKm / 111) * Math.sin(bearingRad);
+    let rawLat = safeCurrentLat + latDelta;
+    rawLat = Math.max(-5.2, Math.min(1.0, rawLat));
+
+    const lonDelta = (distKm / (111 * Math.cos((rawLat * Math.PI) / 180))) * Math.cos(bearingRad);
+    let rawLon = safeCurrentLon + lonDelta;
+
+    // Hard constraint: Longitude must be strictly offshore (east of coastline + buffer) and within EEZ/high seas
+    const minSafeLon = getMinOceanLongitude(rawLat);
+    const finalLon = Number(Math.min(45.4, Math.max(rawLon, minSafeLon)).toFixed(4));
+    const finalLat = Number(rawLat.toFixed(4));
 
     waypoints.push({
-      lon: Number(lon.toFixed(4)),
-      lat: Number(lat.toFixed(4)),
+      lon: finalLon,
+      lat: finalLat,
       hoursAgo,
-      speedKnots: Number((9.5 + (step % 3) * 0.8).toFixed(1)),
-      heading: Math.round((offsetAngle * 180) / Math.PI + 180) % 360,
+      speedKnots: Number((9.2 + (step % 3) * 0.7).toFixed(1)),
+      heading,
       aisStatus: step === 0 ? 'radar_contact' : step === 1 ? 'disabled' : 'active',
       isGapPoint: step === 1,
       isCurrent: step === 0,
-      label: step === 0 ? '🎯 Radar Intercept' : step === 1 ? '⚠️ AIS Transponder Ceased' : `Waypoint T -${hoursAgo}h`,
+      label:
+        step === 0
+          ? '🎯 Radar Contact Intercept'
+          : step === 1
+          ? '⚠️ AIS Transponder Ceased'
+          : `Waypoint T -${hoursAgo}h (${corridorType === 0 ? 'Somali Basin' : corridorType === 1 ? 'High Seas' : 'Southern Channel'})`,
     });
   }
 

@@ -101,6 +101,12 @@ export default function MapViewport({
       style: DARK_OCEAN_STYLE,
       center: [41.2, -2.8], // Center of Kenya EEZ
       zoom: 6.2,
+      minZoom: 4.8,
+      maxZoom: 15.0,
+      maxBounds: [
+        [28.0, -12.5], // Southwest [lon, lat] (Tanzania / Mozambique channel / East Africa)
+        [54.0, 7.5],   // Northeast [lon, lat] (Somali basin / Arabian sea / Seychelles)
+      ],
       pitch: 22,
       bearing: 0,
       attributionControl: false,
@@ -112,6 +118,27 @@ export default function MapViewport({
     map.on('error', (e) => {
       console.warn('MapLibre tile event:', e.error?.message || e);
     });
+
+    // Dynamic zoom listener to collapse pins into compact beacons at lower zoom
+    const handleZoom = () => {
+      const z = map.getZoom();
+      const isCompactNow = z < 7.2;
+      const pinElements = mapContainerRef.current?.querySelectorAll('.tactical-map-pin');
+      pinElements?.forEach((pin) => {
+        const isSelected = pin.classList.contains('is-selected');
+        if (!isSelected) {
+          if (isCompactNow) {
+            pin.classList.add('compact-beacon');
+          } else {
+            pin.classList.remove('compact-beacon');
+          }
+        } else {
+          pin.classList.remove('compact-beacon');
+        }
+      });
+    };
+
+    map.on('zoom', handleZoom);
 
     map.on('load', () => {
       mapRef.current = map;
@@ -477,6 +504,8 @@ export default function MapViewport({
       if (lat === undefined || lon === undefined) return;
 
       const isSelected = selectedCaseId === c.id;
+      const currentMapZoom = map.getZoom ? map.getZoom() : 6.2;
+      const isCompact = currentMapZoom < 7.2 && !isSelected;
       const candidate = c.candidate_matches?.[0] || c.features?.candidate_matches?.[0] || null;
       const vesselName = candidate?.vesselName || 'Unidentified Dark Contact';
       const flagEmoji = getFlagEmoji(candidate?.flag || '');
@@ -490,10 +519,19 @@ export default function MapViewport({
 
       // Create custom DOM element for tactical pin
       const el = document.createElement('div');
-      el.className = `tactical-map-pin ${isSelected ? 'is-selected' : ''} band-${(c.band || 'high').toLowerCase()}`;
+      el.className = `tactical-map-pin ${isSelected ? 'is-selected' : ''} ${isCompact ? 'compact-beacon' : ''} band-${(c.band || 'high').toLowerCase()}`;
       el.setAttribute('data-case-id', c.id);
 
       el.innerHTML = `
+        <!-- Compact Tactical Beacon (Rendered at low zoom levels) -->
+        <div class="pin-beacon-chip">
+          <span class="beacon-flag">${flagEmoji}</span>
+          <span class="beacon-score ${(c.band || 'high').toLowerCase()}">${score}</span>
+          <span class="beacon-name">${vesselName.length > 14 ? vesselName.slice(0, 13) + '…' : vesselName}</span>
+          <span class="beacon-pulse-dot"></span>
+        </div>
+
+        <!-- Full Recon Photo Card Bubble -->
         <div class="pin-card-bubble">
           <div class="pin-photo-header">
             <img src="${vesselPhoto}" alt="${vesselName}" class="pin-vessel-img" loading="lazy" />

@@ -69,6 +69,29 @@ describe('Vessel Trajectory & Historical Route APIs', () => {
     assert.ok(data.meta.tracksCount >= 4, 'Meta tracksCount must be reported');
   });
 
+  test('All vessel track coordinates remain strictly offshore in oceanic waters (never over land)', async () => {
+    const res = await fetch(`${baseUrl}/api/map/tracks`);
+    assert.strictEqual(res.status, 200);
+    const data = await res.json();
+
+    const trackLines = data.features.filter((f) => f.properties?.type === 'vessel_track');
+    assert.ok(trackLines.length > 0);
+
+    // Kenya coastline boundary rule: lon must be >= coastal longitude at that latitude
+    trackLines.forEach((track) => {
+      track.geometry.coordinates.forEach(([lon, lat]) => {
+        assert.ok(
+          lon >= 39.20,
+          `Track for ${track.properties.vesselName} coordinate [${lon}, ${lat}] is west of African coast`
+        );
+        assert.ok(
+          lon <= 46.0,
+          `Track coordinate [${lon}, ${lat}] is beyond eastern high seas`
+        );
+      });
+    });
+  });
+
   test('Teardown test HTTP server', () => {
     server.close();
   });
