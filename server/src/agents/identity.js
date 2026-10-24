@@ -5,7 +5,7 @@ const haversineDistance = haversineKm;
 
 // Curated Western Indian Ocean / Kenya EEZ vessel registry intelligence
 // Corroborated with IOTC (Indian Ocean Tuna Commission) authorized lists and combined RFMO IUU blacklists
-const REGISTRY_DATABASE = [
+export const REGISTRY_DATABASE = [
   {
     mmsi: '412349012',
     name: 'LU RONG YUAN YU 188',
@@ -13,6 +13,7 @@ const REGISTRY_DATABASE = [
     callsign: 'BZYW8',
     gearType: 'Tuna Longliner',
     lengthM: 44.5,
+    preferredSectors: ['Lamu'],
     iotcAuthorized: false,
     iuuListed: true,
     iuuListingBody: 'Combined RFMO IUU (IOTC/WCPFC)',
@@ -26,8 +27,9 @@ const REGISTRY_DATABASE = [
     name: 'HAI FENG 68',
     flag: 'Panama',
     callsign: 'HO3891',
-    gearType: 'Trawler',
+    gearType: 'Industrial Trawler',
     lengthM: 38.0,
+    preferredSectors: ['Malindi-Kilifi'],
     iotcAuthorized: false,
     iuuListed: false,
     iuuListingBody: null,
@@ -43,6 +45,7 @@ const REGISTRY_DATABASE = [
     callsign: '9LA2201',
     gearType: 'Reefer / Cargo Carrier',
     lengthM: 52.0,
+    preferredSectors: ['South Coast/Vanga', 'Mombasa'],
     iotcAuthorized: false,
     iuuListed: false,
     iuuListingBody: null,
@@ -58,6 +61,7 @@ const REGISTRY_DATABASE = [
     callsign: 'E5U2199',
     gearType: 'Tuna Longliner',
     lengthM: 41.2,
+    preferredSectors: ['Mombasa'],
     iotcAuthorized: true,
     iuuListed: false,
     iuuListingBody: null,
@@ -73,6 +77,7 @@ const REGISTRY_DATABASE = [
     callsign: 'BB8812',
     gearType: 'Squid Jigger / Longliner',
     lengthM: 48.0,
+    preferredSectors: ['Malindi-Kilifi', 'Lamu'],
     iotcAuthorized: false,
     iuuListed: true,
     iuuListingBody: 'IOTC IUU List 2024',
@@ -81,18 +86,108 @@ const REGISTRY_DATABASE = [
     mpaViolationHistory: true,
     lastKnownSpeedKnots: 10.5,
   },
+  {
+    mmsi: '416002194',
+    name: 'TAI YUAN 227',
+    flag: 'Taiwan',
+    callsign: 'BK8821',
+    gearType: 'Tuna Longliner',
+    lengthM: 46.5,
+    preferredSectors: ['Lamu'],
+    iotcAuthorized: false,
+    iuuListed: false,
+    iuuListingBody: null,
+    historicalAisOffCount60d: 4,
+    aisCoverageMetricPct: 45,
+    mpaViolationHistory: false,
+    lastKnownSpeedKnots: 9.5,
+  },
+  {
+    mmsi: '671239001',
+    name: 'SEA LION 8',
+    flag: 'Togo',
+    callsign: '5VLA2',
+    gearType: 'Reefer / Fuel Bunkering',
+    lengthM: 54.0,
+    preferredSectors: ['Mombasa', 'South Coast/Vanga'],
+    iotcAuthorized: false,
+    iuuListed: true,
+    iuuListingBody: 'Combined RFMO IUU 2025',
+    historicalAisOffCount60d: 5,
+    aisCoverageMetricPct: 38,
+    mpaViolationHistory: true,
+    lastKnownSpeedKnots: 10.8,
+  },
+  {
+    mmsi: '413890123',
+    name: 'OCEAN DRAGON 9',
+    flag: 'China',
+    callsign: 'BXZ19',
+    gearType: 'Deep-Sea Longliner',
+    lengthM: 62.0,
+    preferredSectors: ['Lamu', 'Malindi-Kilifi'],
+    iotcAuthorized: false,
+    iuuListed: false,
+    iuuListingBody: null,
+    historicalAisOffCount60d: 3,
+    aisCoverageMetricPct: 52,
+    mpaViolationHistory: false,
+    lastKnownSpeedKnots: 11.2,
+  },
+  {
+    mmsi: '422091823',
+    name: 'MV AL-HILAL',
+    flag: 'Iran',
+    callsign: 'EQA41',
+    gearType: 'Pelagic Driftnetter',
+    lengthM: 36.5,
+    preferredSectors: ['Malindi-Kilifi', 'Lamu'],
+    iotcAuthorized: false,
+    iuuListed: true,
+    iuuListingBody: 'IOTC IUU Resolution 18/03',
+    historicalAisOffCount60d: 7,
+    aisCoverageMetricPct: 22,
+    mpaViolationHistory: true,
+    lastKnownSpeedKnots: 8.8,
+  },
+  {
+    mmsi: '667981023',
+    name: 'BARAKA 04',
+    flag: 'Sierra Leone',
+    callsign: '9LA409',
+    gearType: 'Inshore Bunkering Craft',
+    lengthM: 32.0,
+    preferredSectors: ['South Coast/Vanga', 'Mombasa'],
+    iotcAuthorized: false,
+    iuuListed: false,
+    iuuListingBody: null,
+    historicalAisOffCount60d: 2,
+    aisCoverageMetricPct: 65,
+    mpaViolationHistory: false,
+    lastKnownSpeedKnots: 7.5,
+  },
 ];
 
 export class IdentityMatcher {
   /**
    * Match an unmatched SAR radar contact against nearby AIS-off events and candidate vessels.
-   * @param {Object} detection - { lat, lon, detected_at, length_m }
+   * Strictly prevents duplicate assignments so the same vessel never appears more than once across active cases.
+   * @param {Object} detection - { lat, lon, sector, detected_at, length_m }
    * @param {Array} recentAisPositions - Optional list of nearby AIS positions shortly before radar contact
+   * @param {Set|Array} assignedVessels - Vessel names or MMSIs currently assigned to active contacts
    * @returns {Promise<Array>} Ranked candidate identity matches
    */
-  async matchCandidates(detection, recentAisPositions = []) {
-    const { lat, lon, detected_at: detectedAt, length_m: targetLength } = detection;
+  async matchCandidates(detection, recentAisPositions = [], assignedVessels = new Set()) {
+    const { lat, lon, sector, detected_at: detectedAt, length_m: targetLength } = detection;
     const detectTime = new Date(detectedAt || Date.now()).getTime();
+
+    // Normalize assigned vessels lookup
+    const assignedSet = new Set();
+    if (assignedVessels) {
+      for (const v of assignedVessels) {
+        if (v) assignedSet.add(String(v).toUpperCase().trim());
+      }
+    }
 
     // 1. Try to fetch live AIS gap events from GFW API if token is configured
     let liveGapEvents = [];
@@ -115,13 +210,13 @@ export class IdentityMatcher {
 
     // Synthesize candidates from live gaps or regional fleet registry
     const pool = REGISTRY_DATABASE.map((reg, idx) => {
-      // Simulate or extract last known position 2 to 6 hours before detection
-      const hoursAgo = 2.5 + (idx * 0.8);
+      // Offset angle tailored per vessel index
+      const hoursAgo = 2.0 + ((idx * 0.7) % 3.5);
       const lastAisTime = new Date(detectTime - hoursAgo * 3600 * 1000);
-      
-      // Calculate realistic displacement offset based on speed
+
+      // Displacement offset based on speed
       const distKm = (reg.lastKnownSpeedKnots * 1.852) * hoursAgo * 0.85;
-      const angle = (idx * 1.25) % (2 * Math.PI);
+      const angle = ((idx * 53) % 360) * (Math.PI / 180);
       const lastLat = lat + (distKm / 111) * Math.cos(angle);
       const lastLon = lon + (distKm / (111 * Math.cos((lat * Math.PI) / 180))) * Math.sin(angle);
 
@@ -136,8 +231,15 @@ export class IdentityMatcher {
     });
 
     for (const vessel of pool) {
+      // DEDUPLICATION: If this vessel is already assigned to another active case, skip it completely
+      const vNameUpper = vessel.name.toUpperCase();
+      const vMmsiStr = String(vessel.mmsi);
+      if (assignedSet.has(vNameUpper) || assignedSet.has(vMmsiStr)) {
+        continue;
+      }
+
       const distanceKm = vessel.distanceKmToRadar || haversineDistance(lat, lon, vessel.lastAisLat, vessel.lastAisLon);
-      const maxFeasibleDistanceKm = (vessel.lastKnownSpeedKnots * 1.852 * (vessel.gapDurationHours + 0.5)) + 15;
+      const maxFeasibleDistanceKm = (vessel.lastKnownSpeedKnots * 1.852 * (vessel.gapDurationHours + 0.8)) + 20;
 
       // Kinematic filter: could this vessel physically have reached the radar centroid?
       if (distanceKm > maxFeasibleDistanceKm) continue;
@@ -145,23 +247,29 @@ export class IdentityMatcher {
       // Compute kinematic fit score (0-100)
       const speedRequiredKnots = (distanceKm / vessel.gapDurationHours) / 1.852;
       const speedDelta = Math.abs(speedRequiredKnots - vessel.lastKnownSpeedKnots);
-      let kinematicScore = Math.max(10, 100 - speedDelta * 12 - (distanceKm * 0.3));
+      let kinematicScore = Math.max(10, 100 - speedDelta * 10 - (distanceKm * 0.25));
 
-      // Length reflection check (if SAR radar returned vessel length)
+      // Length reflection match (key physical differentiator from SAR radar)
       if (targetLength && vessel.lengthM) {
         const lengthDiff = Math.abs(targetLength - vessel.lengthM);
-        if (lengthDiff < 10) kinematicScore += 10;
-        else if (lengthDiff > 25) kinematicScore -= 15;
+        if (lengthDiff <= 3) kinematicScore += 24;
+        else if (lengthDiff <= 8) kinematicScore += 12;
+        else if (lengthDiff > 16) kinematicScore -= Math.min(30, (lengthDiff - 16) * 2);
+      }
+
+      // Sector compatibility (vessels operate in their customary zones)
+      if (sector && vessel.preferredSectors && vessel.preferredSectors.includes(sector)) {
+        kinematicScore += 14;
       }
 
       // Behavioral risk weighting
       let riskBonus = 0;
-      if (!vessel.iotcAuthorized) riskBonus += 12;
-      if (vessel.iuuListed) riskBonus += 20;
-      if (vessel.historicalAisOffCount60d >= 3) riskBonus += 10;
-      if (vessel.mpaViolationHistory) riskBonus += 8;
+      if (!vessel.iotcAuthorized) riskBonus += 8;
+      if (vessel.iuuListed) riskBonus += 12;
+      if (vessel.historicalAisOffCount60d >= 3) riskBonus += 6;
+      if (vessel.mpaViolationHistory) riskBonus += 4;
 
-      const finalConfidence = Math.min(92, Math.max(25, Math.round((kinematicScore * 0.65) + (riskBonus * 0.35))));
+      const finalConfidence = Math.min(92, Math.max(30, Math.round((kinematicScore * 0.70) + (riskBonus * 0.30))));
 
       candidates.push({
         vesselName: vessel.name,
@@ -189,6 +297,32 @@ export class IdentityMatcher {
 
     // Sort descending by confidence
     candidates.sort((a, b) => b.confidencePct - a.confidencePct);
+
+    // Fallback: If all candidates were assigned, create an unassigned dark designation rather than duplicating
+    if (candidates.length === 0) {
+      const genericId = Math.abs(Math.round(lat * 100 + lon * 100)) % 900 + 100;
+      candidates.push({
+        vesselName: `UNIDENTIFIED TARGET ${genericId}`,
+        mmsi: null,
+        flag: 'Unknown',
+        callsign: null,
+        gearType: targetLength && targetLength > 45 ? 'Industrial Longliner' : 'Commercial Vessel',
+        lengthM: targetLength || 40,
+        confidencePct: 65,
+        distanceKmToRadar: 22,
+        hoursSinceAisOff: 3.0,
+        requiredSpeedKnots: 9.0,
+        iotcAuthorized: false,
+        iuuListed: false,
+        iuuListingBody: null,
+        historicalAisOffCount60d: 0,
+        aisCoverageMetricPct: 50,
+        mpaViolationHistory: false,
+        attributionDisclaimer: 'Unmatched radar return without confirmed registry identity.',
+        summaryRationale: `No active AIS transponder match within kinematic radius. Profile estimated at ${targetLength || 40}m.`,
+      });
+    }
+
     return candidates.slice(0, 3);
   }
 }

@@ -54,6 +54,56 @@ export const KNOWN_VESSELS = {
     mmsi: '518100823',
     iuuListed: false,
   },
+  'TAI YUAN 227': {
+    name: 'TAI YUAN 227',
+    image: '/vessels/lu_rong_yuan_yu.jpg',
+    flag: 'Taiwan',
+    flagEmoji: '🇹🇼',
+    type: 'Tuna Longliner',
+    lengthM: 46.5,
+    mmsi: '416002194',
+    iuuListed: false,
+  },
+  'SEA LION 8': {
+    name: 'SEA LION 8',
+    image: '/vessels/pacific_dawn.jpg',
+    flag: 'Togo',
+    flagEmoji: '🇹🇬',
+    type: 'Reefer / Fuel Bunkering',
+    lengthM: 54.0,
+    mmsi: '671239001',
+    iuuListed: true,
+  },
+  'OCEAN DRAGON 9': {
+    name: 'OCEAN DRAGON 9',
+    image: '/vessels/zhou_yu.jpg',
+    flag: 'China',
+    flagEmoji: '🇨🇳',
+    type: 'Deep-Sea Longliner',
+    lengthM: 62.0,
+    mmsi: '413890123',
+    iuuListed: false,
+  },
+  'MV AL-HILAL': {
+    name: 'MV AL-HILAL',
+    image: '/vessels/hai_feng.jpg',
+    flag: 'Iran',
+    flagEmoji: '🇮🇷',
+    type: 'Pelagic Driftnetter',
+    lengthM: 36.5,
+    mmsi: '422091823',
+    iuuListed: true,
+  },
+  'BARAKA 04': {
+    name: 'BARAKA 04',
+    image: '/vessels/pacific_dawn.jpg',
+    flag: 'Sierra Leone',
+    flagEmoji: '🇸🇱',
+    type: 'Inshore Bunkering Craft',
+    lengthM: 32.0,
+    mmsi: '667981023',
+    iuuListed: false,
+  },
 };
 
 /**
@@ -62,6 +112,15 @@ export const KNOWN_VESSELS = {
  */
 export function getVesselPhoto(vesselName = '', gearType = '', mmsi = '', imo = '') {
   const norm = (vesselName + ' ' + gearType).toLowerCase();
+  if (norm.includes('sea lion') || norm.includes('bunkering') || norm.includes('baraka')) {
+    return '/vessels/pacific_dawn.jpg';
+  }
+  if (norm.includes('al-hilal') || norm.includes('driftnet')) {
+    return '/vessels/hai_feng.jpg';
+  }
+  if (norm.includes('ocean dragon') || norm.includes('tai yuan')) {
+    return '/vessels/zhou_yu.jpg';
+  }
   if (norm.includes('lu rong') || norm.includes('yuan yu')) {
     return '/vessels/lu_rong_yuan_yu.jpg';
   }
@@ -116,6 +175,9 @@ export function getFlagEmoji(country = '') {
   if (c.includes('panama')) return '🇵🇦';
   if (c.includes('sierra leone')) return '🇸🇱';
   if (c.includes('cook')) return '🇨🇰';
+  if (c.includes('taiwan')) return '🇹🇼';
+  if (c.includes('togo')) return '🇹🇬';
+  if (c.includes('iran')) return '🇮🇷';
   if (c.includes('kenya')) return '🇰🇪';
   if (c.includes('tanzania')) return '🇹🇿';
   if (c.includes('somalia')) return '🇸🇴';

@@ -24,9 +24,24 @@ export class ReasoningAgent {
     logger.info({ count: detections.length }, 'Reasoning Agent evaluating candidate detections...');
     const cases = [];
 
+    // Ensure seed cases exist first so we know what is already active
+    if (inMemoryCases.size === 0) {
+      this.getInMemoryCases();
+    }
+
+    // Build assigned vessels set from existing active cases to strictly prevent duplicates
+    const assignedVessels = new Set(context.assignedVessels || []);
+    for (const c of inMemoryCases.values()) {
+      const vName = c.candidate_matches?.[0]?.vesselName || c.features?.candidate_matches?.[0]?.vesselName;
+      if (vName) assignedVessels.add(vName.toUpperCase().trim());
+    }
+
     for (const det of detections) {
       try {
-        const assessed = await this.evaluateDetection(det, context);
+        const assessed = await this.evaluateDetection(det, { ...context, assignedVessels });
+        if (assessed?.features?.candidate_matches?.[0]?.vesselName) {
+          assignedVessels.add(assessed.features.candidate_matches[0].vesselName.toUpperCase().trim());
+        }
         cases.push(assessed);
       } catch (err) {
         logger.error({ err: err.message, detectionId: det.id }, 'Error evaluating detection in Reasoning Agent');
@@ -42,6 +57,25 @@ export class ReasoningAgent {
   static async evaluateDetection(det, context = {}) {
     const lat = Number(det.lat);
     const lon = Number(det.lon);
+
+    // Spatial Track Correlation / Deduplication:
+    // If an existing active contact is already within 10 km, update it instead of creating a duplicate contact
+    const existingCase = Array.from(inMemoryCases.values()).find((c) => {
+      const cLat = Number(c.features?.lat ?? c.lat);
+      const cLon = Number(c.features?.lon ?? c.lon);
+      if (isNaN(cLat) || isNaN(cLon)) return false;
+      return haversineKm(lat, lon, cLat, cLon) < 10.0;
+    });
+
+    if (existingCase) {
+      existingCase.features.recurrenceCount = (existingCase.features.recurrenceCount || 1) + 1;
+      existingCase.updated_at = new Date().toISOString();
+      const existingVessel = existingCase.candidate_matches?.[0]?.vesselName || existingCase.features?.candidate_matches?.[0]?.vesselName;
+      if (existingVessel && context.assignedVessels) {
+        context.assignedVessels.add(existingVessel.toUpperCase().trim());
+      }
+      return existingCase;
+    }
 
     // ──────────────────────────────────────────────
     // 1. Feature Extraction (10 Operational Features)
@@ -132,7 +166,14 @@ export class ReasoningAgent {
     // Candidate Identity Matching ("Who is it?")
     let candidateMatches = [];
     try {
-      candidateMatches = await identityMatcher.matchCandidates(det, context.liveShips || []);
+      candidateMatches = await identityMatcher.matchCandidates(
+        { ...det, sector: det.sector || features.sector },
+        context.liveShips || [],
+        context.assignedVessels || new Set()
+      );
+      if (candidateMatches[0]?.vesselName && context.assignedVessels) {
+        context.assignedVessels.add(candidateMatches[0].vesselName.toUpperCase().trim());
+      }
     } catch (err) {
       logger.warn({ err: err.message }, 'Candidate identity matching fallback');
     }

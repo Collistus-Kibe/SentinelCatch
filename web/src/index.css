@@ -1731,6 +1731,21 @@ body {
   display: block !important;
 }
 
+/* Tight compact stem so beacon chip stays pinned right above radar target without clipping */
+.tactical-map-pin.compact-beacon .pin-pointer-stem .stem-line {
+  height: 6px;
+}
+
+.tactical-map-pin.compact-beacon .pin-pointer-stem .stem-arrow {
+  border-top-width: 4px;
+  border-left-width: 4px;
+  border-right-width: 4px;
+}
+
+.tactical-map-pin.compact-beacon .pin-water-target {
+  height: 8px;
+}
+
 .pin-card-bubble {
   width: 216px;
   background: rgba(13, 20, 36, 0.94);

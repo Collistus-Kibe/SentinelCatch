@@ -99,15 +99,15 @@ export default function MapViewport({
     const map = new maplibregl.Map({
       container: mapContainerRef.current,
       style: DARK_OCEAN_STYLE,
-      center: [41.2, -2.8], // Center of Kenya EEZ
-      zoom: 6.2,
+      center: [40.85, -3.15], // Centers entire Kenya maritime fairway (Kiunga to Shimoni)
+      zoom: 6.6,
       minZoom: 4.8,
       maxZoom: 15.0,
       maxBounds: [
         [28.0, -12.5], // Southwest [lon, lat] (Tanzania / Mozambique channel / East Africa)
         [54.0, 7.5],   // Northeast [lon, lat] (Somali basin / Arabian sea / Seychelles)
       ],
-      pitch: 22,
+      pitch: 16,
       bearing: 0,
       attributionControl: false,
     });
@@ -213,6 +213,20 @@ export default function MapViewport({
         },
       });
 
+      // Sovereign 12 nm Territorial Sea Boundary (UNCLOS)
+      map.addLayer({
+        id: 'territorial-line',
+        type: 'line',
+        source: 'sentinelcatch-data',
+        filter: ['==', ['get', 'type'], 'territorial_boundary'],
+        paint: {
+          'line-color': '#f59e0b',
+          'line-width': 1.8,
+          'line-dasharray': [3, 2],
+          'line-opacity': 0.8,
+        },
+      });
+
       // Marine Protected Areas (MPAs)
       map.addLayer({
         id: 'mpas-fill',
@@ -252,7 +266,7 @@ export default function MapViewport({
         },
       });
 
-      // Ports
+      // Ports Circles
       map.addLayer({
         id: 'ports-circle',
         type: 'circle',
@@ -263,6 +277,26 @@ export default function MapViewport({
           'circle-color': '#94a3b8',
           'circle-stroke-width': 2,
           'circle-stroke-color': '#f8fafc',
+        },
+      });
+
+      // Ports Tactical Name Labels
+      map.addLayer({
+        id: 'ports-label',
+        type: 'symbol',
+        source: 'sentinelcatch-data',
+        filter: ['==', ['get', 'type'], 'port'],
+        layout: {
+          'text-field': ['concat', '⚓ ', ['get', 'name']],
+          'text-size': 11,
+          'text-anchor': 'left',
+          'text-offset': [0.9, 0],
+          'text-allow-overlap': true,
+        },
+        paint: {
+          'text-color': '#f1f5f9',
+          'text-halo-color': '#080d1a',
+          'text-halo-width': 2.5,
         },
       });
 
@@ -439,6 +473,7 @@ export default function MapViewport({
 
     setVis('eez-fill', visibleLayers.eez);
     setVis('eez-line', visibleLayers.eez);
+    setVis('territorial-line', visibleLayers.eez);
     setVis('mpas-fill', visibleLayers.mpas);
     setVis('mpas-line', visibleLayers.mpas);
     setVis('tracks-glow', visibleLayers.tracks);
@@ -447,6 +482,7 @@ export default function MapViewport({
     setVis('ships-circle', visibleLayers.ships);
     setVis('coverage-fill', visibleLayers.coverage);
     setVis('ports-circle', visibleLayers.ports);
+    setVis('ports-label', visibleLayers.ports);
   }, [visibleLayers, layersLoaded]);
 
   // Highlight selected vessel's route when selectedCaseId changes

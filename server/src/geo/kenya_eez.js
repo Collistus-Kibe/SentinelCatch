@@ -190,8 +190,20 @@ export function checkMPAIntersection(lat, lon) {
   };
 }
 
+// 12 Nautical Mile Sovereign Territorial Waters Line (approx 22.2 km offshore)
+export const KENYA_TERRITORIAL_12NM_LINE = [
+  [39.42, -4.75], // 12 nm off Vanga/Shimoni
+  [39.60, -4.55], // 12 nm off Msambweni
+  [39.88, -4.12], // 12 nm off Mombasa
+  [40.06, -3.70], // 12 nm off Kilifi
+  [40.36, -3.25], // 12 nm off Malindi
+  [41.12, -2.32], // 12 nm off Lamu
+  [41.52, -1.95], // 12 nm off Kiunga
+  [41.78, -1.70], // 12 nm off Ras Kamboni (Somalia border)
+];
+
 /**
- * Generate standard GeoJSON FeatureCollection for EEZ and MPAs
+ * Generate standard GeoJSON FeatureCollection for EEZ, MPAs, and Territorial Boundary
  */
 export function getGeoJsonLayers() {
   return {
@@ -208,6 +220,18 @@ export function getGeoJsonLayers() {
         geometry: {
           type: 'Polygon',
           coordinates: [KENYA_EEZ_POLYGON],
+        },
+      },
+      {
+        type: 'Feature',
+        id: 'kenya-territorial-12nm',
+        properties: {
+          name: '12 nm Territorial Sea Boundary (Sovereign Waters)',
+          type: 'territorial_boundary',
+        },
+        geometry: {
+          type: 'LineString',
+          coordinates: KENYA_TERRITORIAL_12NM_LINE,
         },
       },
       ...KENYA_MPAS.map((mpa) => ({
