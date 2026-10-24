@@ -175,6 +175,9 @@ export class VesselPhotoService {
       if (matchByGear) return { ...matchByGear, cached: true };
     }
 
+    return null;
+  }
+
   /**
    * Query VesselFinder API using userkey
    * Endpoint: api.vesselfinder.com/masterdata or api.vesselfinder.com/vessels
