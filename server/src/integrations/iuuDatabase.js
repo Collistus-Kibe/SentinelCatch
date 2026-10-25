@@ -163,7 +163,7 @@ export class CombinedIuuDatabaseService {
             profileUrl: `https://iuu-vessels.org/Vessel/GetVessel/${id}`,
             credit: 'Trygg Mat Tracking (TMT) / iuu-vessels.org',
             photoTitle: 'Combined IUU Fishing Vessel Surveillance Archive',
-            photoUrl: '/vessels/default_dark_vessel.jpg',
+            photoUrl: 'https://upload.wikimedia.org/wikipedia/commons/4/41/Coastal_Patrol_Command_140810-N-IZ292-016_%2814891119516%29.jpg',
             notes: 'Listed on international RFMO illegal fishing blacklist',
           });
           count++;

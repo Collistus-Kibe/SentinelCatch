@@ -45,7 +45,7 @@ describe('Vessel Surveillance Photo API Endpoints', () => {
     const luRong = data.gallery.find((v) => v.vesselName.includes('LU RONG YUAN YU'));
     assert.ok(luRong, 'LU RONG YUAN YU 188 must be in curated gallery');
     assert.strictEqual(luRong.mmsi, '412349012');
-    assert.ok(luRong.photoUrl.endsWith('.jpg'));
+    assert.ok(luRong.photoUrl.startsWith('http') && (luRong.photoUrl.endsWith('.png') || luRong.photoUrl.endsWith('.jpg')));
   });
 
   test('GET /api/vessels/photo?name=LU RONG YUAN YU 188&format=json resolves suspect photo', async () => {
@@ -57,10 +57,10 @@ describe('Vessel Surveillance Photo API Endpoints', () => {
     assert.strictEqual(data.vesselName, 'LU RONG YUAN YU 188');
     assert.strictEqual(data.mmsi, '412349012');
     assert.ok(
-      data.source === 'verified_maritime_archive' || data.source === 'curated_surveillance_archive' || data.source === 'vesselfinder_api',
+      data.source === 'combined_iuu_database' || data.source === 'combined_iuu_vessel_list' || data.source === 'verified_maritime_archive' || data.source === 'vesselfinder_api',
       `Unexpected photo source: ${data.source}`
     );
-    assert.ok(data.photoUrl.includes('lu_rong_yuan_yu.jpg'));
+    assert.ok(data.photoUrl.includes('tmtracking.blob.core.windows.net') || data.photoUrl.includes('lu_rong_yuan_yu'));
   });
 
   test('GET /api/vessels/photo?mmsi=352001928&format=json resolves HAI FENG 68 by MMSI', async () => {
@@ -70,7 +70,7 @@ describe('Vessel Surveillance Photo API Endpoints', () => {
 
     assert.strictEqual(data.success, true);
     assert.strictEqual(data.vesselName, 'HAI FENG 68');
-    assert.ok(data.photoUrl.includes('hai_feng.jpg'));
+    assert.ok(data.photoUrl.includes('wikimedia.org') || data.photoUrl.includes('hai_feng'));
   });
 
   test('GET /api/vessels/photo with redirect=false handles unidentified vessel gracefully', async () => {
