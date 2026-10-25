@@ -448,9 +448,9 @@ export class ReasoningAgent {
           created_at: new Date(now - 3 * 3600 * 1000).toISOString(),
           rationale: 'Suspected unauthorized transshipment. Unmatched radar contact stationary within 1.4 km of an active AIS cargo vessel near the Kenya-Tanzania maritime boundary.',
           features: {
-            lat: -4.75,
-            lon: 39.75,
-            locationLabel: '32 km SE of Shimoni / Vanga',
+            lat: -4.5800,
+            lon: 39.6200,
+            locationLabel: '28 km SE of Shimoni / Vanga',
             sector: 'South Coast/Vanga',
             distanceToCoastKm: 18,
             nearestPort: 'Shimoni/Vanga',

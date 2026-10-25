@@ -155,23 +155,37 @@ function getRouteColor(vesselName = '') {
               onClick={() => setShowDossier(true)}
               title="Open Official Case Dossier"
             >
-              📄 Dossier
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+                <line x1="16" y1="13" x2="8" y2="13" />
+                <line x1="16" y1="17" x2="8" y2="17" />
+                <polyline points="10 9 9 9 8 9" />
+              </svg>
+              <span>Dossier</span>
             </button>
             <button
               className="btn-intel-share"
               onClick={handleShareWhatsApp}
               title="Share brief on WhatsApp"
             >
-              💬 WhatsApp
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+              </svg>
+              <span>WhatsApp</span>
             </button>
             <button
               className="btn-intel-copy"
               onClick={handleCopyBrief}
               title="Copy brief to clipboard"
             >
-              {copied ? '✓ Copied' : '📋 Copy'}
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+              </svg>
+              <span>{copied ? 'Copied' : 'Copy'}</span>
             </button>
-            <button className="btn-intel-close" onClick={onClose}>
+            <button className="btn-intel-close" onClick={onClose} aria-label="Close Intel Panel">
               ✕
             </button>
           </div>

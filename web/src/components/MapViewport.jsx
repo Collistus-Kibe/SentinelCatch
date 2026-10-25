@@ -67,6 +67,7 @@ export default function MapViewport({
   const [layersLoaded, setLayersLoaded] = useState(false);
   const popupRef = useRef(null);
   const [legendCollapsed, setLegendCollapsed] = useState(false);
+  const [showRoutesPanel, setShowRoutesPanel] = useState(true);
   const [visibleLayers, setVisibleLayers] = useState({
     eez: true,
     mpas: true,
@@ -667,13 +668,13 @@ export default function MapViewport({
         <div class="pin-card-bubble">
           <div class="pin-photo-header">
             <img src="${vesselPhoto}" alt="${vesselName}" class="pin-vessel-img" loading="lazy" />
-            <div class="pin-real-photo-badge">📷 REAL VESSEL PHOTO</div>
+            <div class="pin-real-photo-badge">SURVEILLANCE ARCHIVE</div>
             <div class="pin-band-chip ${(c.band || 'high').toLowerCase()}">
               <span class="chip-pulse-dot"></span>
               ${band} · ${score}
             </div>
-            ${isIUU ? '<span class="pin-iuu-badge">⚠️ IUU LISTED</span>' : ''}
-            ${inMPA ? '<span class="pin-mpa-badge">🌿 IN MPA</span>' : ''}
+            ${isIUU ? '<span class="pin-iuu-badge">RFMO BLACKLIST</span>' : ''}
+            ${inMPA ? '<span class="pin-mpa-badge">PROTECTED MPA</span>' : ''}
           </div>
           <div class="pin-details-body">
             <div class="pin-title-row">
@@ -681,8 +682,8 @@ export default function MapViewport({
               <span class="pin-vessel-title" title="${vesselName}">${vesselName}</span>
             </div>
             <div class="pin-meta-row">
-              <span class="pin-loc-text">📍 ${locLabel}</span>
-              <span class="pin-match-chip">🎯 ${matchPct}% match</span>
+              <span class="pin-loc-text">${locLabel}</span>
+              <span class="pin-match-chip">${matchPct}% match</span>
             </div>
             ${isSelected ? `
               <div class="pin-selected-indicator">
@@ -795,7 +796,17 @@ export default function MapViewport({
           title={t.projectionTooltip}
           id="toggle-projection-btn"
         >
-          {isGlobe ? `🌐 ${t.projectionGlobe}` : `🗺️ ${t.projectionFlat}`}
+          {isGlobe ? (
+            <>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+              <span>{t.projectionGlobe}</span>
+            </>
+          ) : (
+            <>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+              <span>{t.projectionFlat}</span>
+            </>
+          )}
         </button>
 
         {/* Quick Layer Visibility Toggles */}
@@ -806,7 +817,8 @@ export default function MapViewport({
               checked={visibleLayers.eez}
               onChange={(e) => setVisibleLayers((p) => ({ ...p, eez: e.target.checked }))}
             />
-            🛡️ EEZ
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            <span>EEZ</span>
           </label>
           <label className={`layer-pill ${visibleLayers.mpas ? 'active' : ''}`}>
             <input
@@ -814,7 +826,8 @@ export default function MapViewport({
               checked={visibleLayers.mpas}
               onChange={(e) => setVisibleLayers((p) => ({ ...p, mpas: e.target.checked }))}
             />
-            🌿 MPAs
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+            <span>MPAs</span>
           </label>
           <label className={`layer-pill ${visibleLayers.tracks ? 'active' : ''}`}>
             <input
@@ -822,7 +835,8 @@ export default function MapViewport({
               checked={visibleLayers.tracks}
               onChange={(e) => setVisibleLayers((p) => ({ ...p, tracks: e.target.checked }))}
             />
-            〰️ Vessel Routes
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19L9 14L15 20L20 4"/></svg>
+            <span>Vessel Routes</span>
           </label>
           <label className={`layer-pill ${visibleLayers.cases ? 'active' : ''}`}>
             <input
@@ -830,7 +844,8 @@ export default function MapViewport({
               checked={visibleLayers.cases}
               onChange={(e) => setVisibleLayers((p) => ({ ...p, cases: e.target.checked }))}
             />
-            🚨 Vessel Pins
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/></svg>
+            <span>Vessel Pins</span>
           </label>
           <label className={`layer-pill ${visibleLayers.ships ? 'active' : ''}`}>
             <input
@@ -838,7 +853,8 @@ export default function MapViewport({
               checked={visibleLayers.ships}
               onChange={(e) => setVisibleLayers((p) => ({ ...p, ships: e.target.checked }))}
             />
-            🚢 Live AIS
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+            <span>Live AIS</span>
           </label>
           <label className={`layer-pill ${visibleLayers.coverage ? 'active' : ''}`}>
             <input
@@ -846,22 +862,39 @@ export default function MapViewport({
               checked={visibleLayers.coverage}
               onChange={(e) => setVisibleLayers((p) => ({ ...p, coverage: e.target.checked }))}
             />
-            📶 AIS Grid
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"/></svg>
+            <span>AIS Grid</span>
           </label>
         </div>
       </div>
 
       {/* Floating Tactical Vessel Routes Legend (Distinct Color & Line per Ship) */}
-      {visibleLayers.tracks && trackList.length > 0 && (
+      {visibleLayers.tracks && trackList.length > 0 && showRoutesPanel && (
         <div className={`map-vessel-legend ${legendCollapsed ? 'collapsed' : ''}`}>
           <div className="legend-header" onClick={() => setLegendCollapsed((p) => !p)}>
             <div className="legend-header-left">
               <span className="legend-pulse-dot"></span>
               <span className="legend-title">Vessel Route Tracks ({trackList.length})</span>
             </div>
-            <button className="legend-toggle-btn" title="Toggle Legend" type="button">
-              {legendCollapsed ? '▲ Expand' : '▼ Minimize'}
-            </button>
+            <div className="legend-header-actions" onClick={(e) => e.stopPropagation()}>
+              <button
+                className="legend-action-btn"
+                onClick={() => setLegendCollapsed((p) => !p)}
+                title={legendCollapsed ? 'Expand Panel' : 'Minimize Panel'}
+                type="button"
+              >
+                {legendCollapsed ? '▲' : '▼'}
+              </button>
+              <button
+                className="legend-action-btn legend-cancel-btn"
+                onClick={() => setShowRoutesPanel(false)}
+                title="Dismiss Route Tracks Panel"
+                type="button"
+                aria-label="Dismiss"
+              >
+                ✕
+              </button>
+            </div>
           </div>
           {!legendCollapsed && (
             <div className="legend-items-list">
@@ -898,6 +931,21 @@ export default function MapViewport({
             </div>
           )}
         </div>
+      )}
+
+      {/* Floating Reopen Button if Panel was closed/cancelled */}
+      {visibleLayers.tracks && trackList.length > 0 && !showRoutesPanel && (
+        <button
+          className="btn-reopen-routes"
+          onClick={() => setShowRoutesPanel(true)}
+          title="Open Vessel Route Tracks Panel"
+          type="button"
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M4 19L9 14L15 20L20 4"/>
+          </svg>
+          <span>Vessel Routes ({trackList.length})</span>
+        </button>
       )}
     </div>
   );

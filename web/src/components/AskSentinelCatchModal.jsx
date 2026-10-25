@@ -69,11 +69,17 @@ export default function AskSentinelCatchModal({ isOpen, onClose, onSelectCase })
         {/* Header */}
         <div className="chat-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span style={{ fontSize: '1.4rem' }}>💬</span>
+            <span className="copilot-icon-wrap" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00f5d4" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
+                <path d="M2 12h20" />
+              </svg>
+            </span>
             <div>
-              <h3>Ask SentinelCatch</h3>
+              <h3>Maritime Intelligence Copilot</h3>
               <p className="chat-subhead">
-                Safe read-only natural language intelligence querying across live radar & AIS records
+                Tactical read-only domain intelligence querying across live radar, AIS gaps, and RFMO registries
               </p>
             </div>
           </div>
@@ -160,7 +166,7 @@ export default function AskSentinelCatchModal({ isOpen, onClose, onSelectCase })
             disabled={loading}
           />
           <button type="submit" className="btn btn-primary" disabled={loading || !input.trim()}>
-            {loading ? '...' : 'Ask AI ➔'}
+            {loading ? '...' : 'Query Intel ➔'}
           </button>
         </form>
       </div>

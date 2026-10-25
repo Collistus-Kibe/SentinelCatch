@@ -39,15 +39,65 @@ export default function CaseFeed({
   }, [cases]);
 
   const sectors = [
-    { id: 'all', label: t.sectorAll, icon: '🌊', count: sectorCounts.all },
-    { id: 'Lamu', label: t.sectorLamu, icon: '🧭', count: sectorCounts.Lamu },
-    { id: 'Malindi-Kilifi', label: t.sectorMalindiKilifi, icon: '⚓', count: sectorCounts['Malindi-Kilifi'] },
-    { id: 'Mombasa', label: t.sectorMombasa, icon: '🏙️', count: sectorCounts.Mombasa },
-    { id: 'South Coast/Vanga', label: t.sectorSouthCoast, icon: '🏝️', count: sectorCounts['South Coast/Vanga'] },
+    {
+      id: 'all',
+      label: t.sectorAll,
+      icon: (
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true">
+          <path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1" />
+        </svg>
+      ),
+      count: sectorCounts.all,
+    },
+    {
+      id: 'Lamu',
+      label: t.sectorLamu,
+      icon: (
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true">
+          <circle cx="12" cy="12" r="10" />
+          <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
+        </svg>
+      ),
+      count: sectorCounts.Lamu,
+    },
+    {
+      id: 'Malindi-Kilifi',
+      label: t.sectorMalindiKilifi,
+      icon: (
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true">
+          <circle cx="12" cy="5" r="3" />
+          <line x1="12" y1="22" x2="12" y2="8" />
+          <path d="M5 12H2a10 10 0 0 0 20 0h-3" />
+        </svg>
+      ),
+      count: sectorCounts['Malindi-Kilifi'],
+    },
+    {
+      id: 'Mombasa',
+      label: t.sectorMombasa,
+      icon: (
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true">
+          <polygon points="3 11 22 2 13 21 11 13 3 11" />
+        </svg>
+      ),
+      count: sectorCounts.Mombasa,
+    },
+    {
+      id: 'South Coast/Vanga',
+      label: t.sectorSouthCoast,
+      icon: (
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true">
+          <polygon points="12 2 2 7 12 12 22 7 12 2" />
+          <polyline points="2 17 12 22 22 17" />
+          <polyline points="2 12 12 17 22 12" />
+        </svg>
+      ),
+      count: sectorCounts['South Coast/Vanga'],
+    },
   ];
 
   const filteredCases = useMemo(() => {
-    return cases.filter((c) => {
+    const list = cases.filter((c) => {
       // Sector filter
       if (activeSector && activeSector !== 'all' && c.sector !== activeSector) {
         return false;
@@ -74,6 +124,9 @@ export default function CaseFeed({
       }
       return true;
     });
+
+    // Strictly sort from Highest Threat Score to Lowest Threat Score in each tab
+    return list.sort((a, b) => (Number(b.score_final) || 0) - (Number(a.score_final) || 0));
   }, [cases, activeSector, bandFilter, statusFilter, searchQuery]);
 
   return (
@@ -149,7 +202,7 @@ export default function CaseFeed({
         </div>
       </div>
 
-      {/* Case Cards List */}
+      {/* Case Cards List (Minimised, high-density layout with smooth scrolling) */}
       <div className="case-cards-list">
         {isLoading && (
           <div className="feed-status-msg">
@@ -177,20 +230,20 @@ export default function CaseFeed({
           return (
             <div
               key={c.id}
-              className={`case-card ${isSelected ? 'case-card-selected' : ''}`}
+              className={`case-card case-card-compact ${isSelected ? 'case-card-selected' : ''}`}
               onClick={() => onSelectCase(c.id)}
             >
               <div className="case-card-top">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <span className={`badge ${bandClass}`}>
-                    {c.band.toUpperCase()} · {c.score_final}/100
+                    {c.band.toUpperCase()} · {c.score_final}
                   </span>
                   <span className="case-sector-tag">{c.sector}</span>
                 </div>
                 <span className="case-time-ago">{timeAgo(c.created_at)}</span>
               </div>
 
-              {/* Vessel Preview Thumbnail & Metadata */}
+              {/* Minimized Vessel Row & Thumbnail */}
               <div className="case-card-vessel-preview">
                 <div className="case-thumb-container">
                   <img
@@ -202,12 +255,11 @@ export default function CaseFeed({
                   {candidate?.iuuListed && (
                     <span className="case-card-iuu-flag">IUU</span>
                   )}
-                  <span className="case-card-real-photo-badge" title="Authentic Maritime Archive Photo">📷 REAL PHOTO</span>
                 </div>
 
                 <div className="case-card-vessel-info">
                   <div className="case-location-title" title={locLabel}>
-                    📍 {locLabel}
+                    {locLabel}
                   </div>
 
                   {candidate ? (
@@ -218,14 +270,9 @@ export default function CaseFeed({
                     </div>
                   ) : (
                     <div className="case-candidate-row">
-                      <span className="candidate-flag-emoji">🎯</span>
                       <span className="candidate-vessel-title text-muted">Unidentified Radar Centroid</span>
                     </div>
                   )}
-
-                  <p className="case-rationale-snippet">
-                    {c.rationale}
-                  </p>
                 </div>
               </div>
 
@@ -234,13 +281,13 @@ export default function CaseFeed({
                   {c.status || 'new'}
                 </span>
                 {c.features?.inMPA && (
-                  <span className="badge-mpa-tag">🌿 Inside MPA</span>
+                  <span className="badge-mpa-tag">MPA</span>
                 )}
                 {c.features?.recurrenceCount > 1 && (
-                  <span className="badge-recurrence-tag">🔁 {c.features.recurrenceCount} Passes</span>
+                  <span className="badge-recurrence-tag">{c.features.recurrenceCount} Passes</span>
                 )}
                 {c.features?.deliberation && (
-                  <span className="badge-delib-tag">⚖️ Deliberated</span>
+                  <span className="badge-delib-tag">Deliberated</span>
                 )}
               </div>
             </div>

@@ -94,7 +94,13 @@ export default function Home() {
       <header className="ops-header">
         <div className="ops-header-left">
           <div className="logo-group">
-            <span className="logo-icon">🛡️</span>
+            <span className="logo-icon-svg" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#00f5d4" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                <circle cx="12" cy="11" r="2.8" />
+                <path d="M12 8.2v1M12 13.8v1M9.2 11h1M13.8 11h1" />
+              </svg>
+            </span>
             <div>
               <h1 className="ops-title">SentinelCatch</h1>
               <span className="ops-subtitle">{t.tagline}</span>
@@ -109,15 +115,19 @@ export default function Home() {
           </div>
         </div>
 
-
         {/* Right Tools & Language Toggle */}
         <div className="ops-header-right">
           <button
             className="btn-header-tool btn-header-highlight"
             onClick={() => setShowChatModal(true)}
-            title="Ask SentinelCatch natural language intelligence copilot"
+            title="Open Maritime Tactical Copilot & Domain Intelligence Query"
           >
-            💬 Ask AI
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
+              <path d="M2 12h20" />
+            </svg>
+            <span>Maritime Copilot</span>
           </button>
 
           <button
@@ -125,7 +135,11 @@ export default function Home() {
             onClick={() => setShowPatrolModal(true)}
             title="Open Coastal Patrol Dispatch Planner"
           >
-            ⚓ Patrol Planner
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="10" />
+              <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
+            </svg>
+            <span>Patrol Planner</span>
           </button>
 
           <button
@@ -134,7 +148,14 @@ export default function Home() {
             disabled={testSending}
             title={t.sendTestAlert}
           >
-            {testSending ? '...' : '⚡ Test Alert'}
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9" />
+              <path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5" />
+              <circle cx="12" cy="12" r="2" />
+              <path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5" />
+              <path d="M19.1 4.9C23 8.8 23 15.2 19.1 19.1" />
+            </svg>
+            <span>{testSending ? 'Broadcasting...' : 'Test Alert'}</span>
           </button>
 
           <button
@@ -142,7 +163,21 @@ export default function Home() {
             onClick={toggleSound}
             title={soundEnabled ? t.soundOn : t.soundOff}
           >
-            {soundEnabled ? '🔔' : '🔕'}
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              {soundEnabled ? (
+                <>
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                </>
+              ) : (
+                <>
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                  <path d="M18.63 13A17.89 17.89 0 0 1 18 8" />
+                  <path d="M6.26 6.26A5.86 5.86 0 0 0 6 8c0 7-3 9-3 9h14" />
+                  <line x1="1" y1="1" x2="23" y2="23" />
+                </>
+              )}
+            </svg>
           </button>
 
           <button
@@ -150,7 +185,12 @@ export default function Home() {
             onClick={toggleLanguage}
             title="Switch Language (English / Kiswahili)"
           >
-            🌐 {language === 'en' ? 'EN' : 'SW'}
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="2" y1="12" x2="22" y2="12" />
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+            </svg>
+            <span>{language === 'en' ? 'EN' : 'SW'}</span>
           </button>
 
           <NotificationBell />
