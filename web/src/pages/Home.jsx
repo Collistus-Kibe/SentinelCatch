@@ -31,11 +31,22 @@ export default function Home() {
   const [testToast, setTestToast] = useState(null);
   const [showPatrolModal, setShowPatrolModal] = useState(false);
   const [showChatModal, setShowChatModal] = useState(false);
-  const [zuluTime, setZuluTime] = useState(() => new Date().toISOString().slice(11, 19) + 'Z');
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [utcClock, setUtcClock] = useState(() => {
+    const d = new Date();
+    return {
+      time: `UTC ${String(d.getUTCHours()).padStart(2, '0')}:${String(d.getUTCMinutes()).padStart(2, '0')}`,
+      date: d.toLocaleDateString('en-US', { timeZone: 'UTC', month: 'short', day: 'numeric', year: 'numeric' }),
+    };
+  });
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setZuluTime(new Date().toISOString().slice(11, 19) + 'Z');
+      const d = new Date();
+      setUtcClock({
+        time: `UTC ${String(d.getUTCHours()).padStart(2, '0')}:${String(d.getUTCMinutes()).padStart(2, '0')}`,
+        date: d.toLocaleDateString('en-US', { timeZone: 'UTC', month: 'short', day: 'numeric', year: 'numeric' }),
+      });
     }, 1000);
     return () => clearInterval(timer);
   }, []);
@@ -49,12 +60,16 @@ export default function Home() {
         const loadedCases = data.cases || [];
         setCases(loadedCases);
         setIsLoading(false);
-        // Automatically synchronize default selected case on first load
+        // Automatically synchronize default selected case to SL PACIFIC DAWN 02 or first case
         setSelectedCaseId((prev) => {
           if (prev) return prev;
-          if (loadedCases.length > 0) {
-            setSelectedCase(loadedCases[0]);
-            return loadedCases[0].id;
+          const target = loadedCases.find((c) => {
+            const name = (c.candidate_matches?.[0]?.vesselName || c.features?.candidate_matches?.[0]?.vesselName || '').toUpperCase();
+            return name.includes('PACIFIC DAWN');
+          }) || loadedCases[0];
+          if (target) {
+            setSelectedCase(target);
+            return target.id;
           }
           return null;
         });
@@ -113,82 +128,81 @@ export default function Home() {
         <div className="ops-header-left">
           <div className="logo-group">
             <span className="logo-icon-svg" aria-hidden="true">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#00f5d4" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" fill="rgba(56, 189, 248, 0.12)" />
                 <circle cx="12" cy="11" r="2.8" />
                 <path d="M12 8.2v1M12 13.8v1M9.2 11h1M13.8 11h1" />
               </svg>
             </span>
-            <div>
+            <div className="logo-brand-block">
               <h1 className="ops-title">SentinelCatch</h1>
-              <span className="ops-subtitle">{t.tagline}</span>
+              <span className="ops-brand-divider">|</span>
+              <span className="ops-subtitle-text">Maritime Operations</span>
             </div>
           </div>
-
-          <div className="connection-chip">
-            <span
-              className={`status-dot ${connectionStatus === 'connected' ? 'dot-ok' : 'dot-warn'}`}
-            ></span>
-            <span>{connectionStatus === 'connected' ? 'LIVE SSE' : connectionStatus.toUpperCase()}</span>
-          </div>
-
-          <div className="zulu-time-chip" title="Active Zulu Time [UTC Clock]">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <circle cx="12" cy="12" r="10" />
-              <polyline points="12 6 12 12 16 14" />
-            </svg>
-            <span>UTC {zuluTime}</span>
-          </div>
-
-          <div className="sensor-telemetry-chip hidden-mobile" title="Surveillance Coverage: 245,000 sq km (Kenya EEZ)">
-            <span className="telemetry-pulse-dot"></span>
-            <span>245,000 SQ KM · AIS / SAR ACTIVE</span>
-          </div>
         </div>
 
-        {/* God's Eye C2 Mode Switch: Tactical Operations vs Trajectory Trace-Back */}
-        <div className="view-mode-tabs" role="tablist">
-          <button
-            className={`view-mode-tab ${activeView === 'tactical' ? 'active' : ''}`}
-            onClick={() => setActiveView('tactical')}
-            role="tab"
-            aria-selected={activeView === 'tactical'}
-            title="Real-Time Tactical Radar & Coastline Surveillance"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <circle cx="12" cy="12" r="10" />
-              <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
-              <path d="M2 12h20" />
-            </svg>
-            <span>Tactical Operations</span>
-          </button>
-          <button
-            className={`view-mode-tab ${activeView === 'traceback' ? 'active' : ''}`}
-            onClick={() => setActiveView('traceback')}
-            role="tab"
-            aria-selected={activeView === 'traceback'}
-            title="Forensic Provenance & Vessel Origin Trace-Back Analysis"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-            </svg>
-            <span>Trajectory Trace-Back</span>
-          </button>
-        </div>
-
-        {/* Right Tools & Language Toggle */}
         <div className="ops-header-right">
+          {/* Live Data Connection Status */}
+          <div className="connection-chip-redesign" title="Live Server-Sent Events stream status">
+            <span
+              className={`status-dot-radar ${connectionStatus === 'connected' ? 'dot-connected' : 'dot-warning'}`}
+            ></span>
+            <span className="connection-status-text">
+              {connectionStatus === 'connected' ? 'Feed connected' : connectionStatus.toUpperCase()}
+            </span>
+          </div>
+
+          {/* UTC Clock & Date Display */}
+          <div className="utc-clock-block" title="Synchronized UTC Clock">
+            <span className="utc-time-str">{utcClock.time}</span>
+            <span className="utc-date-str">{utcClock.date}</span>
+          </div>
+
+          <div className="header-v-divider" />
+
+          {/* Operational View Switcher: Tactical Operations vs Trajectory Trace-Back */}
+          <div className="view-mode-tabs" role="tablist">
+            <button
+              className={`view-mode-tab ${activeView === 'tactical' ? 'active' : ''}`}
+              onClick={() => setActiveView('tactical')}
+              role="tab"
+              aria-selected={activeView === 'tactical'}
+              title="Real-Time Tactical Radar & Coastline Surveillance"
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
+                <path d="M2 12h20" />
+              </svg>
+              <span>Tactical Operations</span>
+            </button>
+            <button
+              className={`view-mode-tab ${activeView === 'traceback' ? 'active' : ''}`}
+              onClick={() => setActiveView('traceback')}
+              role="tab"
+              aria-selected={activeView === 'traceback'}
+              title="Forensic Provenance & Vessel Origin Trace-Back Analysis"
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+              </svg>
+              <span>Trajectory Trace-Back</span>
+            </button>
+          </div>
+
+          <div className="header-v-divider" />
+
+          {/* Quick Tools */}
           <button
-            className="btn-header-tool btn-header-highlight"
+            className="btn-header-tool"
             onClick={() => setShowChatModal(true)}
             title="Open Maritime Tactical Copilot & Domain Intelligence Query"
           >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <circle cx="12" cy="12" r="10" />
-              <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
-              <path d="M2 12h20" />
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
             </svg>
-            <span>Maritime Copilot</span>
+            <span className="btn-label-desktop">Copilot</span>
           </button>
 
           <button
@@ -196,11 +210,11 @@ export default function Home() {
             onClick={() => setShowPatrolModal(true)}
             title="Open Coastal Patrol Dispatch Planner"
           >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <circle cx="12" cy="12" r="10" />
               <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
             </svg>
-            <span>Patrol Planner</span>
+            <span className="btn-label-desktop">Patrol</span>
           </button>
 
           <button
@@ -209,22 +223,23 @@ export default function Home() {
             disabled={testSending}
             title={t.sendTestAlert}
           >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9" />
               <path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5" />
               <circle cx="12" cy="12" r="2" />
               <path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5" />
               <path d="M19.1 4.9C23 8.8 23 15.2 19.1 19.1" />
             </svg>
-            <span>{testSending ? 'Broadcasting...' : 'Test Alert'}</span>
+            <span className="btn-label-desktop">{testSending ? 'Testing...' : 'Test Alert'}</span>
           </button>
 
           <button
             className={`btn-header-tool ${soundEnabled ? 'active' : ''}`}
             onClick={toggleSound}
             title={soundEnabled ? t.soundOn : t.soundOff}
+            aria-label="Sound alert toggle"
           >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               {soundEnabled ? (
                 <>
                   <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
@@ -246,11 +261,6 @@ export default function Home() {
             onClick={toggleLanguage}
             title="Switch Language (English / Kiswahili)"
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <circle cx="12" cy="12" r="10" />
-              <line x1="2" y1="12" x2="22" y2="12" />
-              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-            </svg>
             <span>{language === 'en' ? 'EN' : 'SW'}</span>
           </button>
 
@@ -258,9 +268,9 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Main Workspace (Feed + Map + Intel) */}
-      <div className="ops-workspace">
-        {/* Left Side: Tactical Case Feed */}
+      {/* Main Workspace (Watchlist + Map + Intel) */}
+      <div className={`ops-workspace ${sidebarCollapsed ? 'sidebar-is-collapsed' : ''}`}>
+        {/* Left Side: Vessel Watchlist */}
         <CaseFeed
           cases={cases}
           selectedCaseId={selectedCaseId}
@@ -269,9 +279,11 @@ export default function Home() {
           onSectorChange={setActiveSector}
           language={language}
           isLoading={isLoading}
+          isCollapsed={sidebarCollapsed}
+          onToggleCollapse={() => setSidebarCollapsed((p) => !p)}
         />
 
-        {/* Center / Main: MapLibre Viewport (Flat & Fixed 3D Perspective) */}
+        {/* Center / Main: MapLibre Viewport */}
         <main className="ops-map-area">
           <MapViewport
             selectedCaseId={selectedCaseId}
@@ -284,7 +296,7 @@ export default function Home() {
           />
         </main>
 
-        {/* Tactical Intel Drawer Panel */}
+        {/* Right Side: Vessel Intelligence Panel */}
         {selectedCase && (
           <CaseIntelPanel
             caseItem={selectedCase}

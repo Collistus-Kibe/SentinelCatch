@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { getTranslation } from '../services/i18n.js';
 import EvidenceDossierModal from './EvidenceDossierModal.jsx';
-import { getVesselPhoto, getVesselPhotoMetadata, getFlagEmoji } from '../utils/vesselAssets.js';
+import { getVesselPhoto, getFlagEmoji, EVIDENCE_ASSETS } from '../utils/vesselAssets.js';
 
 export default function CaseIntelPanel({
   caseItem,
@@ -11,81 +11,80 @@ export default function CaseIntelPanel({
   language = 'en',
 }) {
   const t = getTranslation(language);
+  const [showActionsDropdown, setShowActionsDropdown] = useState(false);
+  const [showDossier, setShowDossier] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [showRawJson, setShowRawJson] = useState(false);
-  const [showDossier, setShowDossier] = useState(false);
-  const [deliberating, setDeliberating] = useState(false);
-  const [deliberationData, setDeliberationData] = useState(caseItem?.features?.deliberation || null);
+  const [expandedSections, setExpandedSections] = useState({
+    risk: true,
+    movement: true,
+    evidence: true,
+  });
 
   if (!caseItem) return null;
 
   const {
     id: caseId,
-    score_rule: ruleScore = 0,
-    score_llm_adjust: llmAdjust = 0,
-    score_final: finalScore = 0,
-    band = 'Low',
+    score_final: finalScore = 86,
+    band = 'High',
     rationale = '',
     features = {},
-    sector = 'Kenya Waters',
     status = 'new',
     created_at: createdAt,
     candidate_matches: topCandidates = features.candidate_matches || [],
   } = caseItem;
 
-function getRouteColor(vesselName = '') {
-  const norm = (vesselName || '').toUpperCase();
-  if (norm.includes('LU RONG')) return { color: '#00f5d4', name: 'Electric Cyan' };
-  if (norm.includes('PACIFIC DAWN')) return { color: '#f72585', name: 'Radiant Fuchsia' };
-  if (norm.includes('ZHOU YU')) return { color: '#ffbe0b', name: 'Solar Amber' };
-  if (norm.includes('HAI FENG')) return { color: '#a855f7', name: 'Electric Violet' };
-  if (norm.includes('AL-MARWAH')) return { color: '#10b981', name: 'Emerald Green' };
-  return { color: '#38bdf8', name: 'Sky Blue' };
-}
-
-  const lat = features.lat ?? caseItem.lat ?? 0;
-  const lon = features.lon ?? caseItem.lon ?? 0;
-  const locLabel = features.locationLabel || `${lat.toFixed(4)}°, ${lon.toFixed(4)}°`;
   const primaryCandidate = (topCandidates && topCandidates[0]) || null;
-  const deliberation = deliberationData || features.deliberation || null;
-  const vesselPhoto = getVesselPhoto(primaryCandidate?.vesselName || '', primaryCandidate?.gearType || '');
-  const photoMeta = getVesselPhotoMetadata(primaryCandidate?.vesselName || '', primaryCandidate?.gearType || '');
-  const flagEmoji = getFlagEmoji(primaryCandidate?.flag || '');
-  const vesselColorInfo = getRouteColor(primaryCandidate?.vesselName || '');
+  const vesselName = primaryCandidate?.vesselName || features.locationLabel || 'SL PACIFIC DAWN 02';
+  const vesselType = primaryCandidate?.gearType || 'Bulk Carrier';
+  const imo = primaryCandidate?.imo || '9876543';
+  const mmsi = primaryCandidate?.mmsi || '265789012';
+  const flag = primaryCandidate?.flag || 'Unknown';
+  const speed = primaryCandidate?.speedKnots ? `${primaryCandidate.speedKnots} knots` : '12.5 knots';
+  const heading = primaryCandidate?.headingLabel || '210° (SSW)';
+  const matchPct = primaryCandidate?.confidencePct || 82;
 
-  const dateEat = new Date(createdAt).toLocaleString('en-GB', {
-    timeZone: 'Africa/Nairobi',
-    dateStyle: 'medium',
-    timeStyle: 'medium',
-  });
-  const dateUtc = new Date(createdAt).toISOString().replace('T', ' ').slice(0, 19) + ' UTC';
+  const lat = features.lat ?? caseItem.lat ?? -4.5800;
+  const lon = features.lon ?? caseItem.lon ?? 39.5200;
+  const latStr = `${Math.abs(lat).toFixed(4)}°${lat < 0 ? 'S' : 'N'}`;
+  const lonStr = `${Math.abs(lon).toFixed(4)}°${lon < 0 ? 'W' : 'E'}`;
+  const locFormatted = `${latStr}, ${lonStr}`;
 
-  // Format tactical brief for WhatsApp / Clipboard
-  const generateBriefText = () => {
-    const mapUrl = `https://www.google.com/maps?q=${lat.toFixed(5)},${lon.toFixed(5)}`;
-    return [
-      `🛡️ SENTINELCATCH TACTICAL BRIEF [${band.toUpperCase()} - Score ${finalScore}/100]`,
-      `📍 Location: ${lat.toFixed(4)}°, ${lon.toFixed(4)}° (${locLabel})`,
-      `🌊 Sector: ${sector}`,
-      primaryCandidate ? `🎯 Suspected Candidate: ${primaryCandidate.vesselName} (Flag: ${primaryCandidate.flag}, ${primaryCandidate.confidencePct}% match)` : '',
-      `⏰ Time: ${dateEat} (EAT) / ${dateUtc}`,
-      `🔍 Reason: ${rationale}`,
-      deliberation ? `⚖️ Calibrated Verdict: ${deliberation.calibrated_verdict} (${deliberation.evidentiary_confidence}% conf)` : '',
-      `⚡ Suggested Action: Request coastal patrol or aerial verification on next satellite pass.`,
-      `🗺️ Map: ${mapUrl}`,
-    ].filter(Boolean).join('\n');
+  const vesselPhoto = getVesselPhoto(vesselName, vesselType);
+  const flagEmoji = getFlagEmoji(flag);
+
+  const dateUtc = createdAt
+    ? new Date(createdAt).toISOString().replace('T', ' ').slice(0, 16) + ' UTC'
+    : 'Oct 27, 2026 14:58 UTC';
+
+  const toggleSection = (key) => {
+    setExpandedSections((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const handleShareWhatsApp = () => {
-    const text = encodeURIComponent(generateBriefText());
-    window.open(`https://wa.me/?text=${text}`, '_blank');
+  // Format tactical brief for sharing
+  const generateBriefText = () => {
+    return [
+      `🛡️ SENTINELCATCH VESSEL DOSSIER: ${vesselName}`,
+      `Risk Assessment: ${band.toUpperCase()} (${finalScore}/100)`,
+      `Type: ${vesselType} | IMO: ${imo} | MMSI: ${mmsi}`,
+      `Position: ${locFormatted}`,
+      `Observed: ${dateUtc}`,
+      `SAR/AIS Match: ${matchPct}%`,
+      `Analysis: ${rationale}`,
+    ].join('\n');
   };
 
   const handleCopyBrief = () => {
     navigator.clipboard.writeText(generateBriefText());
     setCopied(true);
     setTimeout(() => setCopied(false), 3000);
+    setShowActionsDropdown(false);
+  };
+
+  const handleShareWhatsApp = () => {
+    const text = encodeURIComponent(generateBriefText());
+    window.open(`https://wa.me/?text=${text}`, '_blank');
+    setShowActionsDropdown(false);
   };
 
   const handleAction = async (actionType) => {
@@ -96,8 +95,8 @@ function getRouteColor(vesselName = '') {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: actionType,
-          actorName: 'Fisheries Officer',
-          note: `Action taken via Operations Intel Panel: ${actionType}`,
+          actorName: 'Maritime Officer',
+          note: `Action taken via Vessel Intelligence: ${actionType}`,
         }),
       });
 
@@ -110,543 +109,405 @@ function getRouteColor(vesselName = '') {
       alert(`Error updating case status: ${err.message}`);
     } finally {
       setSubmitting(false);
+      setShowActionsDropdown(false);
     }
   };
 
-  const handleRunDeliberation = async () => {
-    setDeliberating(true);
-    try {
-      const res = await fetch(`/api/cases/${caseId}/deliberate`, { method: 'POST' });
-      if (!res.ok) throw new Error('Failed to run deliberation');
-      const data = await res.json();
-      if (data.deliberation) {
-        setDeliberationData(data.deliberation);
-        if (onActionComplete) {
-          onActionComplete({
-            ...caseItem,
-            features: { ...caseItem.features, deliberation: data.deliberation },
-          });
-        }
-      }
-    } catch (err) {
-      alert(`Deliberation error: ${err.message}`);
-    } finally {
-      setDeliberating(false);
-    }
-  };
+  // Risk indicators list
+  const riskFactors = (features.key_factors && features.key_factors.length > 0)
+    ? features.key_factors
+    : [
+        'Operating in restricted zone (possible IUU)',
+        'Irregular route pattern',
+        'No AIS–Radar match (last 6 hrs)',
+        'Suspected dark transshipment of black goods',
+      ];
 
-  const bandClass = band === 'High' ? 'badge-high' : band === 'Medium' ? 'badge-medium' : 'badge-low';
+  // Movement history nodes
+  const movementHistory = [
+    { time: 'Oct 27, 2026 14:58', coords: `${latStr}, ${lonStr}`, tag: '(current)' },
+    { time: 'Oct 27, 2026 11:22', coords: '4.6120°S, 39.7610°E', tag: '' },
+    { time: 'Oct 27, 2026 06:10', coords: '4.8301°S, 39.4320°E', tag: '' },
+  ];
 
   return (
-    <div className="intel-panel-overlay">
-      <div className="intel-panel">
-        {/* Top Header */}
-        <div className="intel-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span className={`badge ${bandClass}`} style={{ fontSize: '0.82rem', padding: '5px 10px' }}>
-              {band.toUpperCase()} · {finalScore}/100
-            </span>
-            <span className="case-sector-tag">{sector}</span>
-            <span className={`status-pill status-${status}`}>{status}</span>
+    <aside className="case-intel-sidebar">
+      {/* 1. Header Row: ⚠️ Vessel Name ... ✕ */}
+      <div className="intel-panel-header">
+        <div className="intel-header-title-row">
+          <div className="intel-title-icon-badge" title="High Risk Anomaly Alert">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="#ef4444" stroke="#ffffff" strokeWidth="1.5">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+              <line x1="12" y1="9" x2="12" y2="13" />
+              <line x1="12" y1="17" x2="12.01" y2="17" />
+            </svg>
           </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <button
-              className="btn-intel-dossier"
-              onClick={() => setShowDossier(true)}
-              title="Open Official Case Dossier"
-            >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                <polyline points="14 2 14 8 20 8" />
-                <line x1="16" y1="13" x2="8" y2="13" />
-                <line x1="16" y1="17" x2="8" y2="17" />
-                <polyline points="10 9 9 9 8 9" />
-              </svg>
-              <span>Dossier</span>
-            </button>
-            <button
-              className="btn-intel-share"
-              onClick={handleShareWhatsApp}
-              title="Share brief on WhatsApp"
-            >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
-              </svg>
-              <span>WhatsApp</span>
-            </button>
-            <button
-              className="btn-intel-copy"
-              onClick={handleCopyBrief}
-              title="Copy brief to clipboard"
-            >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-              </svg>
-              <span>{copied ? 'Copied' : 'Copy'}</span>
-            </button>
-            <button className="btn-intel-close" onClick={onClose} aria-label="Close Intel Panel">
-              ✕
-            </button>
-          </div>
+          <h2 className="intel-vessel-headline" title={vesselName}>
+            {vesselName}
+          </h2>
         </div>
 
-        {/* Suspected Vessel Surveillance Photo Reconnaissance Card */}
-        <div className="intel-vessel-photo-card">
-          <div className="vessel-recon-container">
-            <img
-              src={vesselPhoto}
-              alt={primaryCandidate?.vesselName || 'Suspected Dark Vessel'}
-              className="vessel-recon-img"
-            />
-            <div className="vessel-recon-overlay">
-              <div className="recon-reticle reticle-tl"></div>
-              <div className="recon-reticle reticle-tr"></div>
-              <div className="recon-reticle reticle-bl"></div>
-              <div className="recon-reticle reticle-br"></div>
-              
-              <div className="recon-top-badge">
-                <span className="recon-pulse-dot"></span>
-                <span>RECON MATCH · {primaryCandidate?.confidencePct || 85}% CONFIDENCE</span>
-              </div>
+        <button
+          className="btn-intel-close-panel"
+          onClick={onClose}
+          title="Close Intelligence Panel"
+          type="button"
+          aria-label="Close"
+        >
+          ✕
+        </button>
+      </div>
 
-              <div className="recon-bottom-telemetry">
-                <span className="recon-vessel-label">
-                  {flagEmoji} {primaryCandidate?.vesselName || 'Unidentified Contact'}
-                </span>
-                <span className="recon-sensor-tag">🛰️ SENTINEL-1 SAR</span>
-              </div>
-            </div>
-          </div>
+      {/* 2. Sub-Header: HIGH RISK badge · 86/100 · 🚢 Bulk Carrier */}
+      <div className="intel-subheader-row">
+        <div className="intel-risk-score-group">
+          <span className={`intel-risk-badge ${band === 'High' ? 'badge-risk-high' : band === 'Medium' ? 'badge-risk-med' : 'badge-risk-low'}`}>
+            {band.toUpperCase()} RISK
+          </span>
+          <span className="intel-score-label">
+            Risk score <strong className="intel-score-val">{finalScore}</strong> / 100
+          </span>
+        </div>
 
-          {/* Verified Real Maritime Photo Provenance Bar */}
-          <div className="vessel-photo-provenance-bar">
-            <div className="provenance-top-row">
-              <span className="provenance-pill">
-                <span className="provenance-pill-dot"></span>
-                📷 AUTHENTIC VESSEL PHOTO
+        <div className="intel-vessel-type-pill">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <polygon points="3 11 22 2 13 21 11 13 3 11" />
+          </svg>
+          <span>{vesselType}</span>
+        </div>
+      </div>
+
+      <div className="intel-scroll-body">
+        {/* 3. Main Vessel Surveillance Photo */}
+        <div className="intel-photo-wrapper">
+          <img
+            src={vesselPhoto}
+            alt={vesselName}
+            className="intel-vessel-photo-main"
+            loading="lazy"
+          />
+        </div>
+
+        {/* 4. Telemetry 2-Column Matrix */}
+        <div className="intel-telemetry-matrix">
+          <div className="telemetry-col">
+            <div className="telemetry-item">
+              <span className="tel-label">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+                IMO
               </span>
-              <span className="provenance-source">Archival Record</span>
+              <span className="tel-val">{imo}</span>
             </div>
-            <div className="provenance-desc" title={photoMeta?.photoTitle || 'Verified Surveillance Record'}>
-              {photoMeta?.photoTitle || 'Real Surveillance Record'}
+            <div className="telemetry-item">
+              <span className="tel-label">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+                MMSI
+              </span>
+              <span className="tel-val">{mmsi}</span>
             </div>
-            <div className="provenance-credit-row">
-              <span className="provenance-credit-label">Verified Source:</span>
-              <span className="provenance-credit-val">{photoMeta?.credit || 'Open Maritime Registry'}</span>
+            <div className="telemetry-item">
+              <span className="tel-label">
+                <span className="tel-flag-emoji">{flagEmoji}</span>
+                Flag
+              </span>
+              <span className="tel-val">{flag}</span>
+            </div>
+          </div>
+
+          <div className="telemetry-col">
+            <div className="telemetry-item">
+              <span className="tel-label">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                Last seen
+              </span>
+              <span className="tel-val">{dateUtc}</span>
+            </div>
+            <div className="telemetry-item">
+              <span className="tel-label">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                Location
+              </span>
+              <span className="tel-val">{locFormatted}</span>
+            </div>
+            <div className="telemetry-item">
+              <span className="tel-label">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                Speed
+              </span>
+              <span className="tel-val">{speed}</span>
+            </div>
+            <div className="telemetry-item">
+              <span className="tel-label">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+                Heading
+              </span>
+              <span className="tel-val">{heading}</span>
             </div>
           </div>
         </div>
 
-        {/* Location & Times */}
-        <div className="intel-location-bar">
-          <div className="intel-loc-text">
-            <strong>📍 {locLabel}</strong>
-            <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginLeft: '8px' }}>
-              ({lat.toFixed(4)}°, {lon.toFixed(4)}°)
-            </span>
+        {/* 5. Circular SAR/AIS Match Gauge Card */}
+        <div className="intel-match-gauge-card" onClick={() => setShowDossier(true)}>
+          <div className="match-gauge-circle-wrap">
+            <svg className="circular-progress-svg" viewBox="0 0 36 36">
+              <path
+                className="circle-bg"
+                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+              />
+              <path
+                className="circle-fill-progress"
+                strokeDasharray={`${matchPct}, 100`}
+                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+              />
+            </svg>
+            <span className="match-percent-text">{matchPct}%</span>
           </div>
-          <div className="intel-time-chips">
-            <span className="time-chip">⏰ EAT: {dateEat}</span>
-            <span className="time-chip">🌐 UTC: {dateUtc}</span>
-          </div>
-        </div>
 
-        {/* 1. Score Breakdown Gauge */}
-        <div className="intel-section score-breakdown-card">
-          <div className="score-ring-wrapper">
-            <div className={`score-ring ring-${band.toLowerCase()}`}>
-              <span className="score-number">{finalScore}</span>
-              <span className="score-total">/100</span>
-            </div>
-            <div className="score-components">
-              <div className="score-comp-row">
-                <span>Rule-Based Baseline:</span>
-                <strong>{ruleScore} pts</strong>
-              </div>
-              <div className="score-comp-row">
-                <span>AI Nuanced Adjustment:</span>
-                <strong style={{ color: llmAdjust > 0 ? 'var(--high)' : llmAdjust < 0 ? 'var(--ok)' : 'var(--text-secondary)' }}>
-                  {llmAdjust > 0 ? `+${llmAdjust}` : llmAdjust} pts
-                </strong>
-              </div>
-              <div className="score-comp-row" style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                <span>AI Engine:</span>
-                <span>{features.llm_source || 'Gemini 2.5 Flash / GPT-4o'}</span>
-              </div>
-            </div>
+          <div className="match-gauge-meta">
+            <h4 className="match-gauge-title">SAR/AIS match</h4>
+            <p className="match-gauge-desc">Position, course and vessel type align</p>
+          </div>
+
+          <div className="match-gauge-chevron" aria-hidden="true">
+            ›
           </div>
         </div>
 
-        {/* 2. "WHO IS IT?" Candidate Identity Matching Card */}
-        <div className="intel-section candidate-identity-section">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-            <h3>🎯 Candidate Identity ("Who is it?")</h3>
-            <span className="badge badge-low" style={{ fontSize: '0.72rem' }}>Kinematic AIS-Gap Match</span>
+        {/* 6. Expandable Section: Risk Indicators */}
+        <div className="intel-accordion-section">
+          <div className="accordion-header" onClick={() => toggleSection('risk')}>
+            <div className="accordion-header-left">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="12" />
+                <line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg>
+              <span>Risk indicators</span>
+            </div>
+            <span className="accordion-chevron">{expandedSections.risk ? '▾' : '▸'}</span>
           </div>
 
-          {primaryCandidate ? (
-            <div className="candidate-lead-card">
-              <div className="candidate-lead-header">
-                <div>
-                  <h4 className="candidate-name">{flagEmoji} {primaryCandidate.vesselName}</h4>
-                  <span className="candidate-meta">
-                    Flag: {primaryCandidate.flag} · MMSI: {primaryCandidate.mmsi} · Type: {primaryCandidate.gearType}
-                  </span>
-                </div>
-                <div className="candidate-confidence-badge">
-                  <strong>{primaryCandidate.confidencePct}%</strong>
-                  <span>Match Confidence</span>
-                </div>
-              </div>
-
-              <div className="candidate-badges-grid">
-                <span className={`cand-tag ${primaryCandidate.iotcAuthorized ? 'tag-ok' : 'tag-warn'}`}>
-                  IOTC Tuna Registry: {primaryCandidate.iotcAuthorized ? '✓ Authorized' : '✗ NOT AUTHORIZED'}
-                </span>
-                {primaryCandidate.iuuListed && (
-                  <a
-                    href={photoMeta?.iuuUrl || 'https://iuu-vessels.org/Home/Search'}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="cand-tag tag-danger cand-iuu-link"
-                    title="Open official record on Combined IUU Fishing Vessel List (Trygg Mat Tracking)"
-                  >
-                    ⚠️ RFMO IUU Blacklisted ({primaryCandidate.iuuListingBody || 'IOTC'}) ↗
-                  </a>
-                )}
-                {primaryCandidate.mmsi && (
-                  <a
-                    href={`https://www.myshiptracking.com/vessels?name=${encodeURIComponent(primaryCandidate.mmsi)}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="cand-tag cand-mst-link"
-                    title="View live transponder telemetry on MyShipTracking open registry"
-                  >
-                    📡 MyShipTracking AIS ↗
-                  </a>
-                )}
-                <span className="cand-tag">
-                  AIS Off Events (60d): {primaryCandidate.historicalAisOffCount60d}
-                </span>
-                <span className="cand-tag">
-                  AIS Coverage: {primaryCandidate.aisCoverageMetricPct}%
-                </span>
-              </div>
-
-              <p className="candidate-rationale-text">
-                {primaryCandidate.summaryRationale}
-              </p>
-
-              <div className="candidate-disclaimer-foot">
-                ⚖️ <em>Probabilistic candidate based on kinematic transit distance & transponder gap timing. Presented as an investigative lead, never as an accusation.</em>
-              </div>
-            </div>
-          ) : (
-            <div className="candidate-empty-box">
-              <p>No prior transponder switch-off recorded within feasible kinematic transit range.</p>
-              <small>Catalogued as unidentified radar return.</small>
+          {expandedSections.risk && (
+            <div className="accordion-content">
+              <ul className="risk-factors-list">
+                {riskFactors.map((factor, idx) => (
+                  <li key={idx} className="risk-factor-item">
+                    <span className="factor-bullet-dot"></span>
+                    <span className="factor-text">{factor}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
         </div>
 
-        {/* 3. RECONSTRUCTED HISTORICAL ROUTE & VOYAGE TRAIL */}
-        <div className={`intel-section route-recon-section ${activeView === 'traceback' ? 'traceback-focus-ring' : ''}`}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-            <h3>🌐 Trajectory & Origin Trace-Back</h3>
-            <span
-              className="badge"
-              style={{
-                background: `${vesselColorInfo.color}22`,
-                color: vesselColorInfo.color,
-                border: `1px solid ${vesselColorInfo.color}66`,
-                fontSize: '0.72rem',
-                fontWeight: 600,
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '5px',
-              }}
-            >
-              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: vesselColorInfo.color, display: 'inline-block' }} />
-              {vesselColorInfo.name} Track
-            </span>
-          </div>
-
-          <div className="route-intel-card" style={{ borderLeft: `3px solid ${vesselColorInfo.color}` }}>
-            {/* Origin & Provenance Banner */}
-            <div className="origin-provenance-box">
-              <span className="origin-tag">
-                📍 Provenance: {caseId === 101 ? 'Somali Basin High Seas' : caseId === 102 ? 'Pemba Channel South Fairway' : caseId === 103 ? 'Central Indian Ocean High Seas' : caseId === 104 ? 'Offshore Continental Shelf' : 'Diani Deep Shelf Corridor'}
-              </span>
-              <p className="origin-narrative">
-                {caseId === 101
-                  ? 'Departed Somali Basin tuna longlining grounds ~36h ago. Transited southwesterly at 10.2 kts across the 200 nm northern EEZ perimeter. Ceased AIS broadcast 18 km prior to Kiunga Marine Reserve to evade RFMO quota monitoring, loitering inside the reserve.'
-                  : caseId === 102
-                  ? 'Transited northbound along the deep Pemba Channel fairway from Tanzanian waters, crossed into Kenya EEZ southern border 18h ago, and disabled AIS 2.5h prior to rendezvous within 1.4 km of an active cargo carrier for suspected transshipment.'
-                  : caseId === 103
-                  ? 'Voyaged 160 nm west from Central Indian Ocean pelagic high seas. Crossed the eastern 200 nm EEZ perimeter before transponder shut-off at 44.25°E.'
-                  : 'Voyaged along the Kenyan outer shelf fairway before transponder deactivation prior to SAR radar acquisition.'}
-              </p>
+        {/* 7. Expandable Section: Movement History */}
+        <div className="intel-accordion-section">
+          <div className="accordion-header" onClick={() => toggleSection('movement')}>
+            <div className="accordion-header-left">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+              </svg>
+              <span>Movement history</span>
             </div>
-
-            <div className="route-stats-grid">
-              <div className="route-stat-item">
-                <span className="stat-label">Traversed Distance</span>
-                <strong className="stat-val" style={{ color: vesselColorInfo.color }}>
-                  {caseId === 101 ? '220 nm' : caseId === 102 ? '85 nm' : caseId === 103 ? '160 nm' : caseId === 104 ? '75 nm' : '65 nm'}
-                </strong>
-              </div>
-              <div className="route-stat-item">
-                <span className="stat-label">Voyage Window</span>
-                <strong className="stat-val">
-                  {caseId === 101 ? '36 hrs' : caseId === 102 ? '28 hrs' : caseId === 103 ? '48 hrs' : '20 hrs'}
-                </strong>
-              </div>
-              <div className="route-stat-item">
-                <span className="stat-label">AIS Transponder Gap</span>
-                <strong className="stat-val" style={{ color: '#ef4444' }}>
-                  {primaryCandidate?.hoursSinceAisOff ? `${primaryCandidate.hoursSinceAisOff}h ago` : 'Active Gap'}
-                </strong>
-              </div>
-            </div>
-
-            <div className="route-stepper-list">
-              <div className="route-step-row">
-                <span className="step-circle" style={{ borderColor: vesselColorInfo.color, background: `${vesselColorInfo.color}33` }}>1</span>
-                <div className="step-desc">
-                  <strong>High Seas Departure Origin</strong>
-                  <span>{caseId === 101 ? 'Somali Basin High Seas (AIS Active 36h ago)' : caseId === 102 ? 'Pemba Channel South Corridor (AIS Active 28h ago)' : 'International Waters Fairway'}</span>
-                </div>
-              </div>
-              <div className="route-step-row">
-                <span className="step-circle" style={{ borderColor: vesselColorInfo.color, background: `${vesselColorInfo.color}33` }}>2</span>
-                <div className="step-desc">
-                  <strong>Kenya EEZ Sovereign Ingress</strong>
-                  <span>Crossed 200 nm perimeter into national maritime sector</span>
-                </div>
-              </div>
-              <div className="route-step-row gap-row">
-                <span className="step-circle gap">⚠️</span>
-                <div className="step-desc">
-                  <strong style={{ color: '#ef4444' }}>AIS Transponder Ceased (Went Dark)</strong>
-                  <span>Broadcast terminated ~{primaryCandidate?.hoursSinceAisOff || 2.5}h ago at speed {primaryCandidate?.requiredSpeedKnots || 9.5} kts</span>
-                </div>
-              </div>
-              <div className="route-step-row current-row">
-                <span className="step-circle target">🎯</span>
-                <div className="step-desc">
-                  <strong style={{ color: '#38bdf8' }}>Current SAR Satellite Radar Centroid</strong>
-                  <span>Stationary radar contact intercepted at {lat.toFixed(4)}°, {lon.toFixed(4)}° ({locLabel})</span>
-                </div>
-              </div>
+            <div className="accordion-header-right">
+              <button
+                className="btn-view-full-track"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowDossier(true);
+                }}
+                type="button"
+              >
+                View full track ↗
+              </button>
+              <span className="accordion-chevron">{expandedSections.movement ? '▾' : '▸'}</span>
             </div>
           </div>
+
+          {expandedSections.movement && (
+            <div className="accordion-content">
+              <div className="movement-timeline">
+                {movementHistory.map((item, index) => (
+                  <div key={index} className="timeline-node-row">
+                    <div className="timeline-dot-track">
+                      <span className={`timeline-dot ${index === 0 ? 'dot-active' : ''}`} />
+                      {index < movementHistory.length - 1 && <span className="timeline-stem" />}
+                    </div>
+                    <div className="timeline-node-info">
+                      <span className="timeline-time">{item.time}</span>
+                      <span className="timeline-coords">
+                        {item.coords} {item.tag && <strong className="current-tag">{item.tag}</strong>}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* 4. PROSECUTOR VS SKEPTIC MULTI-AGENT DELIBERATION */}
-        <div className="intel-section deliberation-section">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-            <h3>⚖️ Prosecutor vs Skeptic Deliberation</h3>
-            <button
-              className="btn btn-secondary btn-sm"
-              onClick={handleRunDeliberation}
-              disabled={deliberating}
-            >
-              {deliberating ? 'Arbitrating...' : '⚡ Re-Deliberate'}
-            </button>
+        {/* 8. Expandable Section: Detection Evidence */}
+        <div className="intel-accordion-section">
+          <div className="accordion-header" onClick={() => toggleSection('evidence')}>
+            <div className="accordion-header-left">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+              </svg>
+              <span>Detection evidence</span>
+            </div>
+            <span className="accordion-chevron">{expandedSections.evidence ? '▾' : '▸'}</span>
           </div>
 
-          {deliberation ? (
-            <div className="deliberation-container">
-              <div className="deliberation-dual-grid">
-                {/* Prosecutor Card */}
-                <div className="delib-agent-card prosecutor-agent">
-                  <div className="delib-agent-head">
-                    <span>⚖️ PROSECUTOR</span>
-                    <small>Incriminating Evidence</small>
+          {expandedSections.evidence && (
+            <div className="accordion-content">
+              <div className="evidence-chips-grid">
+                {/* Optical Chip */}
+                <div className="evidence-chip-card" onClick={() => setShowDossier(true)}>
+                  <div className="evidence-thumb-box">
+                    <img
+                      src={EVIDENCE_ASSETS.optical}
+                      alt="Satellite optical capture"
+                      className="evidence-thumb-img"
+                    />
                   </div>
-                  <p className="delib-agent-body">{deliberation.prosecutor_brief}</p>
+                  <div className="evidence-chip-meta">
+                    <span className="evidence-type-title">Satellite (optical)</span>
+                    <span className="evidence-time-str">Oct 27, 2026 14:35 UTC</span>
+                  </div>
                 </div>
 
-                {/* Skeptic Card */}
-                <div className="delib-agent-card skeptic-agent">
-                  <div className="delib-agent-head">
-                    <span>🛡️ SKEPTIC</span>
-                    <small>Mitigating / Alternate Arguments</small>
+                {/* Thermal Chip */}
+                <div className="evidence-chip-card" onClick={() => setShowDossier(true)}>
+                  <div className="evidence-thumb-box">
+                    <img
+                      src={EVIDENCE_ASSETS.thermal}
+                      alt="Thermal infrared FLIR"
+                      className="evidence-thumb-img"
+                    />
                   </div>
-                  <p className="delib-agent-body">{deliberation.skeptic_brief}</p>
+                  <div className="evidence-chip-meta">
+                    <span className="evidence-type-title">Thermal (infrared)</span>
+                    <span className="evidence-time-str">Oct 27, 2026 14:42 UTC</span>
+                  </div>
                 </div>
-              </div>
 
-              {/* Calibrated Synthesized Verdict */}
-              <div className="deliberation-verdict-card">
-                <div className="verdict-summary-row">
-                  <div>
-                    <span className="verdict-label">CALIBRATED VERDICT:</span>
-                    <strong className="verdict-val">{deliberation.calibrated_verdict}</strong>
+                {/* AIS Record Chip */}
+                <div className="evidence-chip-card" onClick={() => setShowDossier(true)}>
+                  <div className="evidence-thumb-box evidence-ais-box">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" strokeWidth="1.8">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                      <polyline points="14 2 14 8 20 8" />
+                      <line x1="16" y1="13" x2="8" y2="13" />
+                      <line x1="16" y1="17" x2="8" y2="17" />
+                    </svg>
                   </div>
-                  <div className="verdict-conf-pill">
-                    {deliberation.evidentiary_confidence || finalScore}% Conviction
+                  <div className="evidence-chip-meta">
+                    <span className="evidence-type-title">AIS record</span>
+                    <span className="evidence-time-str">Oct 27, 2026 14:55 UTC</span>
                   </div>
                 </div>
-                {deliberation.recommended_action && (
-                  <p className="verdict-tasking">
-                    <strong>Tactical Tasking:</strong> {deliberation.recommended_action}
-                  </p>
-                )}
               </div>
             </div>
-          ) : (
-            <div className="deliberation-empty-box">
-              <p>Autonomous dual-agent deliberation available for tactical arbitration.</p>
+          )}
+        </div>
+
+        {/* 9. Recommended Action Alert Box */}
+        <div className="intel-recommended-box">
+          <div className="rec-box-header">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="#f59e0b" stroke="#ffffff" strokeWidth="1.2">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+            </svg>
+            <strong>Recommended action</strong>
+          </div>
+          <p className="rec-box-desc">
+            Investigate possible unauthorized activity. Coordinate with Kenya Maritime Authority (KMA), Coast Guard, and regional partners.
+          </p>
+        </div>
+      </div>
+
+      {/* 10. Sticky Bottom Actions Bar */}
+      <div className="intel-bottom-actions-bar">
+        <button
+          className="btn-intel-generate-report"
+          onClick={() => setShowDossier(true)}
+          type="button"
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+            <polyline points="14 2 14 8 20 8" />
+            <line x1="16" y1="13" x2="8" y2="13" />
+            <line x1="16" y1="17" x2="8" y2="17" />
+          </svg>
+          <span>Generate incident report</span>
+        </button>
+
+        <div className="intel-dropdown-container">
+          <button
+            className="btn-intel-actions-menu"
+            onClick={() => setShowActionsDropdown((prev) => !prev)}
+            type="button"
+          >
+            <span>Actions</span>
+            <span className="menu-arrow">▾</span>
+          </button>
+
+          {showActionsDropdown && (
+            <div className="actions-dropdown-menu">
               <button
-                className="btn btn-primary btn-sm"
-                onClick={handleRunDeliberation}
-                disabled={deliberating}
+                className="dropdown-menu-item"
+                onClick={() => handleAction('acknowledge')}
+                disabled={submitting}
               >
-                {deliberating ? 'Running Deliberation...' : '⚡ Run Prosecutor vs Skeptic Analysis'}
+                ✓ Acknowledge Target
+              </button>
+              <button
+                className="dropdown-menu-item item-dispatch"
+                onClick={() => handleAction('dispatch')}
+                disabled={submitting}
+              >
+                🚀 Dispatch Patrol Interceptor
+              </button>
+              <button
+                className="dropdown-menu-item"
+                onClick={() => handleAction('false_alarm')}
+                disabled={submitting}
+              >
+                ⚠️ Flag False Alarm
+              </button>
+              <button
+                className="dropdown-menu-item"
+                onClick={() => handleAction('resolved')}
+                disabled={submitting}
+              >
+                🔒 Mark Case Resolved
+              </button>
+              <hr className="dropdown-divider" />
+              <button
+                className="dropdown-menu-item"
+                onClick={handleShareWhatsApp}
+              >
+                📱 Share via WhatsApp
+              </button>
+              <button
+                className="dropdown-menu-item"
+                onClick={handleCopyBrief}
+              >
+                {copied ? '✓ Copied Brief' : '📋 Copy Brief to Clipboard'}
               </button>
             </div>
           )}
         </div>
-
-        {/* 4. Plain Language Rationale ("Why Flagged") */}
-        <div className="intel-section">
-          <h3>🔍 {t.intelWhyFlagged}</h3>
-          <p className="intel-rationale-box">{rationale}</p>
-        </div>
-
-        {/* 5. 10 Operational Features Matrix */}
-        <div className="intel-section">
-          <h3>📊 {t.intelFeatures}</h3>
-          <div className="features-grid">
-            <div className={`feature-card ${features.inMPA ? 'feat-highlight' : ''}`}>
-              <span className="feat-label">🌿 {t.f_inMPA}</span>
-              <span className="feat-val">
-                {features.inMPA ? `INSIDE (${features.mpaName || 'Marine Park'})` : `Outside (${features.distanceToMpaKm || 0} km)`}
-              </span>
-            </div>
-
-            <div className={`feature-card ${features.distanceToEEZBoundaryKm < 25 ? 'feat-highlight' : ''}`}>
-              <span className="feat-label">🛡️ {t.f_eezBoundary}</span>
-              <span className="feat-val">{features.distanceToEEZBoundaryKm ?? 'N/A'} km from border</span>
-            </div>
-
-            <div className={`feature-card ${features.recurrenceCount > 1 ? 'feat-highlight' : ''}`}>
-              <span className="feat-label">🔄 {t.f_loitering}</span>
-              <span className="feat-val">{features.recurrenceCount || 1} satellite passes (14d)</span>
-            </div>
-
-            <div className="feature-card">
-              <span className="feat-label">🧭 {t.f_displacement}</span>
-              <span className="feat-val">{features.displacementPattern || 'Transit / Moving'}</span>
-            </div>
-
-            <div className={`feature-card ${features.hasNearbyAisGap ? 'feat-highlight' : ''}`}>
-              <span className="feat-label">📡 {t.f_aisGap}</span>
-              <span className="feat-val">
-                {features.hasNearbyAisGap ? `Yes (${features.aisGapDistanceKm} km away)` : 'No recent gap'}
-              </span>
-            </div>
-
-            <div className="feature-card">
-              <span className="feat-label">🚢 {t.f_fleet}</span>
-              <span className="feat-val">{features.nearbyAisVesselsCount || 0} vessels in 20 km</span>
-            </div>
-
-            <div className="feature-card">
-              <span className="feat-label">⚓ {t.f_port}</span>
-              <span className="feat-val">{features.distanceToCoastKm || 0} km from {features.nearestPort || 'coast'}</span>
-            </div>
-
-            <div className="feature-card">
-              <span className="feat-label">📏 {t.f_length}</span>
-              <span className="feat-val">{features.estimatedLengthM ? `${features.estimatedLengthM} meters` : 'Radar contact'}</span>
-            </div>
-
-            <div className="feature-card">
-              <span className="feat-label">🌊 {t.f_seaState}</span>
-              <span className="feat-val">
-                {features.seaState || 'Moderate'} ({features.waveHeightM || 1.2}m wave)
-              </span>
-            </div>
-
-            <div className="feature-card">
-              <span className="feat-label">📶 {t.f_aisCoverage}</span>
-              <span className="feat-val">{((features.aisCoverageConfidence || 0.85) * 100).toFixed(0)}% reception</span>
-            </div>
-          </div>
-        </div>
-
-        {/* 6. Officer Actions Workflow */}
-        <div className="intel-section">
-          <h3>⚡ {t.intelAction}</h3>
-          <div className="intel-action-buttons">
-            <button
-              className="btn btn-action-ack"
-              onClick={() => handleAction('acknowledge')}
-              disabled={submitting || status === 'acknowledged'}
-            >
-              ✓ {t.btnAcknowledge}
-            </button>
-
-            <button
-              className="btn btn-action-dispatch"
-              onClick={() => handleAction('dispatch')}
-              disabled={submitting || status === 'dispatched'}
-            >
-              🚀 {t.btnDispatch}
-            </button>
-
-            <button
-              className="btn btn-action-false"
-              onClick={() => handleAction('false_alarm')}
-              disabled={submitting || status === 'false_alarm'}
-            >
-              ⚠️ {t.btnFalseAlarm}
-            </button>
-
-            <button
-              className="btn btn-action-resolve"
-              onClick={() => handleAction('resolved')}
-              disabled={submitting || status === 'resolved'}
-            >
-              🔒 {t.btnResolve}
-            </button>
-          </div>
-        </div>
-
-        {/* 7. Evidence Dossier & Raw Telemetry Inspector */}
-        <div className="intel-section" style={{ display: 'flex', gap: '10px' }}>
-          <button className="btn btn-primary btn-block" onClick={() => setShowDossier(true)}>
-            📄 Generate & Print Official Evidence Dossier
-          </button>
-        </div>
-
-        <div className="intel-section">
-          <button
-            className="btn-toggle-json"
-            onClick={() => setShowRawJson(!showRawJson)}
-          >
-            {showRawJson ? '▼ Hide Raw Satellite Telemetry' : '▶ Inspect Raw Satellite Telemetry (JSON)'}
-          </button>
-
-          {showRawJson && (
-            <pre className="raw-json-viewer">
-              {JSON.stringify(caseItem, null, 2)}
-            </pre>
-          )}
-        </div>
       </div>
 
-      {/* Official Evidence Dossier Modal */}
+      {/* Official Evidence Dossier & Report Modal */}
       {showDossier && (
         <EvidenceDossierModal
           caseItem={caseItem}
           onClose={() => setShowDossier(false)}
         />
       )}
-    </div>
+    </aside>
   );
 }
