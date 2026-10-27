@@ -1016,6 +1016,51 @@ body {
   color: var(--text-secondary);
 }
 
+.zulu-time-chip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 9px;
+  background: rgba(14, 21, 38, 0.9);
+  border: 1px solid rgba(14, 165, 233, 0.3);
+  border-radius: var(--radius-full);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #38bdf8;
+  letter-spacing: 0.03em;
+}
+
+.sensor-telemetry-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: rgba(10, 20, 36, 0.85);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  border-radius: var(--radius-full);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #34d399;
+  letter-spacing: 0.02em;
+}
+
+.telemetry-pulse-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 8px #10b981;
+  animation: pulse-dot 1.5s infinite;
+}
+
+@media (max-width: 1100px) {
+  .hidden-mobile {
+    display: none !important;
+  }
+}
+
 .ops-nav {
   display: flex;
   align-items: center;
@@ -1682,180 +1727,426 @@ body {
   margin-top: 4px;
 }
 
-/* ── Tactical God's Eye Surface Beacons on MapLibre ────────────────────── */
+/* ── Tactical Vessel Map Pins on MapLibre (Recon Bubble & God's Eye Surface Beacon) ── */
 .tactical-map-pin {
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   cursor: pointer;
   user-select: none;
-  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), z-index 0.1s;
-  z-index: 30;
+  transform-origin: bottom center;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), z-index 0.1s;
+  z-index: 20;
   pointer-events: auto;
 }
 
 .tactical-map-pin:hover {
-  transform: scale(1.08);
+  transform: translateY(-6px) scale(1.06);
   z-index: 100 !important;
 }
 
 .tactical-map-pin.is-selected {
-  transform: scale(1.12);
+  transform: translateY(-8px) scale(1.1);
   z-index: 200 !important;
 }
 
-/* Compact Glass Tactical Chip */
-.pin-tactical-chip {
-  display: flex;
+/* Compact Beacon Chip (Rendered at low zoom levels) */
+.pin-beacon-chip {
+  display: none;
   align-items: center;
-  gap: 6px;
-  background: rgba(8, 16, 32, 0.92);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  padding: 4px 9px 4px 7px;
+  gap: 5px;
+  background: rgba(10, 16, 30, 0.94);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1.5px solid rgba(255, 255, 255, 0.18);
+  padding: 3px 8px 3px 6px;
   border-radius: 9999px;
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.75), 0 0 12px rgba(56, 189, 248, 0.2);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.7), 0 0 10px rgba(56, 189, 248, 0.25);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   white-space: nowrap;
-  margin-bottom: 3px;
 }
 
-.band-high .pin-tactical-chip {
+.band-high .pin-beacon-chip {
   border-color: rgba(239, 68, 68, 0.75);
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.75), 0 0 14px rgba(239, 68, 68, 0.4);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.75), 0 0 14px rgba(239, 68, 68, 0.4);
 }
 
-.band-medium .pin-tactical-chip {
+.band-medium .pin-beacon-chip {
   border-color: rgba(245, 158, 11, 0.75);
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.75), 0 0 14px rgba(245, 158, 11, 0.35);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.75), 0 0 14px rgba(245, 158, 11, 0.4);
 }
 
-.band-low .pin-tactical-chip {
-  border-color: rgba(16, 185, 129, 0.75);
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.75), 0 0 14px rgba(16, 185, 129, 0.35);
-}
-
-.tactical-map-pin.is-selected .pin-tactical-chip {
-  border-color: #00f5d4 !important;
-  background: rgba(10, 24, 46, 0.96) !important;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.85), 0 0 20px rgba(0, 245, 212, 0.65) !important;
-}
-
-.chip-flag {
+.beacon-flag {
   font-size: 0.85rem;
 }
 
-.chip-score {
-  font-size: 0.68rem;
+.beacon-score {
+  font-size: 0.65rem;
   font-weight: 800;
-  padding: 1px 6px;
+  padding: 1px 5px;
   border-radius: 9999px;
   color: #ffffff;
 }
 
-.chip-score.high {
+.beacon-score.high {
   background: #dc2626;
 }
 
-.chip-score.medium {
+.beacon-score.medium {
   background: #d97706;
 }
 
-.chip-score.low {
+.beacon-score.low {
   background: #16a34a;
 }
 
-.chip-name {
-  font-size: 0.72rem;
+.beacon-name {
+  font-size: 0.7rem;
   font-weight: 700;
   color: #f1f5f9;
   letter-spacing: -0.01em;
+}
+
+.beacon-pulse-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #38bdf8;
+  animation: pulse-dot 1.2s infinite;
+}
+
+/* Compact Beacon Mode: Zoomed Out */
+.tactical-map-pin.compact-beacon .pin-card-bubble {
+  display: none;
+}
+
+.tactical-map-pin.compact-beacon .pin-beacon-chip {
+  display: flex;
+}
+
+/* Hover expansion when in compact beacon mode */
+.tactical-map-pin.compact-beacon:hover {
+  z-index: 1000 !important;
+}
+
+.tactical-map-pin.compact-beacon:hover .pin-beacon-chip {
+  display: none;
+}
+
+.tactical-map-pin.compact-beacon:hover .pin-card-bubble {
+  display: block !important;
+  position: absolute;
+  bottom: 24px;
+  z-index: 1000 !important;
+  animation: beacon-expand 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.9), 0 0 24px rgba(14, 165, 233, 0.5) !important;
+}
+
+@keyframes beacon-expand {
+  from {
+    opacity: 0;
+    transform: scale(0.88) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Selected vessel overrides compact mode completely */
+.tactical-map-pin.is-selected .pin-beacon-chip {
+  display: none !important;
+}
+
+.tactical-map-pin.is-selected .pin-card-bubble {
+  display: block !important;
+}
+
+/* Tight compact stem so beacon chip stays pinned right above radar target without clipping */
+.tactical-map-pin.compact-beacon .pin-pointer-stem .stem-line {
+  height: 6px;
+}
+
+.tactical-map-pin.compact-beacon .pin-pointer-stem .stem-arrow {
+  border-top-width: 4px;
+  border-left-width: 4px;
+  border-right-width: 4px;
+}
+
+.tactical-map-pin.compact-beacon .pin-water-target {
+  height: 8px;
+}
+
+/* Full Tactical Recon Photo Card Bubble */
+.pin-card-bubble {
+  width: 226px;
+  background: rgba(9, 14, 26, 0.95);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.75), 0 0 18px rgba(56, 189, 248, 0.2);
+  overflow: hidden;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.band-high .pin-card-bubble {
+  border-color: rgba(239, 68, 68, 0.7);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.8), 0 0 22px rgba(239, 68, 68, 0.35);
+}
+
+.band-medium .pin-card-bubble {
+  border-color: rgba(245, 158, 11, 0.7);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.8), 0 0 22px rgba(245, 158, 11, 0.35);
+}
+
+.is-selected .pin-card-bubble {
+  border: 2px solid #0ea5e9 !important;
+  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.9), 0 0 28px rgba(14, 165, 233, 0.65) !important;
+}
+
+.pin-photo-header {
+  position: relative;
+  width: 100%;
+  height: 98px;
+  background: #050811;
+  overflow: hidden;
+}
+
+.pin-vessel-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.3s ease;
+}
+
+.tactical-map-pin:hover .pin-vessel-img {
+  transform: scale(1.05);
+}
+
+.pin-real-photo-badge {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  background: rgba(5, 8, 17, 0.88);
+  border: 1px solid rgba(16, 185, 129, 0.5);
+  color: #34d399;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 2px 6px;
+  border-radius: 4px;
+  backdrop-filter: blur(6px);
+  z-index: 5;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+}
+
+.pin-band-chip {
+  position: absolute;
+  bottom: 6px;
+  left: 6px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  backdrop-filter: blur(8px);
+  z-index: 5;
+}
+
+.pin-band-chip.high {
+  background: rgba(220, 38, 38, 0.92);
+  color: #ffffff;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.6);
+}
+
+.pin-band-chip.medium {
+  background: rgba(217, 119, 6, 0.92);
+  color: #ffffff;
+}
+
+.pin-band-chip.low {
+  background: rgba(22, 163, 74, 0.92);
+  color: #ffffff;
 }
 
 .chip-pulse-dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #38bdf8;
+  background: #ffffff;
   animation: pulse-dot 1.2s infinite;
 }
 
-.chip-locked-tag {
+.pin-iuu-badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: #dc2626;
+  color: #ffffff;
   font-size: 0.58rem;
   font-weight: 800;
-  color: #00f5d4;
-  background: rgba(0, 245, 212, 0.15);
-  border: 1px solid rgba(0, 245, 212, 0.4);
-  padding: 1px 4px;
-  border-radius: 3px;
-  letter-spacing: 0.05em;
+  padding: 2px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.03em;
+  box-shadow: 0 0 8px rgba(220, 38, 38, 0.7);
+  z-index: 5;
 }
 
-/* Water Surface Target Rings */
-.pin-surface-target {
+.pin-mpa-badge {
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  background: rgba(16, 185, 129, 0.92);
+  color: #ffffff;
+  font-size: 0.58rem;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.03em;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+  z-index: 5;
+}
+
+.pin-details-body {
+  padding: 9px 11px;
+  background: rgba(11, 18, 33, 0.98);
+}
+
+.pin-title-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #f8fafc;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pin-flag-icon {
+  font-size: 0.95rem;
+}
+
+.pin-vessel-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pin-meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.7rem;
+  color: #94a3b8;
+  margin-top: 5px;
+}
+
+.pin-loc-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 130px;
+}
+
+.pin-match-chip {
+  color: #38bdf8;
+  font-weight: 700;
+  background: rgba(56, 189, 248, 0.14);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.66rem;
+}
+
+.pin-selected-indicator {
+  margin-top: 7px;
+  padding-top: 5px;
+  border-top: 1px solid rgba(14, 165, 233, 0.35);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.64rem;
+  font-weight: 800;
+  color: #0ea5e9;
+  letter-spacing: 0.04em;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.sel-pulse-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #0ea5e9;
+  animation: pulse-dot 1s infinite;
+}
+
+/* Pointer Stem & Arrow */
+.pin-pointer-stem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stem-line {
+  width: 2px;
+  height: 18px;
+  background: linear-gradient(to bottom, rgba(56, 189, 248, 0.9), rgba(14, 165, 233, 1));
+  box-shadow: 0 0 8px rgba(14, 165, 233, 0.6);
+}
+
+.stem-arrow {
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 7px solid #0ea5e9;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.6));
+}
+
+/* Water Radar / Sonar Target Beacon */
+.pin-water-target {
   position: relative;
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.target-center-dot {
-  width: 7px;
-  height: 7px;
+.water-crosshair {
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
-  background: #00f5d4;
-  box-shadow: 0 0 10px #00f5d4;
-  z-index: 3;
+  background: #0ea5e9;
+  box-shadow: 0 0 10px #0ea5e9;
+  z-index: 2;
 }
 
-.target-center-dot.high {
-  background: #ef4444;
-  box-shadow: 0 0 10px #ef4444;
-}
-
-.target-center-dot.medium {
-  background: #f59e0b;
-  box-shadow: 0 0 10px #f59e0b;
-}
-
-.target-center-dot.low {
-  background: #10b981;
-  box-shadow: 0 0 10px #10b981;
-}
-
-.target-ripple {
+.water-ripple {
   position: absolute;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
-  border: 1.5px solid rgba(6, 182, 212, 0.6);
+  border: 1.5px solid #0ea5e9;
+  animation: sonar-ripple 2.4s infinite cubic-bezier(0.2, 0.6, 0.35, 1);
   pointer-events: none;
 }
 
-.ring-outer {
-  width: 20px;
-  height: 20px;
-  animation: sonar-wave 2s infinite ease-out;
+.water-ripple.ring-2 {
+  animation-delay: 1.2s;
 }
 
-.ring-inner {
-  width: 12px;
-  height: 12px;
-  animation: sonar-wave 2s infinite ease-out 0.6s;
-}
-
-@keyframes sonar-wave {
-  0% {
-    transform: scale(0.5);
-    opacity: 0.9;
-  }
-  100% {
-    transform: scale(2.2);
-    opacity: 0;
-  }
+@keyframes sonar-ripple {
+  0% { transform: scale(0.2); opacity: 0.95; }
+  100% { transform: scale(2.2); opacity: 0; }
 }
 
 /* ── Intel Panel Vessel Surveillance Photo Recon Card ────────── */

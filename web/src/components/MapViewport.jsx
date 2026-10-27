@@ -64,6 +64,7 @@ export default function MapViewport({
   const mapRef = useRef(null);
   const markersRef = useRef([]);
 
+  const [isGlobe, setIsGlobe] = useState(false);
   const [layersLoaded, setLayersLoaded] = useState(false);
   const popupRef = useRef(null);
   const [legendCollapsed, setLegendCollapsed] = useState(false);
@@ -142,6 +143,25 @@ export default function MapViewport({
       mapRef.current = null;
     };
   }, []);
+
+  // Projection switch: Flat (Mercator) vs 3D Globe
+  const toggleProjection = useCallback(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    const nextIsGlobe = !isGlobe;
+    setIsGlobe(nextIsGlobe);
+
+    try {
+      if (typeof map.setProjection === 'function') {
+        map.setProjection({
+          type: nextIsGlobe ? 'globe' : 'mercator',
+        });
+      }
+    } catch (err) {
+      console.warn('Projection toggle note:', err);
+    }
+  }, [isGlobe]);
 
   // Reset to full Kenya EEZ fairway view
   const resetToFairway = useCallback(() => {
@@ -694,42 +714,77 @@ export default function MapViewport({
       const inMPA = Boolean(c.features?.inMPA);
       const isIUU = Boolean(candidate?.iuuListed);
 
-      // Create custom DOM element for tactical pin (God's Eye Surface Beacon)
+      // Create custom DOM element for tactical pin (Recon Photo Bubble & Target Ripple)
       const el = document.createElement('div');
-      el.className = `tactical-map-pin ${isSelected ? 'is-selected' : ''} band-${(c.band || 'high').toLowerCase()}`;
+      el.className = `tactical-map-pin ${isSelected ? 'is-selected' : ''} ${isCompact ? 'compact-beacon' : ''} band-${(c.band || 'high').toLowerCase()}`;
       el.setAttribute('data-case-id', c.id);
 
       el.innerHTML = `
-        <div class="pin-tactical-chip ${isSelected ? 'target-locked' : ''}">
-          <span class="chip-flag">${flagEmoji}</span>
-          <span class="chip-score ${(c.band || 'high').toLowerCase()}">${score}</span>
-          <span class="chip-name">${vesselName.length > 15 ? vesselName.slice(0, 14) + '…' : vesselName}</span>
-          ${isSelected ? '<span class="chip-locked-tag">LOCKED</span>' : '<span class="chip-pulse-dot"></span>'}
+        <!-- Compact Tactical Beacon (Rendered at low zoom levels) -->
+        <div class="pin-beacon-chip">
+          <span class="beacon-flag">${flagEmoji}</span>
+          <span class="beacon-score ${(c.band || 'high').toLowerCase()}">${score}</span>
+          <span class="beacon-name">${vesselName.length > 14 ? vesselName.slice(0, 13) + '…' : vesselName}</span>
+          <span class="beacon-pulse-dot"></span>
         </div>
-        <div class="pin-surface-target">
-          <div class="target-ripple ring-outer"></div>
-          <div class="target-ripple ring-inner"></div>
-          <div class="target-center-dot ${(c.band || 'high').toLowerCase()}"></div>
+
+        <!-- Full Recon Photo Card Bubble -->
+        <div class="pin-card-bubble">
+          <div class="pin-photo-header">
+            <img src="${vesselPhoto}" alt="${vesselName}" class="pin-vessel-img" loading="lazy" />
+            <div class="pin-real-photo-badge">P-8A RECON // FLIR</div>
+            <div class="pin-band-chip ${(c.band || 'high').toLowerCase()}">
+              <span class="chip-pulse-dot"></span>
+              ${band} · ${score}
+            </div>
+            ${isIUU ? '<span class="pin-iuu-badge">RFMO BLACKLIST</span>' : ''}
+            ${inMPA ? '<span class="pin-mpa-badge">PROTECTED MPA</span>' : ''}
+          </div>
+          <div class="pin-details-body">
+            <div class="pin-title-row">
+              <span class="pin-flag-icon">${flagEmoji}</span>
+              <span class="pin-vessel-title" title="${vesselName}">${vesselName}</span>
+            </div>
+            <div class="pin-meta-row">
+              <span class="pin-loc-text">${locLabel}</span>
+              <span class="pin-match-chip">${matchPct}% match</span>
+            </div>
+            ${isSelected ? `
+              <div class="pin-selected-indicator">
+                <span class="sel-pulse-dot"></span>
+                <span class="sel-text">ACTIVE TARGET · INTEL OPEN</span>
+              </div>
+            ` : ''}
+          </div>
+        </div>
+        <div class="pin-pointer-stem">
+          <div class="stem-line"></div>
+          <div class="stem-arrow"></div>
+        </div>
+        <div class="pin-water-target">
+          <div class="water-ripple ring-1"></div>
+          <div class="water-ripple ring-2"></div>
+          <div class="water-crosshair"></div>
         </div>
       `;
 
-      // Click to select case and center smoothly in stable fixed 3D perspective
+      // Click to select case and center smoothly
       el.addEventListener('click', (e) => {
         e.stopPropagation();
         onSelectCase(c.id);
         map.flyTo({
           center: [lon, lat],
-          zoom: 9.2,
-          pitch: 24,
+          zoom: 9.4,
+          pitch: 26,
           bearing: 0,
           essential: true,
-          duration: 1000,
+          duration: 1100,
         });
       });
 
       const marker = new maplibregl.Marker({
         element: el,
-        anchor: 'center',
+        anchor: 'bottom',
       })
         .setLngLat([lon, lat])
         .addTo(map);
@@ -801,6 +856,25 @@ export default function MapViewport({
 
       {/* Modern HUD Projection & Layer Controls Toolbar */}
       <div className="map-overlay-controls">
+        <button
+          className={`btn-projection ${isGlobe ? 'btn-active' : ''}`}
+          onClick={toggleProjection}
+          title={isGlobe ? "Switch to Flat Mercator Map Projection" : "Switch to 3D Globe Projection"}
+          id="toggle-projection-btn"
+        >
+          {isGlobe ? (
+            <>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+              <span>3D Globe</span>
+            </>
+          ) : (
+            <>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+              <span>Flat Map</span>
+            </>
+          )}
+        </button>
+
         <button
           className="btn-projection"
           onClick={resetToFairway}

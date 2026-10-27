@@ -31,6 +31,14 @@ export default function Home() {
   const [testToast, setTestToast] = useState(null);
   const [showPatrolModal, setShowPatrolModal] = useState(false);
   const [showChatModal, setShowChatModal] = useState(false);
+  const [zuluTime, setZuluTime] = useState(() => new Date().toISOString().slice(11, 19) + 'Z');
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setZuluTime(new Date().toISOString().slice(11, 19) + 'Z');
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Fetch cases from /api/cases
   const fetchCases = useCallback(() => {
@@ -122,6 +130,19 @@ export default function Home() {
               className={`status-dot ${connectionStatus === 'connected' ? 'dot-ok' : 'dot-warn'}`}
             ></span>
             <span>{connectionStatus === 'connected' ? 'LIVE SSE' : connectionStatus.toUpperCase()}</span>
+          </div>
+
+          <div className="zulu-time-chip" title="Active Zulu Time [UTC Clock]">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+            <span>UTC {zuluTime}</span>
+          </div>
+
+          <div className="sensor-telemetry-chip hidden-mobile" title="Surveillance Coverage: 245,000 sq km (Kenya EEZ)">
+            <span className="telemetry-pulse-dot"></span>
+            <span>245,000 SQ KM · AIS / SAR ACTIVE</span>
           </div>
         </div>
 
