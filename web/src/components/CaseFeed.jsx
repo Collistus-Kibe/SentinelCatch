@@ -153,7 +153,6 @@ export default function CaseFeed({
         {/* Search & Band Filters */}
         <div className="feed-filter-row">
           <div className="search-input-wrapper">
-            <span className="search-icon">🔍</span>
             <input
               type="text"
               className="feed-search-input"

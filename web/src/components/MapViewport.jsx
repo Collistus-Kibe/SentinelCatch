@@ -55,6 +55,7 @@ export default function MapViewport({
   onSelectCase,
   cases = [],
   activeSector = 'all',
+  activeView = 'tactical',
   language = 'en',
   flyToCoords = null,
 }) {
@@ -63,7 +64,6 @@ export default function MapViewport({
   const mapRef = useRef(null);
   const markersRef = useRef([]);
 
-  const [isGlobe, setIsGlobe] = useState(false);
   const [layersLoaded, setLayersLoaded] = useState(false);
   const popupRef = useRef(null);
   const [legendCollapsed, setLegendCollapsed] = useState(false);
@@ -93,53 +93,36 @@ export default function MapViewport({
       .catch((err) => console.error('Failed to load map layers:', err));
   }, []);
 
-  // Initialize MapLibre
+  // Initialize MapLibre in a stable, fixed 3D perspective focused on Kenya EEZ & East Africa
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) return;
 
     const map = new maplibregl.Map({
       container: mapContainerRef.current,
       style: DARK_OCEAN_STYLE,
-      center: [40.85, -3.15], // Centers entire Kenya maritime fairway (Kiunga to Shimoni)
-      zoom: 6.6,
+      center: [41.25, -3.15], // Centers Kenya EEZ fairway from Kiunga to Shimoni
+      zoom: 6.8,
       minZoom: 4.8,
       maxZoom: 15.0,
       maxBounds: [
-        [28.0, -12.5], // Southwest [lon, lat] (Tanzania / Mozambique channel / East Africa)
-        [54.0, 7.5],   // Northeast [lon, lat] (Somali basin / Arabian sea / Seychelles)
+        [28.0, -12.5], // Southwest [lon, lat] (East Africa coast)
+        [54.0, 7.5],   // Northeast [lon, lat] (Somali basin / Arabian sea)
       ],
-      pitch: 16,
-      bearing: 0,
+      pitch: 24, // Fixed military God's Eye 3D perspective
+      bearing: 0, // Strict North-up tactical orientation
+      dragRotate: false, // Lock rotation to prevent map spinning or disorienting angle tilt
+      touchPitch: false, // Lock pitch on touch/mobile
+      maxPitch: 26,
+      minPitch: 20,
       attributionControl: false,
     });
 
-    map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'top-right');
+    map.addControl(new maplibregl.NavigationControl({ showCompass: false, showZoom: true }), 'top-right');
     map.addControl(new maplibregl.ScaleControl({ unit: 'nautical' }), 'bottom-left');
 
     map.on('error', (e) => {
       console.warn('MapLibre tile event:', e.error?.message || e);
     });
-
-    // Dynamic zoom listener to collapse pins into compact beacons at lower zoom
-    const handleZoom = () => {
-      const z = map.getZoom();
-      const isCompactNow = z < 7.2;
-      const pinElements = mapContainerRef.current?.querySelectorAll('.tactical-map-pin');
-      pinElements?.forEach((pin) => {
-        const isSelected = pin.classList.contains('is-selected');
-        if (!isSelected) {
-          if (isCompactNow) {
-            pin.classList.add('compact-beacon');
-          } else {
-            pin.classList.remove('compact-beacon');
-          }
-        } else {
-          pin.classList.remove('compact-beacon');
-        }
-      });
-    };
-
-    map.on('zoom', handleZoom);
 
     map.on('load', () => {
       mapRef.current = map;
@@ -160,24 +143,43 @@ export default function MapViewport({
     };
   }, []);
 
-  // Projection switch: Flat (Mercator) vs 3D Globe
-  const toggleProjection = useCallback(() => {
+  // Reset to full Kenya EEZ fairway view
+  const resetToFairway = useCallback(() => {
     const map = mapRef.current;
     if (!map) return;
+    map.flyTo({
+      center: [41.25, -3.15],
+      zoom: 6.8,
+      pitch: 24,
+      bearing: 0,
+      essential: true,
+      duration: 1200,
+    });
+  }, []);
 
-    const nextIsGlobe = !isGlobe;
-    setIsGlobe(nextIsGlobe);
-
-    try {
-      if (typeof map.setProjection === 'function') {
-        map.setProjection({
-          type: nextIsGlobe ? 'globe' : 'mercator',
-        });
-      }
-    } catch (err) {
-      console.warn('Globe projection switch note:', err);
+  // When activeView switches to 'traceback', automatically frame the full oceanic route of the active case
+  useEffect(() => {
+    if (activeView !== 'traceback' || !mapRef.current || !layersLoaded) return;
+    const tracks = (mapLayersData?.features || []).filter((f) => f.properties?.type === 'vessel_track');
+    const targetTrack = tracks.find((t) => t.properties.caseId === selectedCaseId) || tracks[0];
+    if (targetTrack?.geometry?.coordinates?.length) {
+      const coords = targetTrack.geometry.coordinates;
+      let minLon = coords[0][0], maxLon = coords[0][0];
+      let minLat = coords[0][1], maxLat = coords[0][1];
+      coords.forEach(([lon, lat]) => {
+        if (lon < minLon) minLon = lon;
+        if (lon > maxLon) maxLon = lon;
+        if (lat < minLat) minLat = lat;
+        if (lat > maxLat) maxLat = lat;
+      });
+      mapRef.current.fitBounds([[minLon, minLat], [maxLon, maxLat]], {
+        padding: { top: 90, bottom: 90, left: 90, right: 90 },
+        pitch: 24,
+        bearing: 0,
+        duration: 1200,
+      });
     }
-  }, [isGlobe]);
+  }, [activeView, selectedCaseId, layersLoaded, mapLayersData]);
 
   // Add / Update Base GeoJSON Layers (EEZ, MPAs, Ports, AIS Ships)
   useEffect(() => {
@@ -420,16 +422,56 @@ export default function MapViewport({
         source: 'sentinelcatch-data',
         filter: ['==', ['get', 'type'], 'track_origin'],
         layout: {
-          'text-field': ['concat', '▶ START · ', ['get', 'label']],
+          'text-field': ['concat', '▶ ORIGIN · ', ['get', 'label']],
           'text-size': 10,
           'text-anchor': 'left',
           'text-offset': [1.2, 0],
-          'text-allow-overlap': false,
-          'text-max-width': 20,
+          'text-allow-overlap': true,
+          'text-max-width': 22,
           visibility: visibleLayers.tracks ? 'visible' : 'none',
         },
         paint: {
           'text-color': ['get', 'color'],
+          'text-halo-color': '#080d1a',
+          'text-halo-width': 2.5,
+          'text-opacity': 0.95,
+        },
+      });
+
+      // 5b. EEZ Ingress Markers (Crossed 200nm Kenya EEZ Line)
+      map.addLayer({
+        id: 'tracks-ingress-markers',
+        type: 'circle',
+        source: 'sentinelcatch-data',
+        filter: ['==', ['get', 'type'], 'track_ingress'],
+        layout: {
+          visibility: visibleLayers.tracks ? 'visible' : 'none',
+        },
+        paint: {
+          'circle-radius': 6.5,
+          'circle-color': '#38bdf8',
+          'circle-stroke-width': 2,
+          'circle-stroke-color': '#0369a1',
+        },
+      });
+
+      // 5c. EEZ Ingress Labels
+      map.addLayer({
+        id: 'tracks-ingress-labels',
+        type: 'symbol',
+        source: 'sentinelcatch-data',
+        filter: ['==', ['get', 'type'], 'track_ingress'],
+        layout: {
+          'text-field': ['get', 'label'],
+          'text-size': 9.5,
+          'text-anchor': 'left',
+          'text-offset': [1.2, 0],
+          'text-allow-overlap': true,
+          'text-max-width': 22,
+          visibility: visibleLayers.tracks ? 'visible' : 'none',
+        },
+        paint: {
+          'text-color': '#38bdf8',
           'text-halo-color': '#080d1a',
           'text-halo-width': 2.5,
           'text-opacity': 0.95,
@@ -575,6 +617,8 @@ export default function MapViewport({
     setVis('tracks-waypoints', visibleLayers.tracks);
     setVis('tracks-origin-markers', visibleLayers.tracks);
     setVis('tracks-origin-labels', visibleLayers.tracks);
+    setVis('tracks-ingress-markers', visibleLayers.tracks);
+    setVis('tracks-ingress-labels', visibleLayers.tracks);
     setVis('tracks-gap-labels', visibleLayers.tracks);
     setVis('ships-circle', visibleLayers.ships);
     setVis('coverage-fill', visibleLayers.coverage);
@@ -650,76 +694,42 @@ export default function MapViewport({
       const inMPA = Boolean(c.features?.inMPA);
       const isIUU = Boolean(candidate?.iuuListed);
 
-      // Create custom DOM element for tactical pin
+      // Create custom DOM element for tactical pin (God's Eye Surface Beacon)
       const el = document.createElement('div');
-      el.className = `tactical-map-pin ${isSelected ? 'is-selected' : ''} ${isCompact ? 'compact-beacon' : ''} band-${(c.band || 'high').toLowerCase()}`;
+      el.className = `tactical-map-pin ${isSelected ? 'is-selected' : ''} band-${(c.band || 'high').toLowerCase()}`;
       el.setAttribute('data-case-id', c.id);
 
       el.innerHTML = `
-        <!-- Compact Tactical Beacon (Rendered at low zoom levels) -->
-        <div class="pin-beacon-chip">
-          <span class="beacon-flag">${flagEmoji}</span>
-          <span class="beacon-score ${(c.band || 'high').toLowerCase()}">${score}</span>
-          <span class="beacon-name">${vesselName.length > 14 ? vesselName.slice(0, 13) + '…' : vesselName}</span>
-          <span class="beacon-pulse-dot"></span>
+        <div class="pin-tactical-chip ${isSelected ? 'target-locked' : ''}">
+          <span class="chip-flag">${flagEmoji}</span>
+          <span class="chip-score ${(c.band || 'high').toLowerCase()}">${score}</span>
+          <span class="chip-name">${vesselName.length > 15 ? vesselName.slice(0, 14) + '…' : vesselName}</span>
+          ${isSelected ? '<span class="chip-locked-tag">LOCKED</span>' : '<span class="chip-pulse-dot"></span>'}
         </div>
-
-        <!-- Full Recon Photo Card Bubble -->
-        <div class="pin-card-bubble">
-          <div class="pin-photo-header">
-            <img src="${vesselPhoto}" alt="${vesselName}" class="pin-vessel-img" loading="lazy" />
-            <div class="pin-real-photo-badge">SURVEILLANCE ARCHIVE</div>
-            <div class="pin-band-chip ${(c.band || 'high').toLowerCase()}">
-              <span class="chip-pulse-dot"></span>
-              ${band} · ${score}
-            </div>
-            ${isIUU ? '<span class="pin-iuu-badge">RFMO BLACKLIST</span>' : ''}
-            ${inMPA ? '<span class="pin-mpa-badge">PROTECTED MPA</span>' : ''}
-          </div>
-          <div class="pin-details-body">
-            <div class="pin-title-row">
-              <span class="pin-flag-icon">${flagEmoji}</span>
-              <span class="pin-vessel-title" title="${vesselName}">${vesselName}</span>
-            </div>
-            <div class="pin-meta-row">
-              <span class="pin-loc-text">${locLabel}</span>
-              <span class="pin-match-chip">${matchPct}% match</span>
-            </div>
-            ${isSelected ? `
-              <div class="pin-selected-indicator">
-                <span class="sel-pulse-dot"></span>
-                <span class="sel-text">ACTIVE TARGET · INTEL OPEN</span>
-              </div>
-            ` : ''}
-          </div>
-        </div>
-        <div class="pin-pointer-stem">
-          <div class="stem-line"></div>
-          <div class="stem-arrow"></div>
-        </div>
-        <div class="pin-water-target">
-          <div class="water-ripple ring-1"></div>
-          <div class="water-ripple ring-2"></div>
-          <div class="water-crosshair"></div>
+        <div class="pin-surface-target">
+          <div class="target-ripple ring-outer"></div>
+          <div class="target-ripple ring-inner"></div>
+          <div class="target-center-dot ${(c.band || 'high').toLowerCase()}"></div>
         </div>
       `;
 
-      // Click to select case and center smoothly
+      // Click to select case and center smoothly in stable fixed 3D perspective
       el.addEventListener('click', (e) => {
         e.stopPropagation();
         onSelectCase(c.id);
         map.flyTo({
           center: [lon, lat],
-          zoom: 9.8,
-          pitch: 35,
+          zoom: 9.2,
+          pitch: 24,
+          bearing: 0,
           essential: true,
-          duration: 1200,
+          duration: 1000,
         });
       });
 
       const marker = new maplibregl.Marker({
         element: el,
-        anchor: 'bottom',
+        anchor: 'center',
       })
         .setLngLat([lon, lat])
         .addTo(map);
@@ -740,10 +750,11 @@ export default function MapViewport({
 
     map.flyTo({
       center: [flyToCoords.lon, flyToCoords.lat],
-      zoom: 9.8,
-      pitch: 35,
+      zoom: 9.2,
+      pitch: 24,
+      bearing: 0,
       essential: true,
-      duration: 1400,
+      duration: 1200,
     });
   }, [flyToCoords]);
 
@@ -791,22 +802,19 @@ export default function MapViewport({
       {/* Modern HUD Projection & Layer Controls Toolbar */}
       <div className="map-overlay-controls">
         <button
-          className={`btn-projection ${isGlobe ? 'btn-active' : ''}`}
-          onClick={toggleProjection}
-          title={t.projectionTooltip}
-          id="toggle-projection-btn"
+          className="btn-projection"
+          onClick={resetToFairway}
+          title="Reset to Full Kenya EEZ Maritime Fairway (God's Eye Overview)"
+          id="reset-fairway-btn"
         >
-          {isGlobe ? (
-            <>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-              <span>{t.projectionGlobe}</span>
-            </>
-          ) : (
-            <>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
-              <span>{t.projectionFlat}</span>
-            </>
-          )}
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="22" y1="12" x2="18" y2="12" />
+            <line x1="6" y1="12" x2="2" y2="12" />
+            <line x1="12" y1="6" x2="12" y2="2" />
+            <line x1="12" y1="22" x2="12" y2="18" />
+          </svg>
+          <span>EEZ Fairway</span>
         </button>
 
         {/* Quick Layer Visibility Toggles */}

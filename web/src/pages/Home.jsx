@@ -24,6 +24,7 @@ export default function Home() {
   const [selectedCaseId, setSelectedCaseId] = useState(null);
   const [selectedCase, setSelectedCase] = useState(null);
   const [activeSector, setActiveSector] = useState('all');
+  const [activeView, setActiveView] = useState('tactical'); // 'tactical' | 'traceback'
   const [isLoading, setIsLoading] = useState(true);
   const [flyToCoords, setFlyToCoords] = useState(null);
   const [testSending, setTestSending] = useState(false);
@@ -40,6 +41,15 @@ export default function Home() {
         const loadedCases = data.cases || [];
         setCases(loadedCases);
         setIsLoading(false);
+        // Automatically synchronize default selected case on first load
+        setSelectedCaseId((prev) => {
+          if (prev) return prev;
+          if (loadedCases.length > 0) {
+            setSelectedCase(loadedCases[0]);
+            return loadedCases[0].id;
+          }
+          return null;
+        });
       })
       .catch((err) => {
         console.error('Failed to load cases:', err);
@@ -61,7 +71,7 @@ export default function Home() {
         const lat = found.features?.lat ?? found.lat;
         const lon = found.features?.lon ?? found.lon;
         if (lat !== undefined && lon !== undefined) {
-          setFlyToCoords({ lat, lon });
+          setFlyToCoords({ lat, lon, caseId });
         }
       }
     },
@@ -113,6 +123,36 @@ export default function Home() {
             ></span>
             <span>{connectionStatus === 'connected' ? 'LIVE SSE' : connectionStatus.toUpperCase()}</span>
           </div>
+        </div>
+
+        {/* God's Eye C2 Mode Switch: Tactical Operations vs Trajectory Trace-Back */}
+        <div className="view-mode-tabs" role="tablist">
+          <button
+            className={`view-mode-tab ${activeView === 'tactical' ? 'active' : ''}`}
+            onClick={() => setActiveView('tactical')}
+            role="tab"
+            aria-selected={activeView === 'tactical'}
+            title="Real-Time Tactical Radar & Coastline Surveillance"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
+              <path d="M2 12h20" />
+            </svg>
+            <span>Tactical Operations</span>
+          </button>
+          <button
+            className={`view-mode-tab ${activeView === 'traceback' ? 'active' : ''}`}
+            onClick={() => setActiveView('traceback')}
+            role="tab"
+            aria-selected={activeView === 'traceback'}
+            title="Forensic Provenance & Vessel Origin Trace-Back Analysis"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+            </svg>
+            <span>Trajectory Trace-Back</span>
+          </button>
         </div>
 
         {/* Right Tools & Language Toggle */}
@@ -210,13 +250,14 @@ export default function Home() {
           isLoading={isLoading}
         />
 
-        {/* Center / Main: MapLibre Viewport (Flat & 3D Globe) */}
+        {/* Center / Main: MapLibre Viewport (Flat & Fixed 3D Perspective) */}
         <main className="ops-map-area">
           <MapViewport
             selectedCaseId={selectedCaseId}
             onSelectCase={handleSelectCase}
             cases={cases}
             activeSector={activeSector}
+            activeView={activeView}
             language={language}
             flyToCoords={flyToCoords}
           />
@@ -226,6 +267,7 @@ export default function Home() {
         {selectedCase && (
           <CaseIntelPanel
             caseItem={selectedCase}
+            activeView={activeView}
             onClose={() => {
               setSelectedCase(null);
               setSelectedCaseId(null);

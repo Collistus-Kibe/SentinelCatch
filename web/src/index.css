@@ -1043,6 +1043,46 @@ body {
   border: 1px solid rgba(6, 182, 212, 0.25);
 }
 
+/* God's Eye C2 Mode Switch Tabs */
+.view-mode-tabs {
+  display: flex;
+  background: rgba(14, 25, 45, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-full);
+  padding: 3px;
+  gap: 3px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.view-mode-tab {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  padding: 5px 13px;
+  border-radius: var(--radius-full);
+  font-size: 0.74rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+}
+
+.view-mode-tab:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.view-mode-tab.active {
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.9), rgba(37, 99, 235, 0.9));
+  color: #ffffff;
+  box-shadow: 0 0 14px rgba(6, 182, 212, 0.45);
+}
+
 .ops-header-right {
   display: flex;
   align-items: center;
@@ -1188,12 +1228,14 @@ body {
   height: 12px;
 }
 
-/* ── Case Feed Sidebar ──────────────────────────────────────── */
+/* ── Case Feed Sidebar (Glassmorphic Defense Design) ───────────────────────── */
 .case-feed-sidebar {
   width: 360px;
   height: 100%;
-  background: var(--bg-secondary);
-  border-right: 1px solid var(--border);
+  background: rgba(10, 20, 36, 0.82) !important;
+  backdrop-filter: blur(24px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(190%) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
@@ -1202,11 +1244,12 @@ body {
 
 .feed-header {
   padding: 12px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   flex-direction: column;
   gap: 10px;
-  background: var(--bg-primary);
+  background: rgba(8, 16, 30, 0.85);
+  backdrop-filter: blur(20px);
 }
 
 .sector-nav-container {
@@ -1300,14 +1343,6 @@ body {
   width: 100%;
 }
 
-.search-icon {
-  position: absolute;
-  left: 9px;
-  font-size: 0.78rem;
-  color: var(--text-muted);
-  pointer-events: none;
-}
-
 .feed-search-input {
   width: 100%;
   background: rgba(17, 24, 39, 0.85);
@@ -1315,7 +1350,7 @@ body {
   border-radius: var(--radius-sm);
   color: var(--text-primary);
   font-size: 0.78rem;
-  padding: 7px 28px 7px 28px;
+  padding: 8px 28px 8px 12px;
   outline: none;
   transition: all 0.15s;
 }
@@ -1323,6 +1358,38 @@ body {
 .feed-search-input:focus {
   border-color: var(--accent-cyan);
   box-shadow: 0 0 10px rgba(6, 182, 212, 0.25);
+  background: rgba(17, 24, 39, 0.95);
+}
+
+/* Trajectory Provenance & Origin Forensics */
+.origin-provenance-box {
+  background: rgba(8, 18, 36, 0.78);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  margin-bottom: 12px;
+}
+
+.origin-tag {
+  display: inline-block;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #38bdf8;
+  margin-bottom: 5px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.origin-narrative {
+  font-size: 0.76rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.traceback-focus-ring {
+  border: 1px solid rgba(0, 245, 212, 0.5) !important;
+  box-shadow: 0 0 20px rgba(0, 245, 212, 0.2) !important;
 }
 
 .search-clear-btn {
@@ -1615,392 +1682,180 @@ body {
   margin-top: 4px;
 }
 
-/* ── Tactical Vessel Map Pins on MapLibre ────────────────────── */
+/* ── Tactical God's Eye Surface Beacons on MapLibre ────────────────────── */
 .tactical-map-pin {
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   cursor: pointer;
   user-select: none;
-  transform-origin: bottom center;
-  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), z-index 0.1s;
-  z-index: 20;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), z-index 0.1s;
+  z-index: 30;
+  pointer-events: auto;
 }
 
 .tactical-map-pin:hover {
-  transform: translateY(-8px) scale(1.08);
+  transform: scale(1.08);
   z-index: 100 !important;
 }
 
 .tactical-map-pin.is-selected {
-  transform: translateY(-10px) scale(1.12);
+  transform: scale(1.12);
   z-index: 200 !important;
 }
 
-/* Compact Beacon Chip (Zoom-out mode) */
-.pin-beacon-chip {
-  display: none;
+/* Compact Glass Tactical Chip */
+.pin-tactical-chip {
+  display: flex;
   align-items: center;
-  gap: 5px;
-  background: rgba(10, 16, 30, 0.94);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1.5px solid rgba(255, 255, 255, 0.18);
-  padding: 3px 8px 3px 6px;
+  gap: 6px;
+  background: rgba(8, 16, 32, 0.92);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  padding: 4px 9px 4px 7px;
   border-radius: 9999px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.7), 0 0 10px rgba(59, 130, 246, 0.25);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.75), 0 0 12px rgba(56, 189, 248, 0.2);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   white-space: nowrap;
+  margin-bottom: 3px;
 }
 
-.band-high .pin-beacon-chip {
+.band-high .pin-tactical-chip {
   border-color: rgba(239, 68, 68, 0.75);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.75), 0 0 14px rgba(239, 68, 68, 0.4);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.75), 0 0 14px rgba(239, 68, 68, 0.4);
 }
 
-.band-medium .pin-beacon-chip {
+.band-medium .pin-tactical-chip {
   border-color: rgba(245, 158, 11, 0.75);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.75), 0 0 14px rgba(245, 158, 11, 0.4);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.75), 0 0 14px rgba(245, 158, 11, 0.35);
 }
 
-.beacon-flag {
+.band-low .pin-tactical-chip {
+  border-color: rgba(16, 185, 129, 0.75);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.75), 0 0 14px rgba(16, 185, 129, 0.35);
+}
+
+.tactical-map-pin.is-selected .pin-tactical-chip {
+  border-color: #00f5d4 !important;
+  background: rgba(10, 24, 46, 0.96) !important;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.85), 0 0 20px rgba(0, 245, 212, 0.65) !important;
+}
+
+.chip-flag {
   font-size: 0.85rem;
 }
 
-.beacon-score {
-  font-size: 0.65rem;
+.chip-score {
+  font-size: 0.68rem;
   font-weight: 800;
-  padding: 1px 5px;
+  padding: 1px 6px;
   border-radius: 9999px;
   color: #ffffff;
 }
 
-.beacon-score.high {
+.chip-score.high {
   background: #dc2626;
 }
 
-.beacon-score.medium {
+.chip-score.medium {
   background: #d97706;
 }
 
-.beacon-score.low {
+.chip-score.low {
   background: #16a34a;
 }
 
-.beacon-name {
-  font-size: 0.7rem;
+.chip-name {
+  font-size: 0.72rem;
   font-weight: 700;
   color: #f1f5f9;
   letter-spacing: -0.01em;
-}
-
-.beacon-pulse-dot {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: #38bdf8;
-  animation: pulse-dot 1.2s infinite;
-}
-
-/* Compact Beacon Mode: Zoomed Out */
-.tactical-map-pin.compact-beacon .pin-card-bubble {
-  display: none;
-}
-
-.tactical-map-pin.compact-beacon .pin-beacon-chip {
-  display: flex;
-}
-
-/* Hover expansion when in compact beacon mode */
-.tactical-map-pin.compact-beacon:hover {
-  z-index: 1000 !important;
-}
-
-.tactical-map-pin.compact-beacon:hover .pin-beacon-chip {
-  display: none;
-}
-
-.tactical-map-pin.compact-beacon:hover .pin-card-bubble {
-  display: block !important;
-  position: absolute;
-  bottom: 28px;
-  z-index: 1000 !important;
-  animation: beacon-expand 0.18s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.9), 0 0 24px rgba(6, 182, 212, 0.5) !important;
-}
-
-@keyframes beacon-expand {
-  from {
-    opacity: 0;
-    transform: scale(0.85) translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
-}
-
-/* Selected vessel overrides compact mode completely */
-.tactical-map-pin.is-selected .pin-beacon-chip {
-  display: none !important;
-}
-
-.tactical-map-pin.is-selected .pin-card-bubble {
-  display: block !important;
-}
-
-/* Tight compact stem so beacon chip stays pinned right above radar target without clipping */
-.tactical-map-pin.compact-beacon .pin-pointer-stem .stem-line {
-  height: 6px;
-}
-
-.tactical-map-pin.compact-beacon .pin-pointer-stem .stem-arrow {
-  border-top-width: 4px;
-  border-left-width: 4px;
-  border-right-width: 4px;
-}
-
-.tactical-map-pin.compact-beacon .pin-water-target {
-  height: 8px;
-}
-
-.pin-card-bubble {
-  width: 216px;
-  background: rgba(13, 20, 36, 0.94);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1.5px solid rgba(255, 255, 255, 0.14);
-  border-radius: 12px;
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.7), 0 0 15px rgba(59, 130, 246, 0.2);
-  overflow: hidden;
-  transition: all 0.2s;
-}
-
-.band-high .pin-card-bubble {
-  border-color: rgba(239, 68, 68, 0.65);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.75), 0 0 20px rgba(239, 68, 68, 0.35);
-}
-
-.band-medium .pin-card-bubble {
-  border-color: rgba(245, 158, 11, 0.65);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.75), 0 0 20px rgba(245, 158, 11, 0.35);
-}
-
-.is-selected .pin-card-bubble {
-  border: 2px solid #06b6d4 !important;
-  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.85), 0 0 26px rgba(6, 182, 212, 0.65) !important;
-}
-
-.pin-photo-header {
-  position: relative;
-  width: 100%;
-  height: 96px;
-  background: #080d1a;
-  overflow: hidden;
-}
-
-.pin-vessel-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.pin-band-chip {
-  position: absolute;
-  top: 6px;
-  left: 6px;
-  font-size: 0.65rem;
-  font-weight: 800;
-  padding: 2px 8px;
-  border-radius: 9999px;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  backdrop-filter: blur(8px);
-}
-
-.pin-band-chip.high {
-  background: rgba(239, 68, 68, 0.9);
-  color: #ffffff;
-  box-shadow: 0 0 10px rgba(239, 68, 68, 0.6);
-}
-
-.pin-band-chip.medium {
-  background: rgba(245, 158, 11, 0.9);
-  color: #ffffff;
-}
-
-.pin-band-chip.low {
-  background: rgba(34, 197, 94, 0.9);
-  color: #ffffff;
 }
 
 .chip-pulse-dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #ffffff;
+  background: #38bdf8;
   animation: pulse-dot 1.2s infinite;
 }
 
-@keyframes pulse-dot {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.4; transform: scale(0.7); }
-}
-
-.pin-iuu-badge {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  background: #dc2626;
-  color: #ffffff;
+.chip-locked-tag {
   font-size: 0.58rem;
   font-weight: 800;
-  padding: 2px 6px;
-  border-radius: 4px;
-  letter-spacing: 0.03em;
-  box-shadow: 0 0 8px rgba(220, 38, 38, 0.6);
+  color: #00f5d4;
+  background: rgba(0, 245, 212, 0.15);
+  border: 1px solid rgba(0, 245, 212, 0.4);
+  padding: 1px 4px;
+  border-radius: 3px;
+  letter-spacing: 0.05em;
 }
 
-.pin-mpa-badge {
-  position: absolute;
-  bottom: 6px;
-  left: 6px;
-  background: rgba(16, 185, 129, 0.9);
-  color: #ffffff;
-  font-size: 0.6rem;
-  font-weight: 700;
-  padding: 2px 6px;
-  border-radius: 4px;
-  letter-spacing: 0.02em;
-}
-
-.pin-details-body {
-  padding: 8px 10px;
-  background: rgba(17, 24, 39, 0.96);
-}
-
-.pin-title-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: #f1f5f9;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.pin-flag-icon {
-  font-size: 0.9rem;
-}
-
-.pin-vessel-title {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.pin-meta-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 0.68rem;
-  color: var(--text-muted);
-  margin-top: 4px;
-}
-
-.pin-match-chip {
-  color: #38bdf8;
-  font-weight: 700;
-  background: rgba(56, 189, 248, 0.12);
-  padding: 1px 5px;
-  border-radius: 4px;
-}
-
-.pin-selected-indicator {
-  margin-top: 6px;
-  padding-top: 4px;
-  border-top: 1px solid rgba(6, 182, 212, 0.3);
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 0.62rem;
-  font-weight: 800;
-  color: #06b6d4;
-  letter-spacing: 0.03em;
-}
-
-.sel-pulse-dot {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: #06b6d4;
-  animation: pulse-dot 1s infinite;
-}
-
-/* Pointer Stem & Arrow */
-.pin-pointer-stem {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.stem-line {
-  width: 2px;
-  height: 22px;
-  background: linear-gradient(to bottom, rgba(59, 130, 246, 0.9), rgba(6, 182, 212, 1));
-  box-shadow: 0 0 8px rgba(6, 182, 212, 0.6);
-}
-
-.stem-arrow {
-  width: 0;
-  height: 0;
-  border-left: 5px solid transparent;
-  border-right: 5px solid transparent;
-  border-top: 7px solid #06b6d4;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
-}
-
-/* Water Radar / Sonar Target Beacon */
-.pin-water-target {
+/* Water Surface Target Rings */
+.pin-surface-target {
   position: relative;
-  width: 24px;
-  height: 12px;
+  width: 22px;
+  height: 22px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.water-crosshair {
-  width: 6px;
-  height: 6px;
+.target-center-dot {
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
-  background: #06b6d4;
-  box-shadow: 0 0 10px #06b6d4;
-  z-index: 2;
+  background: #00f5d4;
+  box-shadow: 0 0 10px #00f5d4;
+  z-index: 3;
 }
 
-.water-ripple {
+.target-center-dot.high {
+  background: #ef4444;
+  box-shadow: 0 0 10px #ef4444;
+}
+
+.target-center-dot.medium {
+  background: #f59e0b;
+  box-shadow: 0 0 10px #f59e0b;
+}
+
+.target-center-dot.low {
+  background: #10b981;
+  box-shadow: 0 0 10px #10b981;
+}
+
+.target-ripple {
   position: absolute;
-  width: 28px;
-  height: 28px;
   border-radius: 50%;
-  border: 1.5px solid #06b6d4;
-  animation: sonar-ripple 2.4s infinite cubic-bezier(0.2, 0.6, 0.35, 1);
+  border: 1.5px solid rgba(6, 182, 212, 0.6);
   pointer-events: none;
 }
 
-.water-ripple.ring-2 {
-  animation-delay: 1.2s;
+.ring-outer {
+  width: 20px;
+  height: 20px;
+  animation: sonar-wave 2s infinite ease-out;
 }
 
-@keyframes sonar-ripple {
-  0% { transform: scale(0.2); opacity: 0.95; }
-  100% { transform: scale(2.2); opacity: 0; }
+.ring-inner {
+  width: 12px;
+  height: 12px;
+  animation: sonar-wave 2s infinite ease-out 0.6s;
+}
+
+@keyframes sonar-wave {
+  0% {
+    transform: scale(0.5);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
 }
 
 /* ── Intel Panel Vessel Surveillance Photo Recon Card ────────── */

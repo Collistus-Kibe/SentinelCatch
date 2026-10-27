@@ -5,6 +5,7 @@ import { getVesselPhoto, getVesselPhotoMetadata, getFlagEmoji } from '../utils/v
 
 export default function CaseIntelPanel({
   caseItem,
+  activeView = 'tactical',
   onClose,
   onActionComplete,
   language = 'en',
@@ -351,9 +352,9 @@ function getRouteColor(vesselName = '') {
         </div>
 
         {/* 3. RECONSTRUCTED HISTORICAL ROUTE & VOYAGE TRAIL */}
-        <div className="intel-section route-recon-section">
+        <div className={`intel-section route-recon-section ${activeView === 'traceback' ? 'traceback-focus-ring' : ''}`}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-            <h3>〰️ Reconstructed Vessel Route</h3>
+            <h3>🌐 Trajectory & Origin Trace-Back</h3>
             <span
               className="badge"
               style={{
@@ -373,6 +374,22 @@ function getRouteColor(vesselName = '') {
           </div>
 
           <div className="route-intel-card" style={{ borderLeft: `3px solid ${vesselColorInfo.color}` }}>
+            {/* Origin & Provenance Banner */}
+            <div className="origin-provenance-box">
+              <span className="origin-tag">
+                📍 Provenance: {caseId === 101 ? 'Somali Basin High Seas' : caseId === 102 ? 'Pemba Channel South Fairway' : caseId === 103 ? 'Central Indian Ocean High Seas' : caseId === 104 ? 'Offshore Continental Shelf' : 'Diani Deep Shelf Corridor'}
+              </span>
+              <p className="origin-narrative">
+                {caseId === 101
+                  ? 'Departed Somali Basin tuna longlining grounds ~36h ago. Transited southwesterly at 10.2 kts across the 200 nm northern EEZ perimeter. Ceased AIS broadcast 18 km prior to Kiunga Marine Reserve to evade RFMO quota monitoring, loitering inside the reserve.'
+                  : caseId === 102
+                  ? 'Transited northbound along the deep Pemba Channel fairway from Tanzanian waters, crossed into Kenya EEZ southern border 18h ago, and disabled AIS 2.5h prior to rendezvous within 1.4 km of an active cargo carrier for suspected transshipment.'
+                  : caseId === 103
+                  ? 'Voyaged 160 nm west from Central Indian Ocean pelagic high seas. Crossed the eastern 200 nm EEZ perimeter before transponder shut-off at 44.25°E.'
+                  : 'Voyaged along the Kenyan outer shelf fairway before transponder deactivation prior to SAR radar acquisition.'}
+              </p>
+            </div>
+
             <div className="route-stats-grid">
               <div className="route-stat-item">
                 <span className="stat-label">Traversed Distance</span>
@@ -398,8 +415,8 @@ function getRouteColor(vesselName = '') {
               <div className="route-step-row">
                 <span className="step-circle" style={{ borderColor: vesselColorInfo.color, background: `${vesselColorInfo.color}33` }}>1</span>
                 <div className="step-desc">
-                  <strong>High Seas Departure</strong>
-                  <span>Transponder active in international waters</span>
+                  <strong>High Seas Departure Origin</strong>
+                  <span>{caseId === 101 ? 'Somali Basin High Seas (AIS Active 36h ago)' : caseId === 102 ? 'Pemba Channel South Corridor (AIS Active 28h ago)' : 'International Waters Fairway'}</span>
                 </div>
               </div>
               <div className="route-step-row">
@@ -413,14 +430,14 @@ function getRouteColor(vesselName = '') {
                 <span className="step-circle gap">⚠️</span>
                 <div className="step-desc">
                   <strong style={{ color: '#ef4444' }}>AIS Transponder Ceased (Went Dark)</strong>
-                  <span>Broadcast terminated ~{primaryCandidate?.hoursSinceAisOff || 3}h ago before entering MPA</span>
+                  <span>Broadcast terminated ~{primaryCandidate?.hoursSinceAisOff || 2.5}h ago at speed {primaryCandidate?.requiredSpeedKnots || 9.5} kts</span>
                 </div>
               </div>
               <div className="route-step-row current-row">
                 <span className="step-circle target">🎯</span>
                 <div className="step-desc">
-                  <strong style={{ color: '#38bdf8' }}>Current SAR Satellite Radar Intercept</strong>
-                  <span>Stationary radar centroid confirmed at {lat.toFixed(4)}°, {lon.toFixed(4)}°</span>
+                  <strong style={{ color: '#38bdf8' }}>Current SAR Satellite Radar Centroid</strong>
+                  <span>Stationary radar contact intercepted at {lat.toFixed(4)}°, {lon.toFixed(4)}° ({locLabel})</span>
                 </div>
               </div>
             </div>
