@@ -87,7 +87,6 @@ const MARITIME_MASTER_STYLE = {
 function generateHeatmapGeoJson(cases = [], mapLayersData = null) {
   const points = [];
 
-  // 1. Cases coordinates (weighted by threat and behavior)
   cases.forEach((c) => {
     const lat = c.features?.lat ?? c.lat;
     const lon = c.features?.lon ?? c.lon;
@@ -102,7 +101,6 @@ function generateHeatmapGeoJson(cases = [], mapLayersData = null) {
         geometry: { type: 'Point', coordinates: [lon, lat] },
       });
 
-      // Transshipment or high-threat anomaly hotspot cluster
       if (isHigh) {
         const offsets = [
           [0.035, 0.025], [-0.035, -0.025], [0.025, -0.035], [-0.025, 0.035],
@@ -119,7 +117,6 @@ function generateHeatmapGeoJson(cases = [], mapLayersData = null) {
     }
   });
 
-  // 2. Track waypoints & live AIS from mapLayersData
   if (mapLayersData?.features) {
     mapLayersData.features.forEach((f) => {
       if (f.properties?.type === 'vessel_track_waypoint' && f.geometry?.coordinates) {
@@ -141,9 +138,8 @@ function generateHeatmapGeoJson(cases = [], mapLayersData = null) {
     });
   }
 
-  // 3. East Africa commercial fairway traffic concentrations (Mombasa, Shimoni, Tanga, Zanzibar)
   const baselineFairwayNodes = [
-    [-4.5800, 39.5200, 1.0],  // Primary Shimoni transshipment rendezvous area
+    [-4.5800, 39.5200, 1.0],  // Shimoni transshipment rendezvous area
     [-4.6200, 39.5800, 0.92],
     [-4.5100, 39.6900, 0.85],
     [-4.1800, 39.9200, 0.75], // Mombasa harbour approach
@@ -185,14 +181,15 @@ export default function MapViewport({
   const [basemapMode, setBasemapMode] = useState('satellite'); // 'satellite' | 'nautical'
   const [layersLoaded, setLayersLoaded] = useState(false);
   const [mapLayersData, setMapLayersData] = useState(null);
+  const [cursorCoords, setCursorCoords] = useState({ lat: -3.3500, lon: 40.2000 });
 
-  // Layer Visibility Toolbar State
+  // Layer Visibility Toolbar State (Heatmap is FALSE by default to keep coast clean)
   const [visibleLayers, setVisibleLayers] = useState({
     eez: true,
     mpas: true,
     tracks: true,
     cases: true,
-    heatmap: true,
+    heatmap: false,
     ships: true,
   });
 
@@ -207,30 +204,44 @@ export default function MapViewport({
       .catch((err) => console.error('Failed to load map layers:', err));
   }, []);
 
-  // Initialize MapLibre in a stable, realistic maritime tactical projection
+  // Initialize MapLibre in a locked, movable surveillance angle
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) return;
 
+    // Fixed perspective framing the Kenya Coast (Lamu -> Malindi -> Mombasa -> Kwale/Tanzania)
     const map = new maplibregl.Map({
       container: mapContainerRef.current,
       style: MARITIME_MASTER_STYLE,
-      center: [39.65, -4.58], // Centered on Mombasa - Shimoni - Tanga - Zanzibar maritime boundary
-      zoom: 7.2,
-      minZoom: 4.5,
-      maxZoom: 16.0,
+      center: [40.20, -3.35], // Optimal Kenya Coast surveillance centroid matching Image 1
+      zoom: 7.7,
+      minZoom: 7.4,
+      maxZoom: 8.2,
       maxBounds: [
-        [28.0, -12.5],
-        [54.0, 7.5],
+        [37.2, -6.0],
+        [43.5, -0.8],
       ],
-      pitch: 0, // Clean flat overhead operational view matching Reference Image A & B
-      bearing: 0,
+      dragPan: true, // Movable: user can pan up and down the Kenya Coast!
+      scrollZoom: false, // NOT zoomable: prevents accidental zoom distortion and preserves routes & MPAs
+      boxZoom: false,
+      doubleClickZoom: false,
+      touchZoomRotate: false,
       dragRotate: false,
-      touchPitch: false,
+      pitch: 0,
+      bearing: 0,
       attributionControl: false,
     });
 
     map.on('error', (e) => {
       console.warn('MapLibre event note:', e.error?.message || e);
+    });
+
+    map.on('mousemove', (e) => {
+      if (e.lngLat) {
+        setCursorCoords({
+          lat: e.lngLat.lat,
+          lon: e.lngLat.lng,
+        });
+      }
     });
 
     map.on('load', () => {
@@ -272,32 +283,25 @@ export default function MapViewport({
     }
   }, [basemapMode, layersLoaded]);
 
-  // Recenter to maritime surveillance fairway
+  // Recenter to standard Kenya Coast surveillance corridor
   const handleRecenter = useCallback(() => {
     const map = mapRef.current;
     if (!map) return;
     map.flyTo({
-      center: [39.65, -4.58],
-      zoom: 7.2,
+      center: [40.20, -3.35],
+      zoom: 7.7,
       bearing: 0,
+      pitch: 0,
       essential: true,
-      duration: 1200,
+      duration: 1000,
     });
-  }, []);
-
-  const handleZoomIn = useCallback(() => {
-    if (mapRef.current) mapRef.current.zoomIn();
-  }, []);
-
-  const handleZoomOut = useCallback(() => {
-    if (mapRef.current) mapRef.current.zoomOut();
   }, []);
 
   const toggleBasemap = useCallback(() => {
     setBasemapMode((prev) => (prev === 'satellite' ? 'nautical' : 'satellite'));
   }, []);
 
-  // Add / Update Map Layers (EEZ, MPAs, Heatmap, Vessel Routes, etc.)
+  // Add / Update Map Layers (EEZ, MPAs with labels, Heatmap, Routes)
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !layersLoaded || !mapLayersData) return;
@@ -334,7 +338,7 @@ export default function MapViewport({
         },
       });
 
-      // Sovereign 12 nm Territorial Sea Line
+      // Sovereign 12 nm Territorial Sea Line (Yellow dashed line along the entire coast)
       map.addLayer({
         id: 'territorial-line',
         type: 'line',
@@ -342,13 +346,13 @@ export default function MapViewport({
         filter: ['==', ['get', 'type'], 'territorial_boundary'],
         paint: {
           'line-color': '#f59e0b',
-          'line-width': 1.4,
-          'line-dasharray': [3, 2],
-          'line-opacity': 0.65,
+          'line-width': 2.0,
+          'line-dasharray': [4, 2],
+          'line-opacity': 0.85,
         },
       });
 
-      // ── Marine Protected Areas (MPAs) - Outlined Green Dotted Shapes ──
+      // ── Marine Protected Areas (MPAs) - Neon Emerald Dashed Boundaries ──
       map.addLayer({
         id: 'mpas-fill',
         type: 'fill',
@@ -356,7 +360,7 @@ export default function MapViewport({
         filter: ['==', ['get', 'type'], 'MPA'],
         paint: {
           'fill-color': '#10b981',
-          'fill-opacity': 0.08,
+          'fill-opacity': 0.12,
         },
       });
 
@@ -366,10 +370,31 @@ export default function MapViewport({
         source: 'sentinelcatch-data',
         filter: ['==', ['get', 'type'], 'MPA'],
         paint: {
-          'line-color': '#34d399',
-          'line-width': 1.8,
-          'line-dasharray': [3, 2],
-          'line-opacity': 0.85,
+          'line-color': '#10b981',
+          'line-width': 2.2,
+          'line-dasharray': [4, 2],
+          'line-opacity': 0.95,
+        },
+      });
+
+      // MPA Name Labels directly on the map for maritime authorities
+      map.addLayer({
+        id: 'mpas-labels',
+        type: 'symbol',
+        source: 'sentinelcatch-data',
+        filter: ['==', ['get', 'type'], 'MPA'],
+        layout: {
+          'text-field': ['get', 'name'],
+          'text-size': 11,
+          'text-anchor': 'center',
+          'text-offset': [0, 0],
+          'text-allow-overlap': true,
+        },
+        paint: {
+          'text-color': '#34d399',
+          'text-halo-color': '#050c18',
+          'text-halo-width': 2.2,
+          'text-opacity': 0.95,
         },
       });
 
@@ -390,10 +415,10 @@ export default function MapViewport({
           'line-width': [
             'case',
             ['==', ['get', 'caseId'], selectedCaseId || -1],
-            8,
+            9,
             4,
           ],
-          'line-opacity': 0.35,
+          'line-opacity': 0.45,
           'line-blur': 3,
         },
       });
@@ -414,10 +439,10 @@ export default function MapViewport({
           'line-width': [
             'case',
             ['==', ['get', 'caseId'], selectedCaseId || -1],
-            3.2,
-            1.8,
+            3.6,
+            2.2,
           ],
-          'line-opacity': 0.9,
+          'line-opacity': 0.95,
           'line-dasharray': [4, 1.5],
         },
       });
@@ -439,7 +464,7 @@ export default function MapViewport({
         },
       });
 
-      // Interactive hover & click on track lines
+      // Interactive hover on track lines
       map.on('mouseenter', 'tracks-line', (e) => {
         map.getCanvas().style.cursor = 'pointer';
         const props = e.features?.[0]?.properties;
@@ -488,7 +513,6 @@ export default function MapViewport({
         data: heatmapGeoJson,
       });
 
-      // Smooth semi-transparent geospatial heatmap layer
       map.addLayer({
         id: 'vessel-density-heatmap',
         type: 'heatmap',
@@ -497,7 +521,6 @@ export default function MapViewport({
           visibility: visibleLayers.heatmap ? 'visible' : 'none',
         },
         paint: {
-          // Weight scale based on risk & encounter frequency
           'heatmap-weight': [
             'interpolate',
             ['linear'],
@@ -505,37 +528,34 @@ export default function MapViewport({
             0, 0,
             1, 1,
           ],
-          // Intensity scale with zoom
           'heatmap-intensity': [
             'interpolate',
             ['linear'],
             ['zoom'],
             4, 0.7,
-            7, 1.4,
-            10, 2.0,
+            7, 1.2,
+            10, 1.8,
           ],
-          // Color ramp: Dark Blue/transparent -> Cyan -> Green -> Yellow -> Orange -> Red
           'heatmap-color': [
             'interpolate',
             ['linear'],
             ['heatmap-density'],
             0, 'rgba(11, 18, 32, 0)',
-            0.18, 'rgba(14, 165, 233, 0.40)', // Cyan
-            0.38, 'rgba(16, 185, 129, 0.65)', // Green
-            0.62, 'rgba(234, 179, 8, 0.85)',  // Yellow
-            0.82, 'rgba(249, 115, 22, 0.92)', // Orange
-            1.0, 'rgba(239, 68, 68, 0.98)',   // Red
+            0.2, 'rgba(14, 165, 233, 0.40)',
+            0.4, 'rgba(16, 185, 129, 0.65)',
+            0.65, 'rgba(234, 179, 8, 0.85)',
+            0.85, 'rgba(249, 115, 22, 0.92)',
+            1.0, 'rgba(239, 68, 68, 0.98)',
           ],
-          // Radius scale
           'heatmap-radius': [
             'interpolate',
             ['linear'],
             ['zoom'],
             4, 20,
-            7, 45,
-            10, 75,
+            7, 40,
+            10, 70,
           ],
-          'heatmap-opacity': 0.82,
+          'heatmap-opacity': 0.75,
         },
       });
     } else {
@@ -559,13 +579,14 @@ export default function MapViewport({
     setVis('territorial-line', visibleLayers.eez);
     setVis('mpas-fill', visibleLayers.mpas);
     setVis('mpas-line', visibleLayers.mpas);
+    setVis('mpas-labels', visibleLayers.mpas);
     setVis('tracks-glow', visibleLayers.tracks);
     setVis('tracks-line', visibleLayers.tracks);
     setVis('ships-circle', visibleLayers.ships);
     setVis('vessel-density-heatmap', visibleLayers.heatmap);
   }, [visibleLayers, layersLoaded]);
 
-  // Render Custom Directional Vessel Markers & Selected Target Reticle
+  // Render Custom Directional Chevrons & Interactive Pins on Ship Click
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !layersLoaded) return;
@@ -586,66 +607,149 @@ export default function MapViewport({
     filteredCases.forEach((c) => {
       const lat = c.features?.lat ?? c.lat;
       const lon = c.features?.lon ?? c.lon;
-      if (lat === undefined || lon === undefined) return;
+      if (lat === undefined || lon === undefined || isNaN(lat) || isNaN(lon)) return;
 
       const isSelected = selectedCaseId === c.id;
       const candidate = c.candidate_matches?.[0] || c.features?.candidate_matches?.[0] || null;
       const vesselName = candidate?.vesselName || c.features?.locationLabel || `Contact #${c.id}`;
+      const flagEmoji = getFlagEmoji(candidate?.flag || '');
+      const vesselPhoto = getVesselPhoto(vesselName, candidate?.gearType || '');
       const heading = candidate?.heading || 210;
+      const speedKnots = candidate?.speedKnots || 12.5;
       const band = (c.band || 'High').toUpperCase();
-      const isHigh = band === 'HIGH' || (c.score_final && c.score_final >= 75);
+      const score = c.score_final ?? 86;
+      const isHigh = band === 'HIGH' || score >= 75;
+      const isIUU = Boolean(candidate?.iuuListed);
+      const inMPA = Boolean(c.features?.inMPA || (c.features?.locationLabel && c.features.locationLabel.toLowerCase().includes('reserve')));
+      const locLabel = c.features?.locationLabel || (c.sector ? `${c.sector}, Kenya` : 'Kenya Waters');
+
+      const latDms = `${Math.abs(lat).toFixed(4)}°${lat < 0 ? 'S' : 'N'}`;
+      const lonDms = `${Math.abs(lon).toFixed(4)}°${lon < 0 ? 'W' : 'E'}`;
+      const decimalCoords = `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
 
       // Create custom DOM element for vessel marker
       const el = document.createElement('div');
-      el.className = `map-vessel-marker ${isSelected ? 'marker-is-selected' : ''} ${isHigh ? 'threat-high' : 'threat-normal'}`;
 
       if (isSelected) {
-        // Red target box reticle with floating label matching Reference Image C
+        // ── Full Tactical Pin with Coordinates & 1-Click Copy for Authorities ──
+        el.className = `tactical-map-pin is-selected band-${(c.band || 'high').toLowerCase()}`;
+        el.setAttribute('data-case-id', c.id);
+
         el.innerHTML = `
-          <div class="selected-target-reticle">
-            <div class="reticle-corner reticle-corner-tl"></div>
-            <div class="reticle-corner reticle-corner-tr"></div>
-            <div class="reticle-corner reticle-corner-bl"></div>
-            <div class="reticle-corner reticle-corner-br"></div>
-            
-            <div class="selected-vessel-chevron" style="transform: rotate(${heading}deg);">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="#ef4444" stroke="#ffffff" stroke-width="1.5">
+          <!-- Full Recon Photo Card Bubble -->
+          <div class="pin-card-bubble">
+            <div class="pin-photo-header">
+              <img
+                src="${vesselPhoto}"
+                alt="${vesselName}"
+                class="pin-vessel-img"
+                loading="lazy"
+                onerror="this.onerror=null;this.src='/vessels/pacific_dawn.jpg';"
+              />
+              <div class="pin-real-photo-badge">P-8A RECON // FLIR</div>
+              <div class="pin-band-chip ${(c.band || 'high').toLowerCase()}">
+                <span class="chip-pulse-dot"></span>
+                ${band} · ${score}
+              </div>
+              ${isIUU ? '<span class="pin-iuu-badge">RFMO BLACKLIST</span>' : ''}
+              ${inMPA ? '<span class="pin-mpa-badge">PROTECTED MPA</span>' : ''}
+              <button class="pin-close-btn" type="button" title="Close Pin">✕</button>
+            </div>
+
+            <div class="pin-details-body">
+              <div class="pin-title-row">
+                <span class="pin-flag-icon">${flagEmoji}</span>
+                <span class="pin-vessel-title" title="${vesselName}">${vesselName}</span>
+              </div>
+
+              <!-- Prominent GPS Coordinates Box for Authorities to Follow Up -->
+              <div class="pin-coords-authority-box">
+                <div class="pin-coords-header">
+                  <span class="coords-label">📍 GPS COORDINATES (WGS84)</span>
+                  <button class="btn-copy-pin-gps" data-coords="${decimalCoords}" type="button" title="Copy GPS decimal coordinates for naval/maritime dispatch">
+                    📋 Copy GPS
+                  </button>
+                </div>
+                <div class="pin-coords-values">
+                  <span class="coords-dms">${latDms}, ${lonDms}</span>
+                  <span class="coords-dec">(${decimalCoords})</span>
+                </div>
+              </div>
+
+              <div class="pin-telemetry-row">
+                <span>⚡ <strong>${speedKnots} kn</strong></span>
+                <span>🧭 <strong>${heading}°</strong></span>
+                <span class="pin-sector-tag">🎯 <strong>${locLabel}</strong></span>
+              </div>
+
+              <div class="pin-status-banner">
+                <span class="status-pulse-dot"></span>
+                <span class="status-text">${inMPA ? '⚠️ INSIDE MARINE PROTECTED AREA' : isIUU ? '⚠️ SUSPECTED IUU TRANSSHIPMENT' : '⚠️ HIGH THREAT CONTACT'}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="pin-pointer-stem">
+            <div class="stem-line"></div>
+            <div class="stem-arrow"></div>
+          </div>
+
+          <div class="pin-water-target">
+            <div class="water-crosshair"></div>
+            <div class="water-ripple ring-1"></div>
+            <div class="water-ripple ring-2"></div>
+          </div>
+        `;
+
+        // Wire up copy coordinates button
+        const copyBtn = el.querySelector('.btn-copy-pin-gps');
+        if (copyBtn) {
+          copyBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            navigator.clipboard.writeText(decimalCoords);
+            copyBtn.textContent = '✓ Copied';
+            setTimeout(() => {
+              if (copyBtn) copyBtn.textContent = '📋 Copy GPS';
+            }, 2000);
+          });
+        }
+
+        // Wire up close button
+        const closeBtn = el.querySelector('.pin-close-btn');
+        if (closeBtn) {
+          closeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            onSelectCase(null);
+          });
+        }
+      } else {
+        // ── Non-selected Vessel: Tactical Chevron Beacon on the Water ──
+        el.className = `tactical-map-chevron band-${(c.band || 'high').toLowerCase()}`;
+        const chevronColor = isHigh ? '#ef4444' : c.band === 'Medium' ? '#f59e0b' : '#38bdf8';
+
+        el.innerHTML = `
+          <div class="chevron-bubble-pill" title="${vesselName} · ${latDms}, ${lonDms} (Click to inspect pin & coordinates)">
+            <span class="chevron-flag">${flagEmoji}</span>
+            <span class="chevron-score">${score}</span>
+            <div class="chevron-svg-box" style="transform: rotate(${heading}deg);">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="${chevronColor}" stroke="#ffffff" stroke-width="1.5">
                 <polygon points="12 2 19 21 12 17 5 21 12 2" />
               </svg>
             </div>
           </div>
-
-          <!-- Floating Black Label Box with Alert Icon -->
-          <div class="selected-callout-pill">
-            <span class="callout-alert-icon">⚠️</span>
-            <span class="callout-vessel-name">${vesselName}</span>
-          </div>
-        `;
-      } else {
-        // Directional vessel chevron indicator
-        const chevronColor = isHigh ? '#ef4444' : c.band === 'Medium' ? '#f59e0b' : '#38bdf8';
-        el.innerHTML = `
-          <div class="directional-chevron-wrapper" style="transform: rotate(${heading}deg);" title="${vesselName}">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="${chevronColor}" stroke="#0b1220" stroke-width="1.5">
-              <polygon points="12 2 19 21 12 17 5 21 12 2" />
-            </svg>
-          </div>
+          <div class="chevron-water-dot" style="background: ${chevronColor}; box-shadow: 0 0 8px ${chevronColor};"></div>
         `;
       }
 
+      // Clicking any ship opens its rich pin and activates intel
       el.addEventListener('click', (e) => {
         e.stopPropagation();
         onSelectCase(c.id);
-        map.flyTo({
-          center: [lon, lat],
-          zoom: Math.max(8.5, map.getZoom()),
-          duration: 900,
-        });
       });
 
       const marker = new maplibregl.Marker({
         element: el,
-        anchor: 'center',
+        anchor: isSelected ? 'bottom' : 'center',
       })
         .setLngLat([lon, lat])
         .addTo(map);
@@ -659,15 +763,17 @@ export default function MapViewport({
     };
   }, [cases, activeSector, selectedCaseId, visibleLayers.cases, layersLoaded, onSelectCase]);
 
-  // Fly to coordinates when requested
+  // Recenter gently when flyToCoords changes without altering the zoom angle
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !flyToCoords) return;
 
     map.flyTo({
       center: [flyToCoords.lon, flyToCoords.lat],
-      zoom: 8.8,
-      duration: 1000,
+      zoom: 7.7,
+      pitch: 0,
+      bearing: 0,
+      duration: 800,
     });
   }, [flyToCoords]);
 
@@ -675,13 +781,13 @@ export default function MapViewport({
     <div className="map-wrapper" style={{ position: 'relative', width: '100%', height: '100%' }}>
       <div ref={mapContainerRef} style={{ width: '100%', height: '100%' }} />
 
-      {/* Floating Center-Top HUD Toolbar Matching Reference Image */}
+      {/* Floating Center-Top HUD Toolbar */}
       <div className="map-hud-toolbar">
         <button
           className={`hud-pill-btn ${visibleLayers.eez ? 'active' : ''}`}
           onClick={() => setVisibleLayers((p) => ({ ...p, eez: !p.eez }))}
           type="button"
-          title="Toggle EEZ Boundaries"
+          title="Toggle Sovereign EEZ Boundaries & 12nm Territorial Sea"
         >
           <span className="hud-icon">⛶</span>
           <span>EEZ</span>
@@ -691,7 +797,7 @@ export default function MapViewport({
           className={`hud-pill-btn ${visibleLayers.mpas ? 'active' : ''}`}
           onClick={() => setVisibleLayers((p) => ({ ...p, mpas: !p.mpas }))}
           type="button"
-          title="Toggle Marine Protected Areas"
+          title="Toggle Marine Protected Areas (MPAs)"
         >
           <span className="hud-icon">⛶</span>
           <span>MPAs</span>
@@ -711,7 +817,7 @@ export default function MapViewport({
           className={`hud-pill-btn ${visibleLayers.cases ? 'active' : ''}`}
           onClick={() => setVisibleLayers((p) => ({ ...p, cases: !p.cases }))}
           type="button"
-          title="Toggle Vessel Position Markers"
+          title="Toggle Vessel Position Markers & Pins"
         >
           <span className="hud-icon">📍</span>
           <span>Vessel Pins</span>
@@ -750,17 +856,17 @@ export default function MapViewport({
         <div className="scale-bar-line"></div>
       </div>
 
+      {/* Live Coordinates Readout for Maritime Authorities (Bottom Left/Center) */}
+      <div className="map-hud-coordinates-bar" title="Live WGS-84 Coordinates on Fairway">
+        <span className="coord-hud-badge">CRS: WGS84</span>
+        <span className="coord-hud-val">
+          📍 {Math.abs(cursorCoords.lat).toFixed(4)}°{cursorCoords.lat < 0 ? 'S' : 'N'}, {Math.abs(cursorCoords.lon).toFixed(4)}°{cursorCoords.lon < 0 ? 'E' : 'W'}
+        </span>
+        <span className="coord-hud-lock-tag">🔒 LOCKED SURVEILLANCE CORRIDOR</span>
+      </div>
+
       {/* Map Control Buttons (Bottom-Right) */}
       <div className="map-hud-controls-group">
-        <button
-          className="map-control-btn"
-          onClick={handleZoomIn}
-          title="Zoom In"
-          type="button"
-        >
-          +
-        </button>
-
         <button
           className="map-control-btn map-basemap-btn"
           onClick={toggleBasemap}
@@ -777,19 +883,10 @@ export default function MapViewport({
         <button
           className="map-control-btn"
           onClick={handleRecenter}
-          title="Recenter to Maritime Fairway"
+          title="Reset / Recenter to Sovereign Kenya Coastline Angle"
           type="button"
         >
           ⌖
-        </button>
-
-        <button
-          className="map-control-btn"
-          onClick={handleZoomOut}
-          title="Zoom Out"
-          type="button"
-        >
-          −
         </button>
       </div>
     </div>

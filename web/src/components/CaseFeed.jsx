@@ -247,7 +247,13 @@ export default function CaseFeed({
           const riskPillClass = band === 'High' ? 'risk-pill-high' : band === 'Medium' ? 'risk-pill-med' : 'risk-pill-low';
           const cardStripeClass = band === 'High' ? 'stripe-high' : band === 'Medium' ? 'stripe-med' : 'stripe-low';
 
-          // Location & time label
+          // Location, coordinates & time label
+          const lat = c.features?.lat ?? c.lat;
+          const lon = c.features?.lon ?? c.lon;
+          const hasCoords = lat !== undefined && lon !== undefined && !isNaN(lat) && !isNaN(lon);
+          const coordsStr = hasCoords
+            ? `${Math.abs(lat).toFixed(4)}°${lat < 0 ? 'S' : 'N'}, ${Math.abs(lon).toFixed(4)}°${lon < 0 ? 'E' : 'W'}`
+            : null;
           const locText = c.features?.locationLabel || (c.sector ? `${c.sector}, Kenya` : 'Kenya EEZ');
           const timeText = timeAgo(c.created_at);
 
@@ -264,6 +270,10 @@ export default function CaseFeed({
                   alt={vesselName}
                   className="card-thumb-img"
                   loading="lazy"
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = '/vessels/pacific_dawn.jpg';
+                  }}
                 />
               </div>
 
@@ -283,7 +293,9 @@ export default function CaseFeed({
                     <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
                     <circle cx="12" cy="10" r="3" />
                   </svg>
-                  <span className="sub-text-ellipsis" title={locText}>{locText}</span>
+                  <span className="sub-text-ellipsis" title={`${locText} ${coordsStr ? `(${coordsStr})` : ''}`}>
+                    {coordsStr || locText}
+                  </span>
                 </div>
 
                 <div className="card-sub-row card-time-row">

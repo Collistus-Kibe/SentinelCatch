@@ -60,19 +60,8 @@ export default function Home() {
         const loadedCases = data.cases || [];
         setCases(loadedCases);
         setIsLoading(false);
-        // Automatically synchronize default selected case to SL PACIFIC DAWN 02 or first case
-        setSelectedCaseId((prev) => {
-          if (prev) return prev;
-          const target = loadedCases.find((c) => {
-            const name = (c.candidate_matches?.[0]?.vesselName || c.features?.candidate_matches?.[0]?.vesselName || '').toUpperCase();
-            return name.includes('PACIFIC DAWN');
-          }) || loadedCases[0];
-          if (target) {
-            setSelectedCase(target);
-            return target.id;
-          }
-          return null;
-        });
+        // Map begins in clean overview matching Reference Image B / Image 1
+        // When user clicks a vessel on the map or watchlist, the pin and intel panel activate
       })
       .catch((err) => {
         console.error('Failed to load cases:', err);

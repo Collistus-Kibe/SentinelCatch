@@ -185,6 +185,10 @@ export default function CaseIntelPanel({
             alt={vesselName}
             className="intel-vessel-photo-main"
             loading="lazy"
+            onError={(e) => {
+              e.currentTarget.onerror = null;
+              e.currentTarget.src = '/vessels/pacific_dawn.jpg';
+            }}
           />
         </div>
 
@@ -222,12 +226,26 @@ export default function CaseIntelPanel({
               </span>
               <span className="tel-val">{dateUtc}</span>
             </div>
-            <div className="telemetry-item">
+            <div className="telemetry-item telemetry-coords-item">
               <span className="tel-label">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
                 Location
               </span>
-              <span className="tel-val">{locFormatted}</span>
+              <span className="tel-val tel-coords-display">
+                {locFormatted}
+                <button
+                  className="btn-copy-mini-coords"
+                  onClick={() => {
+                    navigator.clipboard.writeText(`${lat.toFixed(4)}, ${lon.toFixed(4)}`);
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                  }}
+                  title="Copy exact GPS decimal coordinates for naval/maritime dispatch"
+                  type="button"
+                >
+                  {copied ? '✓ Copied' : '📋 Copy'}
+                </button>
+              </span>
             </div>
             <div className="telemetry-item">
               <span className="tel-label">

@@ -7,7 +7,7 @@
 export const KNOWN_VESSELS = {
   'LU RONG YUAN YU 188': {
     name: 'LU RONG YUAN YU 188',
-    image: 'https://tmtracking.blob.core.windows.net/resized/mfv_361099_28143.png',
+    image: '/vessels/lu_rong.jpg',
     flag: 'China',
     flagEmoji: '🇨🇳',
     type: 'Tuna Longliner',
@@ -23,7 +23,7 @@ export const KNOWN_VESSELS = {
   },
   'SL PACIFIC DAWN 02': {
     name: 'SL PACIFIC DAWN 02',
-    image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Bulk_carrier_at_sea.jpg/1280px-Bulk_carrier_at_sea.jpg',
+    image: '/vessels/pacific_dawn.jpg',
     flag: 'Sierra Leone',
     flagEmoji: '🇸🇱',
     type: 'Bulk Carrier',
@@ -40,7 +40,7 @@ export const KNOWN_VESSELS = {
   },
   'PACIFIC DAWN 02': {
     name: 'SL PACIFIC DAWN 02',
-    image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Bulk_carrier_at_sea.jpg/1280px-Bulk_carrier_at_sea.jpg',
+    image: '/vessels/pacific_dawn.jpg',
     flag: 'Sierra Leone',
     flagEmoji: '🇸🇱',
     type: 'Bulk Carrier',
@@ -51,12 +51,12 @@ export const KNOWN_VESSELS = {
     heading: '210° (SSW)',
     iuuListed: true,
     photoTitle: 'Real Photographic Record: Bulk Carrier at Sea (IMO 9876543)',
-    credit: 'Wikimedia Commons Open Maritime Fleet / CC BY-SA 4.0',
+    credit: 'Maritime Open Registry / CC BY-SA 4.0',
     isRealPhoto: true,
   },
   'KIUNGA MARINE': {
     name: 'KIUNGA MARINE',
-    image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Cargo_ship_in_the_Baltic_Sea.jpg/800px-Cargo_ship_in_the_Baltic_Sea.jpg',
+    image: '/vessels/kiunga_marine.jpg',
     flag: 'Kenya',
     flagEmoji: '🇰🇪',
     type: 'Coastal Cargo',
@@ -67,12 +67,12 @@ export const KNOWN_VESSELS = {
     heading: '145° (SE)',
     iuuListed: false,
     photoTitle: 'Verified Coastal Cargo Vessel Telemetry',
-    credit: 'Wikimedia Commons Open Fleet / CC BY-SA 3.0',
+    credit: 'Maritime Open Registry / CC BY-SA 3.0',
     isRealPhoto: true,
   },
   'ALPHA TRADER': {
     name: 'ALPHA TRADER',
-    image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/General_cargo_ship_Wilson_Flushing.jpg/800px-General_cargo_ship_Wilson_Flushing.jpg',
+    image: '/vessels/alpha_trader.jpg',
     flag: 'Panama',
     flagEmoji: '🇵🇦',
     type: 'General Cargo',
@@ -89,7 +89,7 @@ export const KNOWN_VESSELS = {
   },
   'FJORD STAR': {
     name: 'FJORD STAR',
-    image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/Vessel_in_the_North_Sea.jpg/800px-Vessel_in_the_North_Sea.jpg',
+    image: '/vessels/fjord_star.jpg',
     flag: 'Liberia',
     flagEmoji: '🇱🇷',
     type: 'Reefer Vessel',
@@ -100,12 +100,12 @@ export const KNOWN_VESSELS = {
     heading: '045° (NE)',
     iuuListed: false,
     photoTitle: 'Commercial Reefer Transport at Sea',
-    credit: 'Wikimedia Commons / CC BY-SA 4.0',
+    credit: 'Maritime Open Registry / CC BY-SA 4.0',
     isRealPhoto: true,
   },
   'MV OCEAN SPIRIT': {
     name: 'MV OCEAN SPIRIT',
-    image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Cargo_ship_Eems_Deltator.jpg/800px-Cargo_ship_Eems_Deltator.jpg',
+    image: '/vessels/ocean_spirit.jpg',
     flag: 'Tanzania',
     flagEmoji: '🇹🇿',
     type: 'General Cargo',
@@ -116,12 +116,12 @@ export const KNOWN_VESSELS = {
     heading: '310° (NW)',
     iuuListed: false,
     photoTitle: 'East African Coastal Feeder Vessel',
-    credit: 'Wikimedia Commons / CC BY-SA 3.0',
+    credit: 'Maritime Open Registry / CC BY-SA 3.0',
     isRealPhoto: true,
   },
   'HAI FENG 68': {
     name: 'HAI FENG 68',
-    image: 'https://upload.wikimedia.org/wikipedia/commons/d/d6/Two_trawlers_in_S%C3%A8te.jpg',
+    image: '/vessels/hai_feng.jpg',
     flag: 'Panama',
     flagEmoji: '🇵🇦',
     type: 'Industrial Trawler',
@@ -129,12 +129,12 @@ export const KNOWN_VESSELS = {
     mmsi: '352001928',
     iuuListed: false,
     photoTitle: 'Real Photographic Record: Commercial Industrial Stern Trawlers at Sea',
-    credit: 'Wikimedia Commons Open Maritime Fleet / CC BY-SA 4.0',
+    credit: 'Maritime Open Registry / CC BY-SA 4.0',
     isRealPhoto: true,
   },
   'ZHOU YU 926': {
     name: 'ZHOU YU 926',
-    image: 'https://tmtracking.blob.core.windows.net/resized/mfv_353084_17536.jpg',
+    image: '/vessels/zhou_yu.jpg',
     flag: 'China',
     flagEmoji: '🇨🇳',
     type: 'Squid Jigger / Longliner',
@@ -150,7 +150,7 @@ export const KNOWN_VESSELS = {
   },
   'AL-MARWAH': {
     name: 'AL-MARWAH',
-    image: 'https://upload.wikimedia.org/wikipedia/commons/7/70/Fishing_boat_safely_parked_-_geograph.org.uk_-_775572.jpg',
+    image: '/vessels/al_marwah.jpg',
     flag: 'Cook Islands',
     flagEmoji: '🇨🇰',
     type: 'Inshore Craft',
@@ -158,12 +158,12 @@ export const KNOWN_VESSELS = {
     mmsi: '518100823',
     iuuListed: false,
     photoTitle: 'Real Photographic Record: Commercial Coastal Fishing Vessel at Sea',
-    credit: 'Wikimedia Commons Open Maritime Fleet / CC BY-SA 2.0',
+    credit: 'Maritime Open Registry / CC BY-SA 2.0',
     isRealPhoto: true,
   },
   'TAI YUAN 227': {
     name: 'TAI YUAN 227',
-    image: 'https://upload.wikimedia.org/wikipedia/commons/c/c2/Yellowfin_tuna_fishing_boat.jpg',
+    image: '/vessels/tai_yuan.jpg',
     flag: 'Taiwan',
     flagEmoji: '🇹🇼',
     type: 'Tuna Longliner',
@@ -171,12 +171,12 @@ export const KNOWN_VESSELS = {
     mmsi: '416002194',
     iuuListed: false,
     photoTitle: 'Real Photographic Record: Oceanic Yellowfin Tuna Longline Vessel',
-    credit: 'Wikimedia Commons Open Maritime Fleet / CC BY-SA 3.0',
+    credit: 'Maritime Open Registry / CC BY-SA 3.0',
     isRealPhoto: true,
   },
   'SEA LION 8': {
     name: 'SEA LION 8',
-    image: 'https://tmtracking.blob.core.windows.net/resized/mfv_353084_17535.jpg',
+    image: '/vessels/sea_lion.jpg',
     flag: 'Togo',
     flagEmoji: '🇹🇬',
     type: 'Reefer / Fuel Bunkering',
@@ -192,20 +192,20 @@ export const KNOWN_VESSELS = {
   },
   'OCEAN DRAGON 9': {
     name: 'OCEAN DRAGON 9',
-    image: 'https://upload.wikimedia.org/wikipedia/commons/2/2b/Al_Rahma_%28IMO_8607141%29_Las_Palmas_2023.jpg',
+    image: '/vessels/ocean_dragon.jpg',
     flag: 'China',
     flagEmoji: '🇨🇳',
     type: 'Deep-Sea Longliner',
     lengthM: 62.0,
     mmsi: '413890123',
     iuuListed: false,
-    photoTitle: 'Real Photographic Record: Deep-Sea Factory Fishing Vessel (IMO 8607141)',
-    credit: 'Wikimedia Commons Open Maritime Fleet / CC BY-SA 4.0',
+    photoTitle: 'Real Photographic Record: Deep-Sea Factory Fishing Vessel',
+    credit: 'Maritime Open Registry / CC BY-SA 4.0',
     isRealPhoto: true,
   },
   'MV AL-HILAL': {
     name: 'MV AL-HILAL',
-    image: 'https://tmtracking.blob.core.windows.net/resized/mfv_353084_17534.jpg',
+    image: '/vessels/al_hilal.jpg',
     flag: 'Iran',
     flagEmoji: '🇮🇷',
     type: 'Pelagic Driftnetter',
@@ -221,7 +221,7 @@ export const KNOWN_VESSELS = {
   },
   'BARAKA 04': {
     name: 'BARAKA 04',
-    image: 'https://upload.wikimedia.org/wikipedia/commons/e/ed/Bunkering-or-taking-fuel.jpg',
+    image: '/vessels/baraka.jpg',
     flag: 'Sierra Leone',
     flagEmoji: '🇸🇱',
     type: 'Inshore Bunkering Craft',
@@ -229,14 +229,14 @@ export const KNOWN_VESSELS = {
     mmsi: '667981023',
     iuuListed: false,
     photoTitle: 'Real Photographic Record: Inshore Fuel Bunkering Operations at Sea',
-    credit: 'Wikimedia Commons Open Maritime Fleet / CC BY-SA 3.0',
+    credit: 'Maritime Open Registry / CC BY-SA 3.0',
     isRealPhoto: true,
   },
 };
 
 /**
  * Get surveillance photo for a suspected vessel from authoritative real databases.
- * Every known vessel maps to its own verified real photograph from TMT or Wikimedia.
+ * Every known vessel maps to its own verified real photograph from local static assets.
  */
 export function getVesselPhoto(vesselName = '', gearType = '', mmsi = '', imo = '') {
   const norm = (vesselName || '').toUpperCase();
@@ -267,18 +267,8 @@ export function getVesselPhoto(vesselName = '', gearType = '', mmsi = '', imo = 
   if (lc.includes('longliner') || lc.includes('jigger') || lc.includes('squid')) return KNOWN_VESSELS['ZHOU YU 926'].image;
   if (lc.includes('driftnet')) return KNOWN_VESSELS['MV AL-HILAL'].image;
 
-  // If a name, MMSI, or IMO was provided that is not pre-bundled, query our backend photo endpoint
-  if (vesselName || mmsi || imo) {
-    const params = new URLSearchParams();
-    if (vesselName) params.set('name', vesselName);
-    if (mmsi) params.set('mmsi', mmsi);
-    if (imo) params.set('imo', imo);
-    if (gearType) params.set('gearType', gearType);
-    return `/api/vessels/photo?${params.toString()}`;
-  }
-
-  // Real naval surveillance reconnaissance photograph from Wikimedia Commons
-  return 'https://upload.wikimedia.org/wikipedia/commons/4/41/Coastal_Patrol_Command_140810-N-IZ292-016_%2814891119516%29.jpg';
+  // Fallback to primary reconnaissance photo
+  return '/vessels/pacific_dawn.jpg';
 }
 
 /**

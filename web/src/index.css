@@ -5043,76 +5043,505 @@ a.cand-tag:hover {
   border-color: rgba(14, 165, 233, 0.4);
 }
 
-/* Vessel Marker on Map */
-.map-vessel-marker {
-  cursor: pointer;
+/* ── Live Coordinates Readout for Maritime Authorities ────────────── */
+.map-hud-coordinates-bar {
+  position: absolute;
+  bottom: 18px;
+  left: 200px;
+  z-index: 30;
+  background: rgba(11, 18, 32, 0.88);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  padding: 4px 10px;
+  color: #cbd5e1;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.68rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
   user-select: none;
 }
 
-.directional-chevron-wrapper {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform 0.2s;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.7));
-}
-
-.directional-chevron-wrapper:hover {
-  transform: scale(1.25) !important;
-}
-
-/* Selected Vessel Target Reticle */
-.selected-target-reticle {
-  position: relative;
-  width: 44px;
-  height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  animation: pulse-reticle 2s infinite ease-in-out;
-}
-
-@keyframes pulse-reticle {
-  0% { transform: scale(1); filter: drop-shadow(0 0 6px rgba(239, 68, 68, 0.5)); }
-  50% { transform: scale(1.05); filter: drop-shadow(0 0 12px rgba(239, 68, 68, 0.9)); }
-  100% { transform: scale(1); filter: drop-shadow(0 0 6px rgba(239, 68, 68, 0.5)); }
-}
-
-.reticle-corner {
-  position: absolute;
-  width: 9px;
-  height: 9px;
-  border-color: #ef4444;
-  border-style: solid;
-}
-
-.reticle-corner-tl { top: 0; left: 0; border-width: 2px 0 0 2px; }
-.reticle-corner-tr { top: 0; right: 0; border-width: 2px 2px 0 0; }
-.reticle-corner-bl { bottom: 0; left: 0; border-width: 0 0 2px 2px; }
-.reticle-corner-br { bottom: 0; right: 0; border-width: 0 2px 2px 0; }
-
-.selected-callout-pill {
-  position: absolute;
-  top: -34px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #0b1220;
-  border: 1px solid #ef4444;
-  border-radius: 4px;
-  padding: 2px 8px;
-  font-size: 0.72rem;
+.coord-hud-badge {
+  background: rgba(14, 165, 233, 0.15);
+  color: #38bdf8;
   font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 3px;
+  border: 1px solid rgba(14, 165, 233, 0.3);
+}
+
+.coord-hud-val {
   color: #f1f5f9;
-  white-space: nowrap;
+  font-weight: 600;
+}
+
+.coord-hud-lock-tag {
+  color: #10b981;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+@media (max-width: 900px) {
+  .map-hud-coordinates-bar {
+    display: none;
+  }
+}
+
+/* ── Directional Tactical Chevron (Non-Selected Vessels) ──────────── */
+.tactical-map-chevron {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.8));
+}
+
+.tactical-map-chevron:hover {
+  transform: scale(1.15) translateY(-3px);
+  z-index: 100 !important;
+}
+
+.chevron-bubble-pill {
   display: flex;
   align-items: center;
   gap: 5px;
+  background: rgba(10, 16, 30, 0.92);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1.5px solid rgba(255, 255, 255, 0.18);
+  padding: 2px 7px;
+  border-radius: 9999px;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.7);
+  white-space: nowrap;
+}
+
+.band-high .chevron-bubble-pill {
+  border-color: rgba(239, 68, 68, 0.75);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.75), 0 0 10px rgba(239, 68, 68, 0.4);
+}
+
+.band-medium .chevron-bubble-pill {
+  border-color: rgba(245, 158, 11, 0.75);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.75), 0 0 10px rgba(245, 158, 11, 0.4);
+}
+
+.chevron-flag {
+  font-size: 0.8rem;
+}
+
+.chevron-score {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: #f8fafc;
+}
+
+.chevron-svg-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chevron-water-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  margin-top: 3px;
+}
+
+/* ── Tactical Recon Photo Map Pin (Selected Vessel Target) ────────── */
+.tactical-map-pin {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  transform-origin: bottom center;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), z-index 0.1s;
+  z-index: 200 !important;
+  pointer-events: auto;
+}
+
+.tactical-map-pin.is-selected {
+  transform: translateY(-6px);
+}
+
+.pin-card-bubble {
+  width: 252px;
+  background: rgba(9, 14, 26, 0.96);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 2px solid #0ea5e9;
+  border-radius: 12px;
+  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.9), 0 0 28px rgba(14, 165, 233, 0.55);
+  overflow: hidden;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.band-high.tactical-map-pin .pin-card-bubble {
+  border-color: #ef4444;
+  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.9), 0 0 28px rgba(239, 68, 68, 0.55);
+}
+
+.pin-photo-header {
+  position: relative;
+  width: 100%;
+  height: 104px;
+  background: #050811;
+  overflow: hidden;
+}
+
+.pin-vessel-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.pin-real-photo-badge {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  background: rgba(5, 8, 17, 0.88);
+  border: 1px solid rgba(16, 185, 129, 0.5);
+  color: #34d399;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 2px 6px;
+  border-radius: 4px;
+  backdrop-filter: blur(6px);
+  z-index: 5;
+}
+
+.pin-close-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 22px;
+  height: 22px;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  color: #cbd5e1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  z-index: 10;
+  transition: all 0.15s;
+}
+
+.pin-close-btn:hover {
+  background: #ef4444;
+  color: #ffffff;
+  border-color: #ef4444;
+}
+
+.pin-band-chip {
+  position: absolute;
+  bottom: 6px;
+  left: 6px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  backdrop-filter: blur(8px);
+  z-index: 5;
+}
+
+.pin-band-chip.high {
+  background: rgba(220, 38, 38, 0.92);
+  color: #ffffff;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.6);
+}
+
+.pin-band-chip.medium {
+  background: rgba(217, 119, 6, 0.92);
+  color: #ffffff;
+}
+
+.pin-band-chip.low {
+  background: rgba(22, 163, 74, 0.92);
+  color: #ffffff;
+}
+
+.chip-pulse-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ffffff;
+  animation: pulse-dot 1.2s infinite;
+}
+
+.pin-iuu-badge {
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  background: #dc2626;
+  color: #ffffff;
+  font-size: 0.58rem;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.03em;
+  box-shadow: 0 0 8px rgba(220, 38, 38, 0.7);
+  z-index: 5;
+}
+
+.pin-mpa-badge {
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  background: rgba(16, 185, 129, 0.92);
+  color: #ffffff;
+  font-size: 0.58rem;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.03em;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+  z-index: 5;
+}
+
+.pin-details-body {
+  padding: 10px 12px;
+  background: rgba(11, 18, 33, 0.98);
+}
+
+.pin-title-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #f8fafc;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 8px;
+}
+
+.pin-flag-icon {
+  font-size: 1rem;
+}
+
+.pin-vessel-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Prominent Coordinates Box for Authorities ── */
+.pin-coords-authority-box {
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(14, 165, 233, 0.35);
+  border-radius: 6px;
+  padding: 6px 8px;
+  margin-bottom: 8px;
+}
+
+.pin-coords-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.coords-label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: #38bdf8;
+  letter-spacing: 0.04em;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.btn-copy-pin-gps {
+  background: rgba(14, 165, 233, 0.2);
+  border: 1px solid rgba(14, 165, 233, 0.45);
+  color: #38bdf8;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.btn-copy-pin-gps:hover {
+  background: #0ea5e9;
+  color: #ffffff;
+}
+
+.pin-coords-values {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.coords-dms {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.coords-dec {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.68rem;
+  color: #94a3b8;
+}
+
+.pin-telemetry-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  color: #94a3b8;
+  margin-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 6px;
+}
+
+.pin-sector-tag {
+  color: #38bdf8;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 105px;
+}
+
+.pin-status-banner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #f59e0b;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.03em;
+}
+
+.band-high .pin-status-banner {
+  color: #ef4444;
+}
+
+.status-pulse-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: pulse-dot 1.1s infinite;
+}
+
+/* Pointer Stem */
+.pin-pointer-stem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stem-line {
+  width: 2px;
+  height: 18px;
+  background: linear-gradient(to bottom, rgba(56, 189, 248, 0.9), rgba(14, 165, 233, 1));
+  box-shadow: 0 0 8px rgba(14, 165, 233, 0.6);
+}
+
+.band-high .stem-line {
+  background: linear-gradient(to bottom, rgba(239, 68, 68, 0.9), rgba(220, 38, 38, 1));
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
+}
+
+.stem-arrow {
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 7px solid #0ea5e9;
+}
+
+.band-high .stem-arrow {
+  border-top-color: #ef4444;
+}
+
+/* Water Sonar Target Beacon */
+.pin-water-target {
+  position: relative;
+  width: 24px;
+  height: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.water-crosshair {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #0ea5e9;
+  box-shadow: 0 0 10px #0ea5e9;
+  z-index: 2;
+}
+
+.band-high .water-crosshair {
+  background: #ef4444;
+  box-shadow: 0 0 10px #ef4444;
+}
+
+.water-ripple {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1.5px solid #0ea5e9;
+  animation: sonar-ripple 2.4s infinite cubic-bezier(0.2, 0.6, 0.35, 1);
   pointer-events: none;
 }
 
-.callout-alert-icon {
-  font-size: 0.75rem;
+.band-high .water-ripple {
+  border-color: #ef4444;
+}
+
+.water-ripple.ring-2 {
+  animation-delay: 1.2s;
+}
+
+/* Mini copy button in CaseIntelPanel Location row */
+.tel-coords-display {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-copy-mini-coords {
+  background: rgba(14, 165, 233, 0.15);
+  border: 1px solid rgba(14, 165, 233, 0.35);
+  color: #38bdf8;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-copy-mini-coords:hover {
+  background: #0ea5e9;
+  color: #ffffff;
 }
 
 /* ── Vessel Intelligence Sidebar (Right Panel) ─────────────────────── */
