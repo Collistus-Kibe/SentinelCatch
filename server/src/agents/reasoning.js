@@ -732,10 +732,10 @@ export class ReasoningAgent {
           rationale: 'Commercial general cargo vessel MV OCEAN SPIRIT maintaining regular course in international fairway toward Dar es Salaam.',
           features: {
             lat: -5.10,
-            lon: 39.88,
-            locationLabel: 'Dar es Salaam, Tanzania',
+            lon: 40.08,
+            locationLabel: '35 km E of Pemba Island (Fairway)',
             sector: 'South Coast/Vanga',
-            distanceToCoastKm: 35,
+            distanceToCoastKm: 42,
             nearestPort: 'Dar es Salaam',
             distanceToEEZBoundaryKm: 90,
             inMPA: false,

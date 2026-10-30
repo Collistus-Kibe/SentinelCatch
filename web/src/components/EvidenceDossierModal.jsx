@@ -21,22 +21,50 @@ export default function EvidenceDossierModal({ caseItem, onClose }) {
       });
   }, [caseItem?.id]);
 
+  const primaryMatch = dossier?.candidateMatches?.[0] || caseItem?.candidateMatches?.[0];
+  const vesselName = (primaryMatch?.vesselName || caseItem?.vesselName || caseItem?.name || `SUSPECT VESSEL SAR-${caseItem?.id || 'ALPHA'}`).toUpperCase();
+  const vesselFlag = primaryMatch?.flag || caseItem?.flag || 'UNKNOWN';
+  const isIuu = primaryMatch?.iuuListed || caseItem?.iuuListed;
+  const inMpa = dossier?.features?.inMPA ?? caseItem?.inMpa;
+  const mpaName = dossier?.features?.mpaName || caseItem?.mpaName;
+
+  const formatCoord = (lat, lon) => {
+    if (lat == null || lon == null) return 'N/A';
+    const latStr = `${Math.abs(lat).toFixed(4)}°${lat < 0 ? 'S' : 'N'}`;
+    const lonStr = `${Math.abs(lon).toFixed(4)}°${lon >= 0 ? 'E' : 'W'}`;
+    return `${latStr}, ${lonStr}`;
+  };
+
   const handlePrint = () => {
+    const prevTitle = document.title;
+    const cleanVessel = vesselName.replace(/[^A-Za-z0-9_-]/g, '_');
+    document.title = `KENYA_INTERCEPTION_REPORT_${cleanVessel}_CASE_${caseItem.id}`;
     window.print();
+    setTimeout(() => {
+      document.title = prevTitle;
+    }, 1500);
   };
 
   const handleCopyText = () => {
     if (!dossier) return;
+    const cleanCoord = formatCoord(dossier.target.coordinates.lat, dossier.target.coordinates.lon);
+    const violationSummary = inMpa 
+      ? `UNAUTHORIZED COMMERCIAL OPERATIONS IN ${mpaName || 'MARINE PROTECTED AREA (MPA)'}`
+      : (isIuu ? `VESSEL BLACKLISTED ON RFMO IUU REGISTRY` : `DARK VESSEL OPERATION (AIS DEACTIVATION IN EEZ)`);
+
     const text = [
       `================================================================================`,
-      `REPUBLIC OF KENYA - MULTI-AGENCY MARITIME SURVEILLANCE DOSSIER`,
+      `REPUBLIC OF KENYA - MULTI-AGENCY MARITIME SURVEILLANCE & ENFORCEMENT DIVISION`,
+      `MARITIME INTERCEPTION REPORT: ${vesselName}`,
+      `PRIMARY OFFENSE / INFRACTION: ${violationSummary}`,
       `CLASSIFICATION: ${dossier.classification}`,
       `DOSSIER REFERENCE: ${dossier.dossierId}`,
       `DATE: ${dossier.target.detectedAtEat} (EAT) / ${dossier.target.detectedAtUtc}`,
       `SECTOR: ${dossier.target.sector}`,
       `THREAT ASSESSMENT: ${dossier.target.threatBand.toUpperCase()} (${dossier.target.scoreFinal}/100)`,
-      `COORDINATES: ${dossier.target.coordinates.lat.toFixed(4)}°N, ${dossier.target.coordinates.lon.toFixed(4)}°E`,
+      `COORDINATES: ${cleanCoord}`,
       `SATELLITE SENSOR: ${dossier.target.satelliteSensor}`,
+      `FLAG STATE: ${vesselFlag}`,
       `--------------------------------------------------------------------------------`,
       `1. PROBABLE CANDIDATE IDENTIFICATION ("WHO IS IT?"):`,
       dossier.candidateMatches && dossier.candidateMatches.length > 0
@@ -71,7 +99,7 @@ export default function EvidenceDossierModal({ caseItem, onClose }) {
         {/* Top Control Bar (Hidden when printing) */}
         <div className="dossier-control-bar no-print">
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span className="badge badge-high">📄 Official Case File</span>
+            <span className="badge badge-high">📄 INTERCEPTION REPORT: {vesselName}</span>
             <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
               Case #{caseItem.id} · {caseItem.sector}
             </span>
@@ -100,14 +128,32 @@ export default function EvidenceDossierModal({ caseItem, onClose }) {
 
           {!loading && dossier && (
             <article className="dossier-paper">
-              {/* Document Header */}
-              <header className="dossier-header">
-                <div className="dossier-emblem">🛡️</div>
+              {/* Document Header - Clean Official Header, No Emblem Logo */}
+              <header className="dossier-header dossier-header-clean">
                 <div className="dossier-title-block">
-                  <h2>REPUBLIC OF KENYA</h2>
-                  <h3>KENYA MARITIME SURVEILLANCE & ENFORCEMENT SUPPORT</h3>
+                  <div className="dossier-state-banner">REPUBLIC OF KENYA</div>
+                  <div className="dossier-agency-title">KENYA MARITIME SURVEILLANCE & ENFORCEMENT DIVISION</div>
+                  <h2 className="dossier-interception-headline">
+                    MARITIME INTERCEPTION REPORT: {vesselName}
+                  </h2>
+                  <div className="dossier-violation-tag">
+                    {inMpa ? (
+                      <span className="violation-pill violation-mpa">
+                        ⚠️ CRITICAL VIOLATION: ILLEGAL INCURSION INTO {mpaName ? mpaName.toUpperCase() : 'MARINE PROTECTED AREA (MPA)'}
+                      </span>
+                    ) : isIuu ? (
+                      <span className="violation-pill violation-iuu">
+                        ⚠️ HIGH-THREAT INTERCEPTION: RFMO IUU BLACKLISTED VESSEL IN EEZ
+                      </span>
+                    ) : (
+                      <span className="violation-pill violation-suspect">
+                        ⚠️ INTERCEPTION NOTICE: SUSPECT DARK VESSEL OPERATING OUTSIDE AUTHORIZED AIS PROFILE
+                      </span>
+                    )}
+                  </div>
                   <div className="dossier-ref-tag">
                     <span>DOSSIER REF: <strong>{dossier.dossierId}</strong></span>
+                    <span>FLAG STATE: <strong>{vesselFlag}</strong></span>
                     <span>CLASSIFICATION: <strong>{dossier.classification}</strong></span>
                   </div>
                 </div>
@@ -121,7 +167,7 @@ export default function EvidenceDossierModal({ caseItem, onClose }) {
                 <div className="dossier-grid-2">
                   <div className="dossier-kv">
                     <span className="kv-label">Radar Centroid Coordinates:</span>
-                    <strong className="kv-val">{dossier.target.coordinates.lat.toFixed(4)}°N, {dossier.target.coordinates.lon.toFixed(4)}°E</strong>
+                    <strong className="kv-val">{formatCoord(dossier.target.coordinates.lat, dossier.target.coordinates.lon)}</strong>
                   </div>
                   <div className="dossier-kv">
                     <span className="kv-label">Coastal EEZ Sector:</span>

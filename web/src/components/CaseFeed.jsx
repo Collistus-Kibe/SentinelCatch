@@ -252,7 +252,7 @@ export default function CaseFeed({
           const lon = c.features?.lon ?? c.lon;
           const hasCoords = lat !== undefined && lon !== undefined && !isNaN(lat) && !isNaN(lon);
           const coordsStr = hasCoords
-            ? `${Math.abs(lat).toFixed(4)}°${lat < 0 ? 'S' : 'N'}, ${Math.abs(lon).toFixed(4)}°${lon < 0 ? 'E' : 'W'}`
+            ? `${Math.abs(lat).toFixed(4)}°${lat < 0 ? 'S' : 'N'}, ${Math.abs(lon).toFixed(4)}°${lon >= 0 ? 'E' : 'W'}`
             : null;
           const locText = c.features?.locationLabel || (c.sector ? `${c.sector}, Kenya` : 'Kenya EEZ');
           const timeText = timeAgo(c.created_at);

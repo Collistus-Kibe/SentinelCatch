@@ -116,13 +116,6 @@ export default function Home() {
       <header className="ops-header">
         <div className="ops-header-left">
           <div className="logo-group">
-            <span className="logo-icon-svg" aria-hidden="true">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" fill="rgba(56, 189, 248, 0.12)" />
-                <circle cx="12" cy="11" r="2.8" />
-                <path d="M12 8.2v1M12 13.8v1M9.2 11h1M13.8 11h1" />
-              </svg>
-            </span>
             <div className="logo-brand-block">
               <h1 className="ops-title">SentinelCatch</h1>
               <span className="ops-brand-divider">|</span>

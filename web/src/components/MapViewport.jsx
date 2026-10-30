@@ -860,7 +860,7 @@ export default function MapViewport({
       <div className="map-hud-coordinates-bar" title="Live WGS-84 Coordinates on Fairway">
         <span className="coord-hud-badge">CRS: WGS84</span>
         <span className="coord-hud-val">
-          📍 {Math.abs(cursorCoords.lat).toFixed(4)}°{cursorCoords.lat < 0 ? 'S' : 'N'}, {Math.abs(cursorCoords.lon).toFixed(4)}°{cursorCoords.lon < 0 ? 'E' : 'W'}
+          📍 {Math.abs(cursorCoords.lat).toFixed(4)}°{cursorCoords.lat < 0 ? 'S' : 'N'}, {Math.abs(cursorCoords.lon).toFixed(4)}°{cursorCoords.lon >= 0 ? 'E' : 'W'}
         </span>
         <span className="coord-hud-lock-tag">🔒 LOCKED SURVEILLANCE CORRIDOR</span>
       </div>
