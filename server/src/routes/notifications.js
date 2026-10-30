@@ -94,7 +94,7 @@ router.get('/stream', async (req, res) => {
 router.get('/notifications', async (req, res) => {
   try {
     const since = req.query.since;
-    const limit = Math.min(Number(req.query.limit) || 50, 100);
+    const limit = Math.min(Math.max(1, Number(req.query.limit) || 50), 100);
 
     let sql = 'SELECT * FROM notifications';
     const params = [];
@@ -107,8 +107,7 @@ router.get('/notifications', async (req, res) => {
       }
     }
 
-    sql += ' ORDER BY created_at DESC LIMIT $' + (params.length + 1);
-    params.push(limit);
+    sql += ` ORDER BY created_at DESC LIMIT ${limit}`;
 
     try {
       const { rows } = await query(sql, params);

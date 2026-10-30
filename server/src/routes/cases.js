@@ -53,18 +53,13 @@ router.get('/cases', async (req, res) => {
       const countRes = await query(countSql, params);
       const total = Number(countRes.rows[0]?.total || 0);
 
-      params.push(limit);
-      const limitParam = `$${params.length}`;
-      params.push(offset);
-      const offsetParam = `$${params.length}`;
-
       const listSql = `
         SELECT c.*, d.lat, d.lon, d.uncertainty_km, d.length_m, d.detected_at, d.raw as detection_raw
         FROM cases c
         LEFT JOIN detections d ON c.detection_id = d.id
         ${whereClause}
         ORDER BY c.created_at DESC
-        LIMIT ${limitParam} OFFSET ${offsetParam}
+        LIMIT ${limit} OFFSET ${offset}
       `;
 
       const listRes = await query(listSql, params);

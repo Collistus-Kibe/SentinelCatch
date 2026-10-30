@@ -210,8 +210,32 @@ export async function query(text, params = []) {
   if (mysqlPool) {
     await initMysqlSchema();
 
-    // Convert $1, $2 to ? for MySQL
-    let mysqlSql = text.replace(/\$(\d+)/g, '?');
+    let mysqlSql = text;
+    let mysqlParams = [...params];
+
+    // If query has LIMIT $N and/or OFFSET $N, inline the integer values directly into the query
+    // and remove them from the parameters list so TiDB prepared statements never error.
+    const limitOffsetMatch = mysqlSql.match(/LIMIT\s+\$(\d+)(?:\s+OFFSET\s+\$(\d+))?/i);
+    if (limitOffsetMatch) {
+      const limitIdx = parseInt(limitOffsetMatch[1], 10) - 1;
+      const offsetIdx = limitOffsetMatch[2] ? parseInt(limitOffsetMatch[2], 10) - 1 : -1;
+      const limitVal = parseInt(mysqlParams[limitIdx], 10) || 50;
+      const offsetVal = offsetIdx >= 0 ? (parseInt(mysqlParams[offsetIdx], 10) || 0) : null;
+
+      let replacement = `LIMIT ${limitVal}`;
+      if (offsetVal !== null) {
+        replacement += ` OFFSET ${offsetVal}`;
+      }
+      mysqlSql = mysqlSql.replace(limitOffsetMatch[0], replacement);
+
+      const indicesToRemove = [limitIdx, offsetIdx].filter((idx) => idx >= 0).sort((a, b) => b - a);
+      for (const idx of indicesToRemove) {
+        mysqlParams.splice(idx, 1);
+      }
+    }
+
+    // Convert remaining $1, $2, ... to ? for MySQL
+    mysqlSql = mysqlSql.replace(/\$(\d+)/g, '?');
 
     // Adapt common postgres syntax differences
     mysqlSql = mysqlSql.replace(/NOW\(\)\s*-\s*INTERVAL\s*'(\d+)\s*hours'/gi, 'NOW() - INTERVAL $1 HOUR');
@@ -227,8 +251,30 @@ export async function query(text, params = []) {
       mysqlSql = mysqlSql.replace(/SELECT\s+DISTINCT\s+ON\s*\([^)]+\)\s+/gi, 'SELECT ');
     }
 
+    // Handle any literal LIMIT ? with parameter
+    if (/LIMIT\s+\?\s*$/i.test(mysqlSql) && mysqlParams.length > 0) {
+      const lastParam = mysqlParams[mysqlParams.length - 1];
+      if (typeof lastParam === 'number' || (typeof lastParam === 'string' && /^\d+$/.test(lastParam))) {
+        mysqlSql = mysqlSql.replace(/LIMIT\s+\?\s*$/i, `LIMIT ${parseInt(lastParam, 10)}`);
+        mysqlParams.pop();
+      }
+    }
+
     try {
-      const [results] = await mysqlPool.execute(mysqlSql, params);
+      let results;
+      try {
+        const [execResults] = await mysqlPool.execute(mysqlSql, mysqlParams);
+        results = execResults;
+      } catch (execErr) {
+        // Fallback to text query if prepared statement fails on parameter types or LIMIT
+        if (execErr.message?.includes('LIMIT') || execErr.code === 'ER_WRONG_ARGUMENTS') {
+          const [queryResults] = await mysqlPool.query(mysqlSql, mysqlParams);
+          results = queryResults;
+        } else {
+          throw execErr;
+        }
+      }
+
       const duration = Date.now() - start;
       const isArray = Array.isArray(results);
       const rows = isArray ? results : [];
