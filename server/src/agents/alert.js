@@ -43,19 +43,36 @@ export class AlertAgent {
     // Deduplication check: 10 km / 7 days
     // ──────────────────────────────────────────────
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-    const existingRecent = await query(
-      `SELECT n.id, n.case_id, n.score, n.lat, n.lon, n.created_at
-       FROM notifications n
-       WHERE n.created_at >= $1
-         AND n.type IN ('case_new', 'case_update')
-       ORDER BY n.created_at DESC`,
-      [sevenDaysAgo]
-    );
+    let existingRecentRows = [];
+    try {
+      const existingRecent = await query(
+        `SELECT n.id, n.case_id, n.score, n.lat, n.lon, n.created_at
+         FROM notifications n
+         WHERE n.created_at >= $1
+           AND n.type IN ('case_new', 'case_update')
+         ORDER BY n.created_at DESC`,
+        [sevenDaysAgo]
+      );
+      existingRecentRows = existingRecent?.rows || [];
+    } catch {
+      try {
+        const fallback = await query(
+          `SELECT n.id, n.case_id, n.score, n.lat, n.lon, n.created_at
+           FROM notifications n
+           WHERE n.created_at >= $1
+           ORDER BY n.created_at DESC`,
+          [sevenDaysAgo]
+        );
+        existingRecentRows = fallback?.rows || [];
+      } catch {
+        existingRecentRows = [];
+      }
+    }
 
     let isDuplicateArea = false;
     let previousScore = 0;
 
-    for (const pastNotif of existingRecent.rows) {
+    for (const pastNotif of existingRecentRows) {
       if (pastNotif.lat && pastNotif.lon) {
         const dist = haversineKm(lat, lon, pastNotif.lat, pastNotif.lon);
         if (dist <= 10) {
@@ -108,22 +125,28 @@ export class AlertAgent {
     const headline = `${band} Alert: Dark Vessel ${locationInfo.label}`;
     const notificationType = isUpdate ? 'case_update' : 'case_new';
 
-    const dispatchResult = await dispatchAlert({
-      caseId,
-      type: notificationType,
-      band,
-      headline,
-      body: brief,
-      lat,
-      lon,
-      sector: locationInfo.sector,
-      score,
-      caseCreatedAt,
-    });
+    let dispatchResult = { success: false, error: 'Unknown' };
+    try {
+      dispatchResult = await dispatchAlert({
+        caseId,
+        type: notificationType,
+        band,
+        headline,
+        body: brief,
+        lat,
+        lon,
+        sector: locationInfo.sector,
+        score,
+        caseCreatedAt,
+      });
+    } catch (err) {
+      logger.warn({ err: err.message, caseId }, 'Alert dispatch notification warning');
+      dispatchResult = { success: false, error: err.message };
+    }
 
     return {
-      alerted: dispatchResult.success,
-      reason: dispatchResult.success ? 'Alert broadcast successfully' : dispatchResult.error,
+      alerted: Boolean(dispatchResult.success),
+      reason: dispatchResult.success ? 'Alert broadcast successfully' : (dispatchResult.error || 'Failed'),
       notificationId: dispatchResult.id,
       broadcastLatencyMs: dispatchResult.broadcastLatencyMs,
     };

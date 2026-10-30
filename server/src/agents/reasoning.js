@@ -258,7 +258,11 @@ export class ReasoningAgent {
     // ──────────────────────────────────────────────
     // 4. Trigger Alert Agent
     // ──────────────────────────────────────────────
-    await AlertAgent.processCase(caseRecord, Boolean(context.isBackfill));
+    try {
+      await AlertAgent.processCase(caseRecord, Boolean(context.isBackfill));
+    } catch (err) {
+      logger.warn({ err: err.message, caseId: caseRecord.id }, 'Alert processing warning');
+    }
 
     return caseRecord;
   }

@@ -177,16 +177,20 @@ export class AISStreamClient {
       return memoryShips;
     }
 
-    // Try DB query
+    // Try DB query with cross-database compatibility (Postgres + TiDB/MySQL 8+)
     try {
       const res = await query(
-        `SELECT DISTINCT ON (mmsi) mmsi, lat, lon, course, speed, ship_name, ship_type, received_at
-         FROM ais_positions
-         WHERE received_at >= NOW() - INTERVAL '24 hours'
-         ORDER BY mmsi, received_at DESC
+        `SELECT mmsi, lat, lon, course, speed, ship_name, ship_type, received_at
+         FROM (
+           SELECT mmsi, lat, lon, course, speed, ship_name, ship_type, received_at,
+                  ROW_NUMBER() OVER (PARTITION BY mmsi ORDER BY received_at DESC) AS rn
+           FROM ais_positions
+           WHERE received_at >= NOW() - INTERVAL '24 hours'
+         ) ranked
+         WHERE ranked.rn = 1
          LIMIT 300`
       );
-      return res.rows;
+      return res.rows || [];
     } catch {
       return [];
     }

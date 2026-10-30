@@ -57,9 +57,13 @@ export class OnsiteAlertAdapter extends AlertChannelAdapter {
       ];
 
       const result = await query(sql, params);
-      row = result.rows[0];
+      if (result?.rows && result.rows[0]) {
+        row = result.rows[0];
+      } else if (result?.insertId) {
+        row.id = result.insertId;
+      }
     } catch (err) {
-      logger.debug({ err: err.message }, 'PostgreSQL offline; using in-memory notification record');
+      logger.debug({ err: err.message }, 'Database offline or query warning; using in-memory notification record');
     }
 
     inMemoryNotifications.unshift(row);

@@ -133,11 +133,61 @@ async function initMysqlSchema() {
       CREATE TABLE IF NOT EXISTS notifications (
         id BIGINT AUTO_INCREMENT PRIMARY KEY,
         case_id BIGINT,
+        type VARCHAR(50) NOT NULL DEFAULT 'case_new',
+        band VARCHAR(20) NOT NULL DEFAULT 'High',
+        headline TEXT,
+        body TEXT,
+        lat DOUBLE,
+        lon DOUBLE,
+        sector VARCHAR(100),
+        score INT,
         channel VARCHAR(50) NOT NULL DEFAULT 'onsite',
         status VARCHAR(50) NOT NULL DEFAULT 'delivered',
         message TEXT,
         broadcast_latency_ms INT DEFAULT 35,
-        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_created_at (created_at),
+        INDEX idx_band (band),
+        INDEX idx_type (type),
+        INDEX idx_case_id (case_id)
+      ) ENGINE=InnoDB;
+    `);
+
+    // Ensure all required columns exist on legacy notifications tables in TiDB/MySQL
+    const notificationColumns = [
+      "ALTER TABLE notifications ADD COLUMN type VARCHAR(50) NOT NULL DEFAULT 'case_new'",
+      "ALTER TABLE notifications ADD COLUMN band VARCHAR(20) NOT NULL DEFAULT 'High'",
+      "ALTER TABLE notifications ADD COLUMN headline TEXT",
+      "ALTER TABLE notifications ADD COLUMN body TEXT",
+      "ALTER TABLE notifications ADD COLUMN lat DOUBLE",
+      "ALTER TABLE notifications ADD COLUMN lon DOUBLE",
+      "ALTER TABLE notifications ADD COLUMN sector VARCHAR(100)",
+      "ALTER TABLE notifications ADD COLUMN score INT",
+      "ALTER TABLE notifications ADD COLUMN broadcast_latency_ms INT DEFAULT 35",
+    ];
+    for (const alterSql of notificationColumns) {
+      try {
+        await mysqlPool.query(alterSql);
+      } catch {
+        // Column already exists or table updated
+      }
+    }
+
+    await mysqlPool.query(`
+      CREATE TABLE IF NOT EXISTS ais_positions (
+        id BIGINT AUTO_INCREMENT PRIMARY KEY,
+        mmsi VARCHAR(20) NOT NULL,
+        lat DOUBLE NOT NULL,
+        lon DOUBLE NOT NULL,
+        course DOUBLE,
+        speed DOUBLE,
+        ship_name VARCHAR(255),
+        ship_type INT,
+        raw JSON,
+        received_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_mmsi (mmsi),
+        INDEX idx_received_at (received_at),
+        INDEX idx_location (lat, lon)
       ) ENGINE=InnoDB;
     `);
 
@@ -171,6 +221,11 @@ export async function query(text, params = []) {
     mysqlSql = mysqlSql.replace(/COUNT\(\*\)\s+FILTER\s*\(WHERE\s+([^)]+)\)/gi, 'SUM(CASE WHEN $1 THEN 1 ELSE 0 END)');
     mysqlSql = mysqlSql.replace(/RETURNING\s+\*/gi, '');
     mysqlSql = mysqlSql.replace(/RETURNING\s+id/gi, '');
+
+    // Adapt PostgreSQL DISTINCT ON (column) for MySQL / TiDB
+    if (/SELECT\s+DISTINCT\s+ON/i.test(mysqlSql)) {
+      mysqlSql = mysqlSql.replace(/SELECT\s+DISTINCT\s+ON\s*\([^)]+\)\s+/gi, 'SELECT ');
+    }
 
     try {
       const [results] = await mysqlPool.execute(mysqlSql, params);

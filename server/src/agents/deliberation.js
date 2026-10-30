@@ -65,17 +65,27 @@ RESPOND ONLY IN VALID JSON matching this structure:
       const response = await llmClient.generate({ prompt, jsonMode: true });
       if (response && response.text) {
         let rawText = response.text.trim();
-        if (rawText.startsWith('```json')) {
-          rawText = rawText.replace(/^```json\s*/i, '').replace(/\s*```$/, '');
-        } else if (rawText.startsWith('```')) {
-          rawText = rawText.replace(/^```\s*/i, '').replace(/\s*```$/, '');
+        const firstBrace = rawText.indexOf('{');
+        const lastBrace = rawText.lastIndexOf('}');
+        if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+          rawText = rawText.slice(firstBrace, lastBrace + 1);
+        } else {
+          if (rawText.startsWith('```json')) {
+            rawText = rawText.replace(/^```json\s*/i, '').replace(/\s*```$/, '');
+          } else if (rawText.startsWith('```')) {
+            rawText = rawText.replace(/^```\s*/i, '').replace(/\s*```$/, '');
+          }
         }
-        const parsed = JSON.parse(rawText);
-        return {
-          ...parsed,
-          generated_by: `Autonomous Multi-Agent Deliberation (${response.provider} ${response.model})`,
-          deliberated_at: new Date().toISOString(),
-        };
+        try {
+          const parsed = JSON.parse(rawText);
+          return {
+            ...parsed,
+            generated_by: `Autonomous Multi-Agent Deliberation (${response.provider} ${response.model})`,
+            deliberated_at: new Date().toISOString(),
+          };
+        } catch {
+          // Fall through to deterministic deliberation
+        }
       }
     } catch (err) {
       logger.warn({ err: err.message }, 'AI Deliberation error; using rule-based synthesis');
