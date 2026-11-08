@@ -1,4 +1,5 @@
 import crypto from 'node:crypto';
+import config from '../config.js';
 import gfwClient from '../integrations/gfw.js';
 import aisStreamClient from '../integrations/aisstream.js';
 import { darkVesselBehavior } from '../behaviors/dark-vessel.js';
@@ -154,14 +155,24 @@ export class DetectionAgent {
       // Store in memory cache
       inMemoryDetections.set(hash, record);
 
-      // Persist to PostgreSQL if available
+      // Persist to database if available
       try {
-        const sql = `
-          INSERT INTO detections (dataset, lat, lon, uncertainty_km, detected_at, matched, length_m, raw, hash)
-          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-          ON CONFLICT (hash) DO UPDATE SET matched = EXCLUDED.matched
-          RETURNING id
-        `;
+        const isMysql = Boolean(
+          config.DATABASE_URL &&
+          (config.DATABASE_URL.startsWith('mysql://') || config.DATABASE_URL.startsWith('tidb://'))
+        );
+        const sql = isMysql
+          ? `
+            INSERT INTO detections (dataset, lat, lon, uncertainty_km, detected_at, matched, length_m, raw, hash)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            ON DUPLICATE KEY UPDATE matched = VALUES(matched)
+          `
+          : `
+            INSERT INTO detections (dataset, lat, lon, uncertainty_km, detected_at, matched, length_m, raw, hash)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            ON CONFLICT (hash) DO UPDATE SET matched = EXCLUDED.matched
+            RETURNING id
+          `;
         const res = await query(sql, [
           record.dataset,
           record.lat,
@@ -173,9 +184,9 @@ export class DetectionAgent {
           JSON.stringify(record.raw),
           record.hash,
         ]);
-        record.id = res.rows[0]?.id;
-      } catch {
-        // Fallback ID when database is offline
+        record.id = res.rows[0]?.id || res.insertId;
+      } catch (err) {
+        logger.debug({ err: err.message }, 'Detection DB persist fallback');
         record.id = record.id || Math.abs(hash.split('').reduce((acc, char) => (acc << 5) - acc + char.charCodeAt(0), 0));
       }
 
