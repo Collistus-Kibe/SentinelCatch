@@ -100,8 +100,20 @@ export default function CaseFeed({
       return true;
     });
 
+    // Deduplicate by vessel name so the same ship never repeats in the watchlist
+    const seen = new Set();
+    const uniqueList = [];
+    for (const c of list) {
+      const candidate = c.candidate_matches?.[0] || c.features?.candidate_matches?.[0] || {};
+      const key = (candidate.vesselName || c.features?.locationLabel || `ID-${c.id}`).toUpperCase().trim();
+      if (!seen.has(key)) {
+        seen.add(key);
+        uniqueList.push(c);
+      }
+    }
+
     // Priority sort: Selected case first if in list, then highest risk score
-    return list.sort((a, b) => {
+    return uniqueList.sort((a, b) => {
       return (Number(b.score_final) || 0) - (Number(a.score_final) || 0);
     });
   }, [cases, activeSector, bandFilter, statusFilter, jurisdictionFilter, searchQuery]);

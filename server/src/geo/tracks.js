@@ -336,7 +336,9 @@ const BASE_TRACKS = [
         { lon: 105.80, lat: -6.00, label: 'Sunda Strait Passage 🇮🇩', day: 'Day -12' },
         { lon: 72.50, lat: -7.30, label: 'Diego Garcia Pelagic Ridge 🇮🇴', day: 'Day -7' },
         { lon: 54.00, lat: -5.00, label: 'Seychelles Outer Waters 🇸🇨', day: 'Day -3' },
-        { lon: 40.35, lat: -3.65, label: '🎯 Current Position: Ungwana Bay Trawling Fairway 🇰🇪', day: 'Now' },
+        { lon: 42.00, lat: -4.20, label: 'Kenya EEZ Deep Sea Approach 🇰🇪', day: 'Day -1' },
+        { lon: 39.54, lat: -4.48, label: 'Diani South Fairway', day: 'Day 0' },
+        { lon: 39.42, lat: -4.85, label: '🎯 Current Position: 26 km SE of Shimoni / Vanga 🇰🇪', day: 'Now' },
       ],
     },
     waypoints: [
@@ -401,13 +403,15 @@ const BASE_TRACKS = [
       voyageDays: 8,
       departureDate: 'Oct 22, 2026',
       chokepoints: ['Gulf of Aden', 'Socotra South Channel', 'Kenya North Approach'],
-      voyageSummary: 'Departed Mukalla, operated south across the Gulf of Aden past Socotra, navigated inshore along the Somali coast before crossing into Lamu coastal fishing grounds.',
+      voyageSummary: 'Departed Mukalla, operated south across the Gulf of Aden past Socotra, navigated inshore along the Somali coast before crossing into Lamu coastal fishing grounds and lingering off Mombasa pilot station.',
       originCoords: [49.12, 14.53],
       waypoints: [
         { lon: 49.12, lat: 14.53, label: '▶ DEPARTURE: Port of Mukalla, Yemen 🇾🇪', day: 'Day -8' },
         { lon: 51.00, lat: 12.50, label: 'Socotra South Channel 🇾🇪', day: 'Day -5' },
         { lon: 47.50, lat: 3.50, label: 'Somali Inshore Corridor', day: 'Day -2' },
-        { lon: 41.20, lat: -1.90, label: '🎯 Current Position: Lamu Coastal Fishing Grounds 🇰🇪', day: 'Now' },
+        { lon: 42.00, lat: -2.00, label: 'Northern Kenya EEZ Boundary 🇰🇪', day: 'Day -1' },
+        { lon: 40.35, lat: -4.55, label: 'Diani Deep Shelf Passage', day: 'Day 0' },
+        { lon: 39.92, lat: -4.18, label: '🎯 Current Position: 24 km SE of Mombasa Pilot 🇰🇪', day: 'Now' },
       ],
     },
     waypoints: [
@@ -462,13 +466,12 @@ const BASE_TRACKS = [
       voyageDays: 2,
       departureDate: 'Oct 27, 2026',
       chokepoints: ['Mombasa Channel', 'Kilifi Offshore Corridor', 'Malindi Bay Lane'],
-      voyageSummary: 'Departed Kilindini Harbour in Mombasa, cleared customs, transited north through the coastal navigation corridor past Malindi into the Kiunga coastal fairway with active AIS.',
+      voyageSummary: 'Departed Kilindini Harbour in Mombasa, cleared customs, transited north through coastal navigation corridor past Malindi into the Kiunga coastal fairway with active AIS.',
       originCoords: [39.65, -4.07],
       waypoints: [
-        { lon: 39.65, lat: -4.07, label: '▶ DEPARTURE: Kilindini Harbour, Mombasa 🇰🇪', day: 'Day -2' },
-        { lon: 39.95, lat: -3.60, label: 'Kilifi Offshore Coastal Fairway', day: 'Day -1' },
-        { lon: 40.18, lat: -3.20, label: 'Malindi Bay Transit Corridor', day: 'Day 0' },
-        { lon: 41.50, lat: -1.75, label: '🎯 Current Position: Kiunga Coastal Approach 🇰🇪', day: 'Now' },
+        { lon: 40.08, lat: -3.72, label: '▶ DEPARTURE: Kilifi Coastal Corridor 🇰🇪', day: 'Day -2' },
+        { lon: 39.90, lat: -3.92, label: 'Nyali Marine Park Offshore Passage', day: 'Day -1' },
+        { lon: 39.75, lat: -4.08, label: '🎯 Mombasa Harbour Approaches (Compliant) 🇰🇪', day: 'Now' },
       ],
     },
     waypoints: [
@@ -524,11 +527,13 @@ const BASE_TRACKS = [
       voyageDays: 1,
       departureDate: 'Oct 28, 2026',
       chokepoints: ['Tanga Northern Fairway', 'Vanga Border Inshore Reef'],
-      voyageSummary: 'Departed Port of Tanga, crossed northern boundary into Kenya territorial waters near Shimoni.',
+      voyageSummary: 'Departed Port of Tanga, navigated east into the international deep-water commercial lane 35 km east of Pemba Island.',
       originCoords: [39.12, -5.06],
       waypoints: [
         { lon: 39.12, lat: -5.06, label: '▶ DEPARTURE: Port of Tanga, Tanzania 🇹🇿', day: 'Day -1' },
-        { lon: 39.32, lat: -4.68, label: '🎯 Current Position: Vanga / Kisite Southern Reef 🇰🇪', day: 'Now' },
+        { lon: 40.48, lat: -4.45, label: 'East African Deep Water Fairway', day: 'Day 0' },
+        { lon: 40.28, lat: -4.80, label: 'Eastern Deep Fairway (35 km E of Pemba)', day: 'Day 0' },
+        { lon: 40.08, lat: -5.10, label: '🎯 Open Ocean Commercial Lane (East of Pemba) 🇹🇿/🇰🇪', day: 'Now' },
       ],
     },
     waypoints: [
@@ -584,7 +589,7 @@ const BASE_TRACKS = [
       voyageDays: 11,
       departureDate: 'Oct 19, 2026',
       chokepoints: ['Gulf of Oman', 'Arabian Sea South Corridor', 'Guardafui Channel', 'Somali Basin'],
-      voyageSummary: 'Departed Port of Fujairah, rounded the eastern Horn of Africa, sailed south down the Somali coast, dropped AIS in the northern Kenya channel, currently lingering off Mombasa outer anchorage.',
+      voyageSummary: 'Departed Port of Fujairah, rounded eastern Horn of Africa down Somali coast, dropped AIS transponder while entering Zanzibar Channel western fairway.',
       originCoords: [56.35, 25.13],
       waypoints: [
         { lon: 56.35, lat: 25.13, label: '▶ DEPARTURE: Port of Fujairah, UAE 🇦🇪', day: 'Day -11' },
@@ -592,7 +597,8 @@ const BASE_TRACKS = [
         { lon: 57.00, lat: 16.50, label: 'Arabian Sea South Corridor 🌊', day: 'Day -6' },
         { lon: 51.50, lat: 11.80, label: 'Guardafui Channel (Cape Guardafui) 🇸🇴', day: 'Day -4' },
         { lon: 47.00, lat: 2.50, label: 'Somali Basin Fairway (AIS Off)', day: 'Day -1' },
-        { lon: 39.75, lat: -4.12, label: '🎯 Current Position: Mombasa Outer Roads 🇰🇪', day: 'Now' },
+        { lon: 39.24, lat: -6.42, label: 'Dar es Salaam Southern Approach', day: 'Day 0' },
+        { lon: 39.35, lat: -5.85, label: '🎯 Target Location: Zanzibar Channel Corridor', day: 'Now' },
       ],
     },
     waypoints: [
@@ -657,12 +663,13 @@ const BASE_TRACKS = [
       voyageDays: 25,
       departureDate: 'Oct 04, 2026',
       chokepoints: ['Atlantic Guinea Basin', 'Cape of Good Hope', 'Mozambique Channel'],
-      voyageSummary: 'Departed Monrovia, sailed south through the Atlantic, rounded the Cape of Good Hope, proceeded north through the Mozambique Channel into Kenya EEZ.',
+      voyageSummary: 'Departed Monrovia, sailed south through Atlantic, rounded Cape of Good Hope, proceeded north through Mozambique Channel to Kilindini Container Terminal.',
       originCoords: [-10.80, 6.32],
       waypoints: [
         { lon: -10.80, lat: 6.32, label: '▶ DEPARTURE: Monrovia Free Port, Liberia 🇱🇷', day: 'Day -25' },
         { lon: 18.50, lat: -34.50, label: 'Cape of Good Hope Offshore 🇿🇦', day: 'Day -12' },
-        { lon: 40.80, lat: -4.80, label: '🎯 Current Position: Kenya EEZ Southern Boundary', day: 'Now' },
+        { lon: 40.38, lat: -4.38, label: 'Offshore Approach to Mombasa 🇰🇪', day: 'Day 0' },
+        { lon: 39.82, lat: -4.12, label: '🎯 Kilindini Container Terminal Fairway 🇰🇪', day: 'Now' },
       ],
     },
     waypoints: [
@@ -707,7 +714,7 @@ const BASE_TRACKS = [
     flagEmoji: '🇹🇼',
     gearType: 'Tuna Longliner',
     behavior: 'normal-transit',
-    targetCoords: [41.6000, -2.3000],
+    targetCoords: [41.2500, -2.0500],
     originLabel: 'Kaohsiung Harbor Approach',
     originCountry: 'Taiwan',
     transOceanicVoyage: {
@@ -721,10 +728,13 @@ const BASE_TRACKS = [
       originCoords: [120.28, 22.61],
       waypoints: [
         { lon: 120.28, lat: 22.61, label: '▶ DEPARTURE: Kaohsiung Harbor, Taiwan 🇹🇼', day: 'Day -24' },
+        { lon: 112.00, lat: 12.00, label: 'South China Sea Deep Basin', day: 'Day -19' },
         { lon: 103.80, lat: 1.25, label: 'Malacca Strait Transit 🇸🇬', day: 'Day -15' },
         { lon: 80.50, lat: 5.50, label: 'Sri Lanka South Fairway 🇱🇰', day: 'Day -9' },
-        { lon: 52.00, lat: -2.50, label: 'Seychelles Northern Basin 🇸🇨', day: 'Day -4' },
-        { lon: 41.60, lat: -2.30, label: '🎯 Current Position: Kenya Northern EEZ / Lamu Basin 🇰🇪', day: 'Now' },
+        { lon: 65.00, lat: 0.00, label: 'Equatorial Indian Ocean Transit 🌊', day: 'Day -6' },
+        { lon: 52.00, lat: -1.80, label: 'Seychelles Northern Basin 🇸🇨', day: 'Day -3' },
+        { lon: 43.10, lat: -1.80, label: 'High Seas North Approach 🇸🇴', day: 'Day -1' },
+        { lon: 41.25, lat: -2.05, label: '🎯 Current Position: Lamu Basin / Northern EEZ 🇰🇪', day: 'Now' },
       ],
     },
     waypoints: [
@@ -748,8 +758,8 @@ const BASE_TRACKS = [
         label: 'Kenya EEZ 100nm Line',
       },
       {
-        lon: 41.6000,
-        lat: -2.3000,
+        lon: 41.2500,
+        lat: -2.0500,
         hoursAgo: 0,
         speedKnots: 9.2,
         heading: 220,
@@ -1064,16 +1074,32 @@ export function generateVesselTracksGeoJson(cases = []) {
     trackMap.set(bt.caseId, bt);
   }
 
-  // Handle any other cases passed dynamically
+  // Handle any other cases passed dynamically - deduplicate so we never create duplicate tracks or radiating fan rays
   for (const c of cases) {
     const cId = Number(c.id);
+    const candidate = c.candidate_matches?.[0] || c.features?.candidate_matches?.[0] || {};
+    const vName = (candidate.vesselName || '').toUpperCase().trim();
+
+    // If this vessel already exists in BASE_TRACKS, skip creating synthetic rays
+    const alreadyMapped = Array.from(trackMap.values()).some((bt) => {
+      const btName = bt.vesselName.toUpperCase().trim();
+      return vName && (btName === vName || btName.includes(vName) || vName.includes(btName));
+    });
+    if (alreadyMapped) continue;
+
     if (!trackMap.has(cId)) {
       const lat = Number(c.features?.lat ?? c.lat);
       const lon = Number(c.features?.lon ?? c.lon);
       if (!isNaN(lat) && !isNaN(lon)) {
-        const candidate = c.candidate_matches?.[0] || c.features?.candidate_matches?.[0] || {};
-        const vName = candidate.vesselName || `Contact #${cId}`;
-        const synthetic = createSyntheticTrack(cId, vName, lon, lat);
+        // Also ensure we don't have another synthetic track within 15 km
+        const nearbyTrack = Array.from(trackMap.values()).some((t) => {
+          const tCoord = t.targetCoords || (t.waypoints && [t.waypoints[t.waypoints.length - 1]?.lon, t.waypoints[t.waypoints.length - 1]?.lat]);
+          return tCoord && haversineKm(lat, lon, tCoord[1], tCoord[0]) < 15.0;
+        });
+        if (nearbyTrack) continue;
+
+        const displayName = candidate.vesselName || `Contact #${cId}`;
+        const synthetic = createSyntheticTrack(cId, displayName, lon, lat);
         trackMap.set(cId, synthetic);
       }
     }

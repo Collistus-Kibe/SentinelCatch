@@ -283,6 +283,7 @@ export default function Home() {
           <CaseIntelPanel
             caseItem={selectedCase}
             activeView={activeView}
+            onSwitchView={setActiveView}
             onClose={() => {
               setSelectedCase(null);
               setSelectedCaseId(null);

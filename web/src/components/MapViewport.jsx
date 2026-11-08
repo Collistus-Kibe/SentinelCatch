@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { getTranslation } from '../services/i18n.js';
-import { getVesselPhoto, getFlagEmoji, FALLBACK_REAL_PHOTO } from '../utils/vesselAssets.js';
+import { getVesselPhoto, getFlagEmoji, FALLBACK_REAL_PHOTO, getVesselOrigin } from '../utils/vesselAssets.js';
 
 // Unified Master Style with both Satellite and Dark Ocean raster sources
 const MARITIME_MASTER_STYLE = {
@@ -208,23 +208,20 @@ export default function MapViewport({
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) return;
 
-    // Fixed perspective framing the Kenya Coast (Lamu -> Malindi -> Mombasa -> Kwale/Tanzania)
+    // Responsive, freely navigable maritime perspective across Kenya EEZ and international waters
     const map = new maplibregl.Map({
       container: mapContainerRef.current,
       style: MARITIME_MASTER_STYLE,
-      center: [40.20, -3.35], // Optimal Kenya Coast surveillance centroid matching Image 1
-      zoom: 7.7,
-      minZoom: 7.4,
-      maxZoom: 8.2,
-      maxBounds: [
-        [37.2, -6.0],
-        [43.5, -0.8],
-      ],
-      dragPan: true, // Movable: user can pan up and down the Kenya Coast!
-      scrollZoom: false, // NOT zoomable: prevents accidental zoom distortion and preserves routes & MPAs
-      boxZoom: false,
-      doubleClickZoom: false,
-      touchZoomRotate: false,
+      center: [40.50, -3.20], // Centered over Kenya EEZ and surveillance approaches
+      zoom: 7.2,
+      minZoom: 2.2, // Fully unlock zoom out to see Asia, Europe, Africa & Middle East
+      maxZoom: 18.0,
+      maxBounds: null, // Allow natural pan across the Indian Ocean to trace origins
+      dragPan: true,
+      scrollZoom: true, // Smooth mouse wheel & trackpad zoom enabled
+      boxZoom: true,
+      doubleClickZoom: true,
+      touchZoomRotate: true,
       dragRotate: false,
       pitch: 0,
       bearing: 0,
@@ -686,12 +683,55 @@ export default function MapViewport({
     setVis('mpas-labels', visibleLayers.mpas);
     setVis('tracks-glow', visibleLayers.tracks);
     setVis('tracks-line', visibleLayers.tracks);
-    setVis('transoceanic-tracks-glow', visibleLayers.tracks);
-    setVis('transoceanic-tracks-line', visibleLayers.tracks);
-    setVis('origin-ports-symbol', visibleLayers.tracks);
+
+    // Show trans-oceanic origin routes only in traceback mode or when a vessel is actively inspected
+    const showTransoceanic = visibleLayers.tracks && (activeView === 'traceback' || Boolean(selectedCaseId));
+    setVis('transoceanic-tracks-glow', showTransoceanic);
+    setVis('transoceanic-tracks-line', showTransoceanic);
+    setVis('origin-ports-symbol', showTransoceanic);
     setVis('ships-circle', visibleLayers.ships);
     setVis('vessel-density-heatmap', visibleLayers.heatmap);
-  }, [visibleLayers, layersLoaded]);
+  }, [visibleLayers, layersLoaded, activeView, selectedCaseId]);
+
+  // Selected case provenance intelligence
+  const selectedCaseObj = useMemo(
+    () => cases.find((c) => c.id === selectedCaseId) || null,
+    [cases, selectedCaseId]
+  );
+  const selectedCandidate = selectedCaseObj?.candidate_matches?.[0] || selectedCaseObj?.features?.candidate_matches?.[0] || {};
+  const selectedVesselName = selectedCandidate.vesselName || selectedCaseObj?.features?.locationLabel || '';
+  const selectedVoyage = useMemo(
+    () => (selectedVesselName ? getVesselOrigin(selectedVesselName, selectedCandidate.mmsi) : null),
+    [selectedVesselName, selectedCandidate.mmsi]
+  );
+
+  // Smoothly fit map camera to full trans-oceanic journey from origin nation
+  const handleFitVoyage = useCallback(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    if (selectedVoyage && Array.isArray(selectedVoyage.transOceanicRoute) && selectedVoyage.transOceanicRoute.length > 1) {
+      const coords = selectedVoyage.transOceanicRoute.map((wp) => [wp.lon, wp.lat]);
+      let minLon = Infinity, minLat = Infinity, maxLon = -Infinity, maxLat = -Infinity;
+      coords.forEach(([lon, lat]) => {
+        if (lon < minLon) minLon = lon;
+        if (lat < minLat) minLat = lat;
+        if (lon > maxLon) maxLon = lon;
+        if (lat > maxLat) maxLat = lat;
+      });
+
+      map.fitBounds(
+        [[minLon - 4, minLat - 4], [maxLon + 4, maxLat + 4]],
+        { padding: { top: 90, bottom: 70, left: 70, right: 70 }, duration: 2000 }
+      );
+    } else {
+      map.flyTo({
+        center: [68.0, 5.0],
+        zoom: 3.6,
+        duration: 1800,
+      });
+    }
+  }, [selectedVoyage]);
 
   // Handle activeView camera perspective switch (Tactical Coastline vs Forensic Origin Trace-Back)
   useEffect(() => {
@@ -699,39 +739,27 @@ export default function MapViewport({
     if (!map || !layersLoaded) return;
 
     if (activeView === 'traceback') {
-      // Unlock bounds & min zoom to reveal trans-oceanic passage across Indian Ocean, Asia, Middle East & Africa
-      map.setMaxBounds(null);
-      map.setMinZoom(2.0);
-      map.setMaxZoom(12.0);
-      map.scrollZoom.enable();
-      map.flyTo({
-        center: [65.0, 4.0],
-        zoom: 3.5,
-        duration: 2200,
-        essential: true,
-      });
+      if (selectedVoyage && Array.isArray(selectedVoyage.transOceanicRoute) && selectedVoyage.transOceanicRoute.length > 1) {
+        handleFitVoyage();
+      } else {
+        // Broad Indian Ocean / Asia / Africa theater
+        map.flyTo({
+          center: [68.0, 5.0],
+          zoom: 3.6,
+          duration: 2000,
+          essential: true,
+        });
+      }
     } else {
-      // Re-center on optimal Kenya Coast surveillance angle
-      map.scrollZoom.disable();
+      // Re-center on Kenya Coast surveillance zone
       map.flyTo({
-        center: [40.20, -3.35],
-        zoom: 7.7,
-        duration: 1800,
+        center: [40.50, -3.20],
+        zoom: 7.2,
+        duration: 1600,
         essential: true,
       });
-      const timer = setTimeout(() => {
-        if (mapRef.current) {
-          mapRef.current.setMinZoom(7.4);
-          mapRef.current.setMaxZoom(8.2);
-          mapRef.current.setMaxBounds([
-            [37.2, -6.0],
-            [43.5, -0.8],
-          ]);
-        }
-      }, 1900);
-      return () => clearTimeout(timer);
     }
-  }, [activeView, layersLoaded]);
+  }, [activeView, layersLoaded, selectedVoyage, handleFitVoyage]);
 
   // Render Custom Directional Chevrons & Interactive Pins on Ship Click
   useEffect(() => {
@@ -1003,17 +1031,76 @@ export default function MapViewport({
         <div className="scale-bar-line"></div>
       </div>
 
+      {/* Floating Trans-Oceanic Voyage Provenance Banner when Vessel is Selected */}
+      {selectedVoyage && (
+        <div className="voyage-provenance-hud-bar">
+          <div className="provenance-origin-chip">
+            <span className="provenance-flag">{selectedVoyage.flagEmoji}</span>
+            <span className="provenance-origin-title">
+              {selectedVoyage.country} · {selectedVoyage.port?.split(',')[0]}
+            </span>
+          </div>
+          <span className="provenance-arrow">➔</span>
+          <div className="provenance-transit-route" title={selectedVoyage.voyageSummary}>
+            {selectedVoyage.chokepoints?.slice(0, 2).join(' ➔ ')}
+          </div>
+          <span className="provenance-arrow">➔</span>
+          <div className="provenance-dest-chip">
+            <span>🎯 Kenya Intercept</span>
+            <span className="provenance-days-pill">{selectedVoyage.voyageDays}d at sea</span>
+          </div>
+          <button
+            className="btn-fit-voyage-action"
+            type="button"
+            onClick={handleFitVoyage}
+            title="Auto-zoom to reveal full trans-oceanic route from origin country to Kenya"
+          >
+            🧭 Trace Origin
+          </button>
+        </div>
+      )}
+
       {/* Live Coordinates Readout for Maritime Authorities (Bottom Left/Center) */}
       <div className="map-hud-coordinates-bar" title="Live WGS-84 Coordinates on Fairway">
         <span className="coord-hud-badge">CRS: WGS84</span>
         <span className="coord-hud-val">
           📍 {Math.abs(cursorCoords.lat).toFixed(4)}°{cursorCoords.lat < 0 ? 'S' : 'N'}, {Math.abs(cursorCoords.lon).toFixed(4)}°{cursorCoords.lon >= 0 ? 'E' : 'W'}
         </span>
-        <span className="coord-hud-lock-tag">🔒 LOCKED SURVEILLANCE CORRIDOR</span>
+        <span className="coord-hud-lock-tag">
+          {activeView === 'traceback' ? '🌐 GLOBAL TRANS-OCEANIC PROVENANCE' : '🛡️ KENYA EEZ TACTICAL SURVEILLANCE'}
+        </span>
       </div>
 
       {/* Map Control Buttons (Bottom-Right) */}
       <div className="map-hud-controls-group">
+        <button
+          className="map-control-btn"
+          onClick={() => mapRef.current?.zoomIn()}
+          title="Zoom In (+)"
+          type="button"
+        >
+          +
+        </button>
+        <button
+          className="map-control-btn"
+          onClick={() => mapRef.current?.zoomOut()}
+          title="Zoom Out (-)"
+          type="button"
+        >
+          −
+        </button>
+
+        {selectedVoyage && (
+          <button
+            className="map-control-btn btn-trace-hud-icon"
+            onClick={handleFitVoyage}
+            title={`Trace full voyage back to ${selectedVoyage.country} (${selectedVoyage.port})`}
+            type="button"
+          >
+            🧭
+          </button>
+        )}
+
         <button
           className="map-control-btn map-basemap-btn"
           onClick={toggleBasemap}

@@ -70,9 +70,34 @@ router.get('/cases', async (req, res) => {
         return row;
       });
 
+      // Deduplicate cases by candidate vessel name so the same ship never repeats
+      const seenVessels = new Set();
+      const deduplicatedCases = [];
+      for (const row of parsedCases) {
+        const candidate = row.candidate_matches?.[0] || row.features?.candidate_matches?.[0] || null;
+        const vKey = (candidate?.vesselName || row.features?.locationLabel || `ID-${row.id}`).toUpperCase().trim();
+        if (!seenVessels.has(vKey)) {
+          seenVessels.add(vKey);
+          deduplicatedCases.push(row);
+        }
+      }
+
+      // If DB has limited unique vessels, merge with curated diverse fleet from ReasoningAgent
+      if (deduplicatedCases.length < 10) {
+        const curatedFleet = ReasoningAgent.getInMemoryCases();
+        for (const c of curatedFleet) {
+          const candidate = c.candidate_matches?.[0] || c.features?.candidate_matches?.[0] || null;
+          const vKey = (candidate?.vesselName || c.features?.locationLabel || `ID-${c.id}`).toUpperCase().trim();
+          if (!seenVessels.has(vKey)) {
+            seenVessels.add(vKey);
+            deduplicatedCases.push(c);
+          }
+        }
+      }
+
       return res.json({
-        cases: parsedCases,
-        total,
+        cases: deduplicatedCases.slice(offset, offset + limit),
+        total: deduplicatedCases.length,
         limit,
         offset,
         timestamp: new Date().toISOString(),
