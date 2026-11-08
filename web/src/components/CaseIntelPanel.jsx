@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { getTranslation } from '../services/i18n.js';
 import EvidenceDossierModal from './EvidenceDossierModal.jsx';
+import { FlagIcon } from './FlagIcon.jsx';
 import {
   getVesselPhoto,
   getVesselPhotoMetadata,
@@ -274,7 +275,7 @@ export default function CaseIntelPanel({
             </div>
             <div className="telemetry-item">
               <span className="tel-label">
-                <span className="tel-flag-emoji">{flagEmoji}</span>
+                <FlagIcon country={flag} emoji={flagEmoji} size="sm" />
                 Flag
               </span>
               <span className="tel-val">{flag}</span>
@@ -376,7 +377,9 @@ export default function CaseIntelPanel({
               <div className="origin-meta-grid">
                 <div className="origin-meta-item">
                   <span className="origin-meta-label">Origin Nation & Port:</span>
-                  <strong className="origin-meta-val">{origin.flagEmoji} {origin.port || origin.country}</strong>
+                  <strong className="origin-meta-val">
+                    <FlagIcon country={origin.country} emoji={origin.flagEmoji} size="sm" /> {origin.port || origin.country}
+                  </strong>
                 </div>
                 <div className="origin-meta-item">
                   <span className="origin-meta-label">Voyage Duration:</span>
@@ -488,7 +491,9 @@ export default function CaseIntelPanel({
               {prosecutions.length > 0 ? (
                 <div className="flags-badge-group">
                   {prosecutions.map((p, pIdx) => (
-                    <span key={pIdx} className="mini-flag-tag" title={p.country}>{p.flagEmoji}</span>
+                    <span key={pIdx} className="mini-flag-tag" title={p.country}>
+                      <FlagIcon country={p.country} emoji={p.flagEmoji} size="sm" />
+                    </span>
                   ))}
                 </div>
               ) : (
@@ -516,7 +521,7 @@ export default function CaseIntelPanel({
                         onClick={() => setSelectedProsecutionIdx(pIdx)}
                         title={`Click to inspect legal enforcement in ${p.country}`}
                       >
-                        <span className="btn-flag-emoji">{p.flagEmoji}</span>
+                        <FlagIcon country={p.country} emoji={p.flagEmoji} size="md" />
                         <span className="btn-country-label">{p.country} ({p.year})</span>
                       </button>
                     ))}
@@ -527,7 +532,7 @@ export default function CaseIntelPanel({
                     <div className="prosecution-detail-card">
                       <div className="pros-card-header">
                         <span className="pros-country-title">
-                          {prosecutions[selectedProsecutionIdx].flagEmoji} {prosecutions[selectedProsecutionIdx].country} Enforcement Record
+                          <FlagIcon country={prosecutions[selectedProsecutionIdx].country} emoji={prosecutions[selectedProsecutionIdx].flagEmoji} size="md" /> {prosecutions[selectedProsecutionIdx].country} Enforcement Record
                         </span>
                         <span className="pros-status-chip">
                           {prosecutions[selectedProsecutionIdx].status}

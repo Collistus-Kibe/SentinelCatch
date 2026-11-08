@@ -6309,29 +6309,50 @@ a.cand-tag:hover {
 }
 
 .card-flag-badge-btn {
-  background: rgba(239, 68, 68, 0.12);
-  border: 1px solid rgba(239, 68, 68, 0.35);
-  border-radius: 3px;
-  padding: 1px 5px;
+  background: rgba(239, 68, 68, 0.16);
+  border: 1px solid rgba(239, 68, 68, 0.42);
+  border-radius: 4px;
+  padding: 2px 5px;
   display: inline-flex;
   align-items: center;
-  gap: 3px;
-  color: #fca5a5;
-  font-size: 0.64rem;
-  font-weight: 600;
+  justify-content: center;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.16s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 .card-flag-badge-btn:hover {
-  background: rgba(239, 68, 68, 0.28);
-  border-color: #ef4444;
-  color: #ffffff;
-  transform: translateY(-1px);
+  background: rgba(239, 68, 68, 0.32);
+  border-color: #f87171;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.45);
+  transform: translateY(-1px) scale(1.14);
 }
 
-.card-flag-badge-btn .flag-icon {
-  font-size: 0.72rem;
+.inline-flag-img {
+  display: inline-block;
+  vertical-align: middle;
+  border-radius: 2px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.inline-flag-emoji {
+  display: inline-block;
+  vertical-align: middle;
+  font-size: 0.85rem;
+  line-height: 1;
+}
+
+.card-origin-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.card-origin-country-name {
+  font-weight: 600;
+  color: #e2e8f0;
 }
 
 /* ─────────────────────────────────────────────────────────────

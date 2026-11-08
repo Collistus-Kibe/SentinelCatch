@@ -3,6 +3,7 @@ import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { getTranslation } from '../services/i18n.js';
 import { getVesselPhoto, getFlagEmoji, FALLBACK_REAL_PHOTO, getVesselOrigin } from '../utils/vesselAssets.js';
+import { FlagIcon, getFlagHtml } from './FlagIcon.jsx';
 
 // Unified Master Style with both Satellite and Dark Ocean raster sources
 const MARITIME_MASTER_STYLE = {
@@ -833,7 +834,7 @@ export default function MapViewport({
 
             <div class="pin-details-body">
               <div class="pin-title-row">
-                <span class="pin-flag-icon">${flagEmoji}</span>
+                <span class="pin-flag-icon">${getFlagHtml(candidate?.flag || '', flagEmoji, 22)}</span>
                 <span class="pin-vessel-title" title="${vesselName}">${vesselName}</span>
               </div>
 
@@ -904,7 +905,7 @@ export default function MapViewport({
 
         el.innerHTML = `
           <div class="chevron-bubble-pill" title="${vesselName} · ${latDms}, ${lonDms} (Click to inspect pin & coordinates)">
-            <span class="chevron-flag">${flagEmoji}</span>
+            <span class="chevron-flag">${getFlagHtml(candidate?.flag || '', flagEmoji, 16)}</span>
             <span class="chevron-score">${score}</span>
             <div class="chevron-svg-box" style="transform: rotate(${heading}deg);">
               <svg width="17" height="17" viewBox="0 0 24 24" fill="${chevronColor}" stroke="#ffffff" stroke-width="1.5">
@@ -1035,7 +1036,9 @@ export default function MapViewport({
       {selectedVoyage && (
         <div className="voyage-provenance-hud-bar">
           <div className="provenance-origin-chip">
-            <span className="provenance-flag">{selectedVoyage.flagEmoji}</span>
+            <span className="provenance-flag">
+              <FlagIcon country={selectedVoyage.originCountry} emoji={selectedVoyage.flagEmoji} size="md" />
+            </span>
             <span className="provenance-origin-title">
               {selectedVoyage.country} · {selectedVoyage.port?.split(',')[0]}
             </span>

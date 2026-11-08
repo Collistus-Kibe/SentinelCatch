@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { getTranslation } from '../services/i18n.js';
+import { FlagIcon } from './FlagIcon.jsx';
 import {
   getVesselPhoto,
   getFlagEmoji,
@@ -342,7 +343,8 @@ export default function CaseFeed({
 
                 <div className="card-sub-row card-origin-row" title={`Origin: ${origin.country} (${origin.port})`}>
                   <span className="card-origin-text">
-                    {origin.flagEmoji} {origin.country} · {origin.port?.split(',')[0]}
+                    <FlagIcon country={origin.country} emoji={origin.flagEmoji} size="sm" />
+                    <span className="card-origin-country-name">{origin.country}</span> · {origin.port?.split(',')[0]}
                   </span>
                   <span className="card-owner-mini" title={`Registered Owner: ${ownership.registeredOwner}`}>
                     · {ownership.registeredOwner?.split(' ')[0]}
@@ -360,7 +362,7 @@ export default function CaseFeed({
                 </div>
 
                 {prosecutions.length > 0 && (
-                  <div className="card-prosecutions-flag-row" title="Prior sanctions/fines in other countries. Click flag to inspect.">
+                  <div className="card-prosecutions-flag-row" title="Prior sanctions/fines in other countries. Click flag to inspect case dossier.">
                     <span className="flag-row-label">⚖️ Fined:</span>
                     <div className="prosecution-flags-wrap">
                       {prosecutions.map((p, idx) => (
@@ -368,14 +370,13 @@ export default function CaseFeed({
                           key={idx}
                           type="button"
                           className="card-flag-badge-btn"
-                          title={`${p.flagEmoji} ${p.country} (${p.year}): ${p.charge}\nPenalty: ${p.penalty}`}
+                          title={`${p.country} (${p.year}): ${p.charge}\nPenalty: ${p.penalty}\nClick to inspect case dossier`}
                           onClick={(e) => {
                             e.stopPropagation();
                             onSelectCase(c.id);
                           }}
                         >
-                          <span className="flag-icon">{p.flagEmoji}</span>
-                          <span className="flag-name">{p.country}</span>
+                          <FlagIcon country={p.country} emoji={p.flagEmoji} size="md" />
                         </button>
                       ))}
                     </div>

@@ -54,6 +54,8 @@ app.use(helmet({
         "https://iuu-vessels.org",
         "https://*.myshiptracking.com",
         "https://www.myshiptracking.com",
+        "https://flagcdn.com",
+        "https://*.flagcdn.com",
       ],
       connectSrc: [
         "'self'",
