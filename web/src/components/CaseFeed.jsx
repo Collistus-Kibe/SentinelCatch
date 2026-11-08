@@ -1,6 +1,14 @@
 import { useState, useMemo } from 'react';
 import { getTranslation } from '../services/i18n.js';
-import { getVesselPhoto, getFlagEmoji, FALLBACK_REAL_PHOTO } from '../utils/vesselAssets.js';
+import {
+  getVesselPhoto,
+  getFlagEmoji,
+  FALLBACK_REAL_PHOTO,
+  getVesselOrigin,
+  getVesselOwnership,
+  getVesselProsecutions,
+  getAllProsecutionJurisdictions,
+} from '../utils/vesselAssets.js';
 
 function timeAgo(dateString) {
   const seconds = Math.floor((Date.now() - new Date(dateString).getTime()) / 1000);
@@ -27,7 +35,10 @@ export default function CaseFeed({
   const t = getTranslation(language);
   const [bandFilter, setBandFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [jurisdictionFilter, setJurisdictionFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+
+  const availableJurisdictions = useMemo(() => getAllProsecutionJurisdictions(), []);
 
   // Count cases per sector
   const sectorCounts = useMemo(() => {
@@ -62,6 +73,15 @@ export default function CaseFeed({
       if (statusFilter !== 'all' && c.status !== statusFilter) {
         return false;
       }
+      // Jurisdiction prior prosecution filter
+      if (jurisdictionFilter !== 'all') {
+        const candidate = c.candidate_matches?.[0] || c.features?.candidate_matches?.[0] || null;
+        const vName = candidate?.vesselName || c.features?.locationLabel || '';
+        const pros = getVesselProsecutions(vName);
+        if (!pros.some((p) => p.country.toLowerCase() === jurisdictionFilter.toLowerCase())) {
+          return false;
+        }
+      }
       // Search query
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
@@ -84,7 +104,7 @@ export default function CaseFeed({
     return list.sort((a, b) => {
       return (Number(b.score_final) || 0) - (Number(a.score_final) || 0);
     });
-  }, [cases, activeSector, bandFilter, statusFilter, searchQuery]);
+  }, [cases, activeSector, bandFilter, statusFilter, jurisdictionFilter, searchQuery]);
 
   if (isCollapsed) {
     return (
@@ -201,6 +221,23 @@ export default function CaseFeed({
           </select>
           <span className="select-chevron-icon">▾</span>
         </div>
+
+        <div className="select-pill-wrapper">
+          <select
+            className="watchlist-select-pill"
+            value={jurisdictionFilter}
+            onChange={(e) => setJurisdictionFilter(e.target.value)}
+            title="Filter by international prosecution & enforcement jurisdiction"
+          >
+            <option value="all">⚖️ All Jurisdictions</option>
+            {availableJurisdictions.map((j) => (
+              <option key={j.country} value={j.country}>
+                {j.flagEmoji} {j.country} ({j.count})
+              </option>
+            ))}
+          </select>
+          <span className="select-chevron-icon">▾</span>
+        </div>
       </div>
 
       {/* Compact Sector Tabs Row */}
@@ -239,6 +276,9 @@ export default function CaseFeed({
           const candidate = c.candidate_matches?.[0] || c.features?.candidate_matches?.[0] || null;
           const vesselName = candidate?.vesselName || c.features?.locationLabel || `Contact #${c.id}`;
           const vesselPhoto = getVesselPhoto(vesselName, candidate?.gearType || '');
+          const origin = getVesselOrigin(vesselName, candidate?.mmsi);
+          const ownership = getVesselOwnership(vesselName, candidate?.mmsi);
+          const prosecutions = getVesselProsecutions(vesselName, candidate?.mmsi);
           const score = Number(c.score_final) || 50;
           const band = c.band || 'Medium';
 
@@ -288,6 +328,15 @@ export default function CaseFeed({
                   </span>
                 </div>
 
+                <div className="card-sub-row card-origin-row" title={`Origin: ${origin.country} (${origin.port})`}>
+                  <span className="card-origin-text">
+                    {origin.flagEmoji} {origin.country} · {origin.port?.split(',')[0]}
+                  </span>
+                  <span className="card-owner-mini" title={`Registered Owner: ${ownership.registeredOwner}`}>
+                    · {ownership.registeredOwner?.split(' ')[0]}
+                  </span>
+                </div>
+
                 <div className="card-sub-row card-loc-row">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
@@ -297,6 +346,29 @@ export default function CaseFeed({
                     {coordsStr || locText}
                   </span>
                 </div>
+
+                {prosecutions.length > 0 && (
+                  <div className="card-prosecutions-flag-row" title="Prior sanctions/fines in other countries. Click flag to inspect.">
+                    <span className="flag-row-label">⚖️ Fined:</span>
+                    <div className="prosecution-flags-wrap">
+                      {prosecutions.map((p, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          className="card-flag-badge-btn"
+                          title={`${p.flagEmoji} ${p.country} (${p.year}): ${p.charge}\nPenalty: ${p.penalty}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onSelectCase(c.id);
+                          }}
+                        >
+                          <span className="flag-icon">{p.flagEmoji}</span>
+                          <span className="flag-name">{p.country}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 <div className="card-sub-row card-time-row">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">

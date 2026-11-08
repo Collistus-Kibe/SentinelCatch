@@ -24,6 +24,7 @@ router.get('/patrol/bases', (_req, res) => {
 router.get('/patrol/plan', async (req, res) => {
   try {
     const baseId = (req.query.base || 'mombasa').toLowerCase();
+    const assetId = (req.query.asset || 'kcgs_doria').toLowerCase();
     const speedKnots = Number(req.query.speed) || 22;
 
     let cases = reasoningAgent.getInMemoryCases();
@@ -36,7 +37,7 @@ router.get('/patrol/plan', async (req, res) => {
       }
     }
 
-    const plan = patrolPlanner.planPatrol(cases, { baseId, speedKnots });
+    const plan = patrolPlanner.planPatrol(cases, { baseId, speedKnots, assetId });
     res.json(plan);
   } catch (err) {
     logger.error({ err }, 'Failed to compute patrol plan');

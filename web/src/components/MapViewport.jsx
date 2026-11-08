@@ -447,6 +447,75 @@ export default function MapViewport({
         },
       });
 
+      // ── Trans-Oceanic Global Origin Route Layers (Tracing Vessels back to Home Nations) ──
+      map.addLayer({
+        id: 'transoceanic-tracks-glow',
+        type: 'line',
+        source: 'sentinelcatch-data',
+        filter: ['==', ['get', 'type'], 'vessel_transoceanic_track'],
+        layout: {
+          'line-cap': 'round',
+          'line-join': 'round',
+          visibility: visibleLayers.tracks ? 'visible' : 'none',
+        },
+        paint: {
+          'line-color': ['get', 'color'],
+          'line-width': [
+            'case',
+            ['==', ['get', 'caseId'], selectedCaseId || -1],
+            7,
+            3,
+          ],
+          'line-opacity': 0.35,
+          'line-blur': 2.5,
+        },
+      });
+
+      map.addLayer({
+        id: 'transoceanic-tracks-line',
+        type: 'line',
+        source: 'sentinelcatch-data',
+        filter: ['==', ['get', 'type'], 'vessel_transoceanic_track'],
+        layout: {
+          'line-cap': 'round',
+          'line-join': 'round',
+          visibility: visibleLayers.tracks ? 'visible' : 'none',
+        },
+        paint: {
+          'line-color': ['get', 'color'],
+          'line-width': [
+            'case',
+            ['==', ['get', 'caseId'], selectedCaseId || -1],
+            3.2,
+            1.8,
+          ],
+          'line-opacity': 0.85,
+          'line-dasharray': [6, 2.5],
+        },
+      });
+
+      // Origin Ports Landmark Symbol Layer (Country Flags & Ports)
+      map.addLayer({
+        id: 'origin-ports-symbol',
+        type: 'symbol',
+        source: 'sentinelcatch-data',
+        filter: ['==', ['get', 'type'], 'origin_port_marker'],
+        layout: {
+          'text-field': ['get', 'label'],
+          'text-size': 11,
+          'text-anchor': 'left',
+          'text-offset': [0.8, 0],
+          'text-allow-overlap': true,
+          visibility: visibleLayers.tracks ? 'visible' : 'none',
+        },
+        paint: {
+          'text-color': '#38bdf8',
+          'text-halo-color': '#050c18',
+          'text-halo-width': 2.2,
+          'text-opacity': 0.95,
+        },
+      });
+
       // Live AIS Ships (Circles)
       map.addLayer({
         id: 'ships-circle',
@@ -496,6 +565,41 @@ export default function MapViewport({
       });
 
       map.on('click', 'tracks-line', (e) => {
+        const caseId = e.features?.[0]?.properties?.caseId;
+        if (caseId) {
+          onSelectCase(Number(caseId));
+        }
+      });
+
+      // Interactive hover on trans-oceanic origin route lines
+      map.on('mouseenter', 'transoceanic-tracks-line', (e) => {
+        map.getCanvas().style.cursor = 'pointer';
+        const props = e.features?.[0]?.properties;
+        if (!props) return;
+        if (!popupRef.current) {
+          popupRef.current = new maplibregl.Popup({ closeButton: false, closeOnClick: false, offset: 12 });
+        }
+        popupRef.current
+          .setLngLat(e.lngLat)
+          .setHTML(`
+            <div class="track-popup-card transoceanic-popup" style="border-left: 3px solid ${props.color}">
+              <div class="track-popup-title">${props.flagEmoji || '🚢'} <strong>${props.vesselName}</strong> — Trans-Oceanic Voyage</div>
+              <div class="track-endpoints-badge">
+                <div class="ep-row">▶ <strong>Origin Port:</strong> ${props.originPort || props.originCountry}</div>
+                <div class="ep-row">⏱️ <strong>Transit Time:</strong> ~${props.voyageDays || 21} days at sea</div>
+              </div>
+              <div class="transoceanic-summary-sub">${props.voyageSummary || 'Transited across international waterways into East Africa.'}</div>
+            </div>
+          `)
+          .addTo(map);
+      });
+
+      map.on('mouseleave', 'transoceanic-tracks-line', () => {
+        map.getCanvas().style.cursor = '';
+        if (popupRef.current) popupRef.current.remove();
+      });
+
+      map.on('click', 'transoceanic-tracks-line', (e) => {
         const caseId = e.features?.[0]?.properties?.caseId;
         if (caseId) {
           onSelectCase(Number(caseId));
@@ -582,9 +686,52 @@ export default function MapViewport({
     setVis('mpas-labels', visibleLayers.mpas);
     setVis('tracks-glow', visibleLayers.tracks);
     setVis('tracks-line', visibleLayers.tracks);
+    setVis('transoceanic-tracks-glow', visibleLayers.tracks);
+    setVis('transoceanic-tracks-line', visibleLayers.tracks);
+    setVis('origin-ports-symbol', visibleLayers.tracks);
     setVis('ships-circle', visibleLayers.ships);
     setVis('vessel-density-heatmap', visibleLayers.heatmap);
   }, [visibleLayers, layersLoaded]);
+
+  // Handle activeView camera perspective switch (Tactical Coastline vs Forensic Origin Trace-Back)
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !layersLoaded) return;
+
+    if (activeView === 'traceback') {
+      // Unlock bounds & min zoom to reveal trans-oceanic passage across Indian Ocean, Asia, Middle East & Africa
+      map.setMaxBounds(null);
+      map.setMinZoom(2.0);
+      map.setMaxZoom(12.0);
+      map.scrollZoom.enable();
+      map.flyTo({
+        center: [65.0, 4.0],
+        zoom: 3.5,
+        duration: 2200,
+        essential: true,
+      });
+    } else {
+      // Re-center on optimal Kenya Coast surveillance angle
+      map.scrollZoom.disable();
+      map.flyTo({
+        center: [40.20, -3.35],
+        zoom: 7.7,
+        duration: 1800,
+        essential: true,
+      });
+      const timer = setTimeout(() => {
+        if (mapRef.current) {
+          mapRef.current.setMinZoom(7.4);
+          mapRef.current.setMaxZoom(8.2);
+          mapRef.current.setMaxBounds([
+            [37.2, -6.0],
+            [43.5, -0.8],
+          ]);
+        }
+      }, 1900);
+      return () => clearTimeout(timer);
+    }
+  }, [activeView, layersLoaded]);
 
   // Render Custom Directional Chevrons & Interactive Pins on Ship Click
   useEffect(() => {

@@ -6,7 +6,7 @@ import DetectionAgent from '../agents/detection.js';
 import ReasoningAgent from '../agents/reasoning.js';
 import { query } from '../db/index.js';
 import logger from '../logger.js';
-import { generateVesselTracksGeoJson, getTrackByCaseId } from '../geo/tracks.js';
+import { generateVesselTracksGeoJson, getTrackByCaseId, getTransOceanicTrack } from '../geo/tracks.js';
 
 const router = Router();
 
@@ -180,6 +180,19 @@ router.get('/map/tracks/:caseId', (req, res) => {
     return res.status(404).json({ error: 'Track not found for case ID' });
   }
   res.json({ success: true, track });
+});
+
+/**
+ * GET /api/map/tracks/:caseId/voyage
+ * Returns trans-oceanic origin trace-back voyage details for a case
+ */
+router.get('/map/tracks/:caseId/voyage', (req, res) => {
+  const caseId = Number(req.params.caseId);
+  const voyage = getTransOceanicTrack(caseId);
+  if (!voyage) {
+    return res.status(404).json({ error: 'Trans-oceanic voyage data not found for case ID' });
+  }
+  res.json({ success: true, voyage });
 });
 
 /**

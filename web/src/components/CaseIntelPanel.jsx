@@ -7,6 +7,9 @@ import {
   getFlagEmoji,
   FALLBACK_REAL_PHOTO,
   EVIDENCE_ASSETS,
+  getVesselOrigin,
+  getVesselOwnership,
+  getVesselProsecutions,
 } from '../utils/vesselAssets.js';
 
 export default function CaseIntelPanel({
@@ -21,7 +24,11 @@ export default function CaseIntelPanel({
   const [showDossier, setShowDossier] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [selectedProsecutionIdx, setSelectedProsecutionIdx] = useState(0);
   const [expandedSections, setExpandedSections] = useState({
+    origin: true,
+    ownership: true,
+    prosecutions: true,
     risk: true,
     movement: true,
     evidence: true,
@@ -59,6 +66,10 @@ export default function CaseIntelPanel({
   const photoMeta = getVesselPhotoMetadata(vesselName, vesselType, mmsi, imo);
   const vesselPhoto = photoMeta?.image || getVesselPhoto(vesselName, vesselType, mmsi, imo);
   const flagEmoji = getFlagEmoji(flag);
+
+  const origin = getVesselOrigin(vesselName, mmsi);
+  const ownership = getVesselOwnership(vesselName, mmsi);
+  const prosecutions = getVesselProsecutions(vesselName, mmsi);
 
   const dateUtc = createdAt
     ? new Date(createdAt).toISOString().replace('T', ' ').slice(0, 16) + ' UTC'
@@ -320,6 +331,201 @@ export default function CaseIntelPanel({
           <div className="match-gauge-chevron" aria-hidden="true">
             ›
           </div>
+        </div>
+
+        {/* 6. Origin Country & Trans-Oceanic Route Trace-Back */}
+        <div className="intel-accordion-section">
+          <div className="accordion-header" onClick={() => toggleSection('origin')}>
+            <div className="accordion-header-left">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
+                <path d="M2 12h20" />
+              </svg>
+              <span>Origin & Trans-Oceanic Voyage</span>
+            </div>
+            <div className="accordion-header-right">
+              <span className="origin-flag-badge">{origin.flagEmoji} {origin.country}</span>
+              <span className="accordion-chevron">{expandedSections.origin ? '▾' : '▸'}</span>
+            </div>
+          </div>
+
+          {expandedSections.origin && (
+            <div className="accordion-content">
+              <div className="origin-meta-grid">
+                <div className="origin-meta-item">
+                  <span className="origin-meta-label">Origin Nation & Port:</span>
+                  <strong className="origin-meta-val">{origin.flagEmoji} {origin.port || origin.country}</strong>
+                </div>
+                <div className="origin-meta-item">
+                  <span className="origin-meta-label">Voyage Duration:</span>
+                  <strong className="origin-meta-val">~{origin.voyageDays} days at sea (Departed {origin.departureDate})</strong>
+                </div>
+              </div>
+
+              {origin.chokepoints && origin.chokepoints.length > 0 && (
+                <div className="chokepoints-block">
+                  <span className="chokepoint-title">International Choke Points:</span>
+                  <div className="chokepoint-pills-wrap">
+                    {origin.chokepoints.map((cp, idx) => (
+                      <span key={idx} className="chokepoint-pill">
+                        {idx + 1}. {cp}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <p className="voyage-narrative-text">{origin.voyageSummary}</p>
+
+              {origin.transOceanicRoute && origin.transOceanicRoute.length > 0 && (
+                <div className="transoceanic-timeline">
+                  <span className="timeline-title">Route Waypoints to East Africa:</span>
+                  <div className="timeline-nodes-wrap">
+                    {origin.transOceanicRoute.map((wp, wIdx) => (
+                      <div key={wIdx} className="voyage-step-row">
+                        <span className="voyage-day-chip">{wp.day}</span>
+                        <span className="voyage-step-label">{wp.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* 7. Beneficial Ownership & Corporate Syndicate Intelligence */}
+        <div className="intel-accordion-section">
+          <div className="accordion-header" onClick={() => toggleSection('ownership')}>
+            <div className="accordion-header-left">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 21h18" />
+                <path d="M5 21V7l8-4v18" />
+                <path d="M19 21V11l-6-4" />
+                <path d="M9 9h1" />
+                <path d="M9 13h1" />
+                <path d="M9 17h1" />
+              </svg>
+              <span>Beneficial Ownership & Registry</span>
+            </div>
+            <span className="accordion-chevron">{expandedSections.ownership ? '▾' : '▸'}</span>
+          </div>
+
+          {expandedSections.ownership && (
+            <div className="accordion-content">
+              <div className="ownership-intel-grid">
+                <div className="ownership-row">
+                  <span className="own-label">Registered Owner:</span>
+                  <strong className="own-val">{ownership.registeredOwner}</strong>
+                </div>
+                <div className="ownership-row">
+                  <span className="own-label">Ultimate Beneficial Owner (UBO):</span>
+                  <strong className="own-val ubo-val">{ownership.beneficialOwner}</strong>
+                </div>
+                <div className="ownership-row">
+                  <span className="own-label">Commercial Operator / ISM:</span>
+                  <strong className="own-val">{ownership.operator}</strong>
+                </div>
+                <div className="ownership-row">
+                  <span className="own-label">Flag of Convenience (FOC):</span>
+                  <span className={`own-foc-badge ${ownership.focFlag ? 'foc-warning' : 'foc-national'}`}>
+                    {ownership.flagOfConvenience}
+                  </span>
+                </div>
+                <div className="ownership-row">
+                  <span className="own-label">P&I Marine Insurer:</span>
+                  <span className="own-val">{ownership.piClub}</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* 8. International Prosecutions, Foreign Seizures & Fines */}
+        <div className="intel-accordion-section">
+          <div className="accordion-header" onClick={() => toggleSection('prosecutions')}>
+            <div className="accordion-header-left">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M9 12l2 2 4-4" />
+              </svg>
+              <span>International Prosecutions ({prosecutions.length})</span>
+            </div>
+            <div className="accordion-header-right">
+              {prosecutions.length > 0 ? (
+                <div className="flags-badge-group">
+                  {prosecutions.map((p, pIdx) => (
+                    <span key={pIdx} className="mini-flag-tag" title={p.country}>{p.flagEmoji}</span>
+                  ))}
+                </div>
+              ) : (
+                <span className="clean-record-pill">Clean Record</span>
+              )}
+              <span className="accordion-chevron">{expandedSections.prosecutions ? '▾' : '▸'}</span>
+            </div>
+          </div>
+
+          {expandedSections.prosecutions && (
+            <div className="accordion-content">
+              {prosecutions.length === 0 ? (
+                <div className="clean-prosecution-state">
+                  <p>✓ No prior foreign fisheries convictions or INTERPOL notices found for this hull.</p>
+                </div>
+              ) : (
+                <div className="prosecutions-interactive-container">
+                  {/* Country Flag Tabs ("wen one taps the falg the case loads") */}
+                  <div className="jurisdiction-tab-buttons">
+                    {prosecutions.map((p, pIdx) => (
+                      <button
+                        key={pIdx}
+                        type="button"
+                        className={`btn-jurisdiction-flag ${selectedProsecutionIdx === pIdx ? 'active' : ''}`}
+                        onClick={() => setSelectedProsecutionIdx(pIdx)}
+                        title={`Click to inspect legal enforcement in ${p.country}`}
+                      >
+                        <span className="btn-flag-emoji">{p.flagEmoji}</span>
+                        <span className="btn-country-label">{p.country} ({p.year})</span>
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Selected Prosecution Detail Dossier */}
+                  {prosecutions[selectedProsecutionIdx] && (
+                    <div className="prosecution-detail-card">
+                      <div className="pros-card-header">
+                        <span className="pros-country-title">
+                          {prosecutions[selectedProsecutionIdx].flagEmoji} {prosecutions[selectedProsecutionIdx].country} Enforcement Record
+                        </span>
+                        <span className="pros-status-chip">
+                          {prosecutions[selectedProsecutionIdx].status}
+                        </span>
+                      </div>
+
+                      <div className="pros-body-rows">
+                        <div className="pros-info-row">
+                          <span className="pros-label">Enforcement Agency:</span>
+                          <strong>{prosecutions[selectedProsecutionIdx].agency}</strong>
+                        </div>
+                        <div className="pros-info-row">
+                          <span className="pros-label">Violation / Charge:</span>
+                          <span className="pros-charge-text">{prosecutions[selectedProsecutionIdx].charge}</span>
+                        </div>
+                        <div className="pros-info-row">
+                          <span className="pros-label">Court Penalty / Sanction:</span>
+                          <span className="pros-penalty-highlight">{prosecutions[selectedProsecutionIdx].penalty}</span>
+                        </div>
+                        <div className="pros-info-row">
+                          <span className="pros-label">Official Document Ref:</span>
+                          <code>{prosecutions[selectedProsecutionIdx].citation}</code>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* 6. Expandable Section: Risk Indicators */}

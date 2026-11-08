@@ -6,3 +6,4 @@ SentinelCatch displays authentic, verified maritime surveillance photography str
 3. **VesselFinder & MyShipTracking Open Registries**.
 
 No synthetic or AI-generated mockup images are stored or served from this directory.
+

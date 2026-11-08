@@ -2,15 +2,25 @@ import { useState, useEffect } from 'react';
 
 export default function PatrolPlannerModal({ isOpen, onClose, onSelectCase }) {
   const [baseId, setBaseId] = useState('mombasa');
+  const [assetId, setAssetId] = useState('kcgs_doria');
   const [speedKnots, setSpeedKnots] = useState(22);
   const [plan, setPlan] = useState(null);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
 
+  // Sync speed when asset changes
+  const handleAssetChange = (newAssetId) => {
+    setAssetId(newAssetId);
+    if (newAssetId === 'kcgs_doria') setSpeedKnots(22);
+    else if (newAssetId === 'kns_shujaa') setSpeedKnots(28);
+    else if (newAssetId === 'fast_interceptor') setSpeedKnots(30);
+    else if (newAssetId === 'coastal_patrol') setSpeedKnots(20);
+  };
+
   useEffect(() => {
     if (!isOpen) return;
     setLoading(true);
-    fetch(`/api/patrol/plan?base=${baseId}&speed=${speedKnots}`)
+    fetch(`/api/patrol/plan?base=${baseId}&speed=${speedKnots}&asset=${assetId}`)
       .then((res) => res.json())
       .then((data) => {
         setPlan(data);
@@ -20,14 +30,17 @@ export default function PatrolPlannerModal({ isOpen, onClose, onSelectCase }) {
         console.error('Failed to load patrol plan:', err);
         setLoading(false);
       });
-  }, [isOpen, baseId, speedKnots]);
+  }, [isOpen, baseId, speedKnots, assetId]);
 
   const handleShareWhatsApp = () => {
     if (!plan || !plan.legs) return;
     const text = [
       `🛡️ SENTINELCATCH PATROL DISPATCH ORDER`,
       `⚓ Base: ${plan.base?.name}`,
-      `⚡ Cruising Speed: ${plan.speedKnots} knots | Total Sweep: ${plan.totalDistanceNM} NM (~${plan.totalTravelTimeFormatted})`,
+      `🚢 Operational Asset: ${plan.asset?.name} (${plan.speedKnots} kts cruise)`,
+      `⚡ Total Sweep: ${plan.totalDistanceNM} NM (~${plan.totalTravelTimeFormatted}) | Fuel Est: ~${plan.estimatedFuelLiters} L`,
+      `🌊 Sea State: ${plan.seaStateAssessment}`,
+      `📜 Legal Authority: ${plan.statutoryAuthority}`,
       `---------------------------------------`,
       ...plan.legs.map(
         (leg) =>
@@ -44,14 +57,21 @@ export default function PatrolPlannerModal({ isOpen, onClose, onSelectCase }) {
   const handleCopy = () => {
     if (!plan || !plan.legs) return;
     const text = [
-      `SENTINELCATCH PATROL DISPATCH ORDER`,
-      `Base: ${plan.base?.name}`,
+      `SENTINELCATCH NAVAL & COAST GUARD PATROL DISPATCH ORDER`,
+      `Deployment Base: ${plan.base?.name}`,
+      `Interception Asset: ${plan.asset?.name}`,
       `Cruising Speed: ${plan.speedKnots} knots | Total Distance: ${plan.totalDistanceNM} NM (~${plan.totalTravelTimeFormatted})`,
+      `Fuel Consumption Estimate: ~${plan.estimatedFuelLiters} Liters MGO`,
+      `Sea State & Swell: ${plan.seaStateAssessment}`,
+      `Statutory Authority: ${plan.statutoryAuthority}`,
       `---------------------------------------`,
       ...plan.legs.map(
         (leg) =>
           `Leg ${leg.legIndex}: ${leg.from} -> ${leg.to} | ${leg.distanceNM} NM (${leg.travelTimeFormatted}) | ${leg.objective}`
       ),
+      `---------------------------------------`,
+      `BOARDING INSPECTION PROTOCOL:`,
+      ...(plan.boardingChecklist || []),
       `---------------------------------------`,
       plan.disclaimer,
     ].join('\n');
@@ -71,9 +91,9 @@ export default function PatrolPlannerModal({ isOpen, onClose, onSelectCase }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <span style={{ fontSize: '1.4rem' }}>⚓</span>
             <div>
-              <h3>Patrol Dispatch Planner</h3>
+              <h3>Coastal Patrol Dispatch Planner</h3>
               <p className="patrol-subhead">
-                Actionable route sweep and dispatch priorities for authorized enforcement assets
+                Actionable route sweep, fuel estimates, and statutory boarding checklists for Kenya Coast Guard Service & Kenya Navy
               </p>
             </div>
           </div>
@@ -87,15 +107,27 @@ export default function PatrolPlannerModal({ isOpen, onClose, onSelectCase }) {
           <div className="patrol-config-item">
             <label>Deployment Base:</label>
             <select value={baseId} onChange={(e) => setBaseId(e.target.value)}>
-              <option value="mombasa">Mombasa Base (Mtongwe / Kilindini)</option>
-              <option value="lamu">Lamu Base (Manda Bay Naval Base)</option>
+              <option value="mombasa">Mombasa Base (KCGS HQ / Mtongwe)</option>
+              <option value="lamu">Lamu Base (Manda Bay / Lamu Port)</option>
+              <option value="shimoni">Shimoni Marine Station (Kisite / TZ Border)</option>
+              <option value="malindi">Malindi Protection Base (Ungwana Bay)</option>
             </select>
           </div>
 
           <div className="patrol-config-item">
-            <label>Asset Cruising Speed:</label>
+            <label>Patrol Asset:</label>
+            <select value={assetId} onChange={(e) => handleAssetChange(e.target.value)}>
+              <option value="kcgs_doria">KCGS Doria (OPV 54m - Flagship)</option>
+              <option value="kns_shujaa">KNS Shujaa (Navy Combat Patrol)</option>
+              <option value="fast_interceptor">Fast Interceptor Craft (FIC 12m)</option>
+              <option value="coastal_patrol">Coastal Patrol Boat (PB 24m)</option>
+            </select>
+          </div>
+
+          <div className="patrol-config-item">
+            <label>Cruising Speed:</label>
             <div className="speed-buttons">
-              {[18, 22, 28, 32].map((s) => (
+              {[18, 20, 22, 28, 32].map((s) => (
                 <button
                   key={s}
                   className={`btn-speed ${speedKnots === s ? 'active' : ''}`}
@@ -117,13 +149,7 @@ export default function PatrolPlannerModal({ isOpen, onClose, onSelectCase }) {
           </div>
         </div>
 
-        {/* Disclaimer Callout */}
-        <div className="patrol-disclaimer-callout">
-          <strong>ℹ️ Illustrative Operational Dispatch:</strong>
-          <span> Asset speeds (illustrated at {speedKnots} knots) and target sequences assume standard sea state. Answers the operational question: <em>"So what does the officer do?"</em></span>
-        </div>
-
-        {/* Route Summary Stats */}
+        {/* Tactical Summary Bar */}
         {plan && (
           <div className="patrol-stats-row">
             <div className="patrol-stat-card">
@@ -137,25 +163,41 @@ export default function PatrolPlannerModal({ isOpen, onClose, onSelectCase }) {
               </strong>
             </div>
             <div className="patrol-stat-card">
-              <span className="stat-label">High-Priority Targets</span>
-              <strong className="stat-val">{plan.legs.length > 1 ? plan.legs.length - 1 : 0} contacts</strong>
+              <span className="stat-label">Fuel Consumption Est.</span>
+              <strong className="stat-val" style={{ color: '#38bdf8' }}>
+                ~{plan.estimatedFuelLiters} L (MGO)
+              </strong>
             </div>
             <div className="patrol-stat-card">
-              <span className="stat-label">Primary Departure Base</span>
-              <strong className="stat-val" style={{ fontSize: '0.85rem' }}>
-                {plan.base?.name?.split('(')[0]}
+              <span className="stat-label">High-Priority Intercepts</span>
+              <strong className="stat-val" style={{ color: '#ef4444' }}>
+                {plan.legs.length > 1 ? plan.legs.length - 1 : 0} contacts
               </strong>
+            </div>
+          </div>
+        )}
+
+        {/* Operational Context Callout */}
+        {plan && (
+          <div className="patrol-operational-intel-box">
+            <div className="patrol-intel-col">
+              <span className="intel-pill-header">🌊 SEA STATE & METEOROLOGICAL COND.</span>
+              <p className="intel-box-text">{plan.seaStateAssessment}</p>
+            </div>
+            <div className="patrol-intel-col">
+              <span className="intel-pill-header">📜 STATUTORY BOARDING MANDATE</span>
+              <p className="intel-box-text">{plan.statutoryAuthority}</p>
             </div>
           </div>
         )}
 
         {/* Leg-by-leg Waypoint Table */}
         <div className="patrol-legs-container">
-          {loading && <p style={{ padding: '24px', textAlign: 'center' }}>Optimizing patrol sweep route...</p>}
+          {loading && <p style={{ padding: '24px', textAlign: 'center' }}>Optimizing tactical interception sweep...</p>}
 
           {!loading && plan && plan.legs && (
             <div className="legs-list">
-              <h4>Leg-by-Leg Interception Sweep</h4>
+              <h4>Sequential Interception Legs</h4>
               {plan.legs.map((leg) => (
                 <div key={leg.legIndex} className="leg-card">
                   <div className="leg-badge">Leg {leg.legIndex}</div>
@@ -182,6 +224,21 @@ export default function PatrolPlannerModal({ isOpen, onClose, onSelectCase }) {
                   )}
                 </div>
               ))}
+            </div>
+          )}
+
+          {/* Statutory Boarding Checklist */}
+          {plan && plan.boardingChecklist && (
+            <div className="patrol-checklist-section">
+              <h5>🛡️ Authorized Officer Boarding & Inspection Checklist (FMDA 2016)</h5>
+              <div className="checklist-items-grid">
+                {plan.boardingChecklist.map((item, i) => (
+                  <div key={i} className="checklist-item-pill">
+                    <span className="check-bullet">☑</span>
+                    <span>{item}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>

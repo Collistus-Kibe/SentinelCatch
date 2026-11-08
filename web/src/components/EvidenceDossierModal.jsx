@@ -1,5 +1,12 @@
 import { useState, useEffect } from 'react';
-import { getVesselPhoto, getVesselPhotoMetadata, FALLBACK_REAL_PHOTO } from '../utils/vesselAssets.js';
+import {
+  getVesselPhoto,
+  getVesselPhotoMetadata,
+  FALLBACK_REAL_PHOTO,
+  getVesselOrigin,
+  getVesselOwnership,
+  getVesselProsecutions,
+} from '../utils/vesselAssets.js';
 
 export default function EvidenceDossierModal({ caseItem, onClose }) {
   const [dossier, setDossier] = useState(null);
@@ -264,6 +271,40 @@ export default function EvidenceDossierModal({ caseItem, onClose }) {
                                 </span>
                               </div>
                               <p className="cand-rationale">{cand.summaryRationale}</p>
+
+                              {/* Origin & Ownership Intelligence */}
+                              {(() => {
+                                const origin = getVesselOrigin(cand.vesselName, cand.mmsi);
+                                const ownership = getVesselOwnership(cand.vesselName, cand.mmsi);
+                                const prosecutions = getVesselProsecutions(cand.vesselName, cand.mmsi);
+                                return (
+                                  <div className="cand-dossier-extended-intel" style={{ margin: '8px 0', fontSize: '0.74rem' }}>
+                                    <div className="dossier-intel-pill-row" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '6px' }}>
+                                      <span>🌍 <strong>Origin:</strong> {origin.flagEmoji} {origin.port || origin.country} (~{origin.voyageDays}d voyage)</span>
+                                      <span>🏢 <strong>UBO Owner:</strong> {ownership.beneficialOwner}</span>
+                                      <span style={{ color: ownership.focFlag ? '#f87171' : '#34d399' }}>
+                                        Registry: {ownership.flagOfConvenience}
+                                      </span>
+                                    </div>
+
+                                    {prosecutions.length > 0 && (
+                                      <div className="dossier-prosecution-history-box" style={{ background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.25)', borderRadius: '4px', padding: '6px 8px', marginTop: '4px' }}>
+                                        <div style={{ color: '#f87171', fontWeight: 700, marginBottom: '4px' }}>
+                                          ⚖️ Documented Foreign Convictions & Maritime Sanctions ({prosecutions.length}):
+                                        </div>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                                          {prosecutions.map((p, pIdx) => (
+                                            <div key={pIdx} style={{ fontSize: '0.7rem', color: '#cbd5e1' }}>
+                                              <strong style={{ color: '#ffffff' }}>{p.flagEmoji} {p.country} ({p.year}):</strong> {p.agency} — {p.charge} | <span style={{ color: '#fca5a5' }}>{p.penalty}</span> (Ref: <code>{p.citation}</code>)
+                                            </div>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })()}
+
                               <div className="cand-photo-provenance-caption">
                                 <strong>Photographic Record:</strong> {photoMeta.photoTitle} · <span className="cand-credit-text">Attribution: {photoMeta.credit}</span>
                               </div>
