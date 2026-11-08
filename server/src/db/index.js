@@ -191,6 +191,21 @@ async function initMysqlSchema() {
       ) ENGINE=InnoDB;
     `);
 
+    await mysqlPool.query(`
+      CREATE TABLE IF NOT EXISTS pipeline_runs (
+        id BIGINT AUTO_INCREMENT PRIMARY KEY,
+        stage VARCHAR(100) NOT NULL DEFAULT 'full',
+        started_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        finished_at DATETIME,
+        status VARCHAR(50) NOT NULL DEFAULT 'running',
+        counts JSON,
+        errors JSON,
+        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_status (status),
+        INDEX idx_started_at (started_at)
+      ) ENGINE=InnoDB;
+    `);
+
     dbInitialized = true;
     logger.info('TiDB schema initialized successfully');
   } catch (err) {
@@ -245,6 +260,16 @@ export async function query(text, params = []) {
     mysqlSql = mysqlSql.replace(/COUNT\(\*\)\s+FILTER\s*\(WHERE\s+([^)]+)\)/gi, 'SUM(CASE WHEN $1 THEN 1 ELSE 0 END)');
     mysqlSql = mysqlSql.replace(/RETURNING\s+\*/gi, '');
     mysqlSql = mysqlSql.replace(/RETURNING\s+id/gi, '');
+
+    // Adapt PostgreSQL ON CONFLICT for MySQL / TiDB
+    mysqlSql = mysqlSql.replace(
+      /ON\s+CONFLICT\s*\([^)]+\)\s*DO\s+UPDATE\s+SET\s+matched\s*=\s*EXCLUDED\.matched/gi,
+      'ON DUPLICATE KEY UPDATE matched = VALUES(matched)'
+    );
+    mysqlSql = mysqlSql.replace(
+      /ON\s+CONFLICT\s*\([^)]+\)\s*DO\s+NOTHING/gi,
+      'ON DUPLICATE KEY UPDATE id = id'
+    );
 
     // Adapt PostgreSQL DISTINCT ON (column) for MySQL / TiDB
     if (/SELECT\s+DISTINCT\s+ON/i.test(mysqlSql)) {

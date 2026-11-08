@@ -4,6 +4,36 @@ import { KENYA_EEZ_BBOX } from '../geo/kenya_eez.js';
 
 const GFW_GATEWAY = 'https://gateway.api.globalfishingwatch.org/v3';
 
+/**
+ * Sanitize query date range: GFW API enforces strict maximum time ranges (max 366 days,
+ * recommended 14-30 days for 4wings reports and event searches).
+ */
+function sanitizeGfwDateRange(startDate, endDate, defaultDays = 7) {
+  const now = new Date();
+  let endD = endDate ? new Date(endDate) : now;
+  if (isNaN(endD.getTime()) || endD > now) endD = now;
+
+  let startD = startDate ? new Date(startDate) : new Date(endD.getTime() - defaultDays * 24 * 60 * 60 * 1000);
+  if (isNaN(startD.getTime())) startD = new Date(endD.getTime() - defaultDays * 24 * 60 * 60 * 1000);
+
+  if (endD < startD) {
+    const tmp = endD;
+    endD = startD;
+    startD = tmp;
+  }
+
+  // Restrict time window to max 30 days to strictly avoid GFW 422 errors
+  const maxDiffMs = 30 * 24 * 60 * 60 * 1000;
+  if (endD.getTime() - startD.getTime() > maxDiffMs) {
+    startD = new Date(endD.getTime() - maxDiffMs);
+  }
+
+  return {
+    start: startD.toISOString().split('T')[0],
+    end: endD.toISOString().split('T')[0],
+  };
+}
+
 export class GFWClient {
   constructor(token = config.GFW_API_TOKEN) {
     this.token = token;
@@ -40,6 +70,12 @@ export class GFWClient {
         return null;
       }
 
+      if (response.status === 422) {
+        const errorText = await response.text();
+        logger.debug({ status: response.status, errorText }, 'GFW API query range out of bounds, falling back to local simulation');
+        return null;
+      }
+
       if (!response.ok) {
         const errorText = await response.text();
         logger.error({ status: response.status, errorText }, 'GFW API request failed');
@@ -59,8 +95,7 @@ export class GFWClient {
    * @param {Object} params - { startDate, endDate, bbox }
    */
   async fetchSARDetections({ startDate, endDate, bbox = KENYA_EEZ_BBOX } = {}) {
-    const start = startDate || new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-    const end = endDate || new Date().toISOString().split('T')[0];
+    const { start, end } = sanitizeGfwDateRange(startDate, endDate, 7);
 
     const queryParams = new URLSearchParams({
       'start-date': start,
@@ -100,8 +135,7 @@ export class GFWClient {
    * Dataset: public-global-presence:latest
    */
   async fetchAISPresence({ startDate, endDate, bbox = KENYA_EEZ_BBOX } = {}) {
-    const start = startDate || new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-    const end = endDate || new Date().toISOString().split('T')[0];
+    const { start, end } = sanitizeGfwDateRange(startDate, endDate, 7);
 
     const queryParams = new URLSearchParams({
       'start-date': start,
@@ -138,8 +172,7 @@ export class GFWClient {
    * @param {string} dataset - e.g. 'public-global-gaps-events:latest', 'public-global-loitering-events:latest'
    */
   async fetchEvents(dataset, { startDate, endDate } = {}) {
-    const start = startDate || new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-    const end = endDate || new Date().toISOString().split('T')[0];
+    const { start, end } = sanitizeGfwDateRange(startDate, endDate, 14);
 
     const queryParams = new URLSearchParams({
       'start-date': start,

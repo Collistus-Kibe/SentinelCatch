@@ -76,7 +76,7 @@ export class PipelineOrchestrator {
       const res = await query(
         `INSERT INTO pipeline_runs (stage, started_at, status) VALUES ('full', NOW(), 'running') RETURNING id`
       );
-      runId = res.rows[0]?.id;
+      runId = res.rows[0]?.id || res.insertId;
     } catch {
       // Ignore if DB unreachable
     }

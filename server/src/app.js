@@ -19,6 +19,9 @@ import vesselsRouter from './routes/vessels.js';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
 
+// Trust reverse proxy (e.g. Render, AWS, Heroku) so express-rate-limit correctly resolves client IPs
+app.set('trust proxy', 1);
+
 // ── Security ─────────────────────────────────
 app.use(helmet({
   contentSecurityPolicy: {
