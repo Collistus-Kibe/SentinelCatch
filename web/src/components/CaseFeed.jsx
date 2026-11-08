@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { getTranslation } from '../services/i18n.js';
-import { getVesselPhoto, getFlagEmoji } from '../utils/vesselAssets.js';
+import { getVesselPhoto, getFlagEmoji, FALLBACK_REAL_PHOTO } from '../utils/vesselAssets.js';
 
 function timeAgo(dateString) {
   const seconds = Math.floor((Date.now() - new Date(dateString).getTime()) / 1000);
@@ -272,7 +272,7 @@ export default function CaseFeed({
                   loading="lazy"
                   onError={(e) => {
                     e.currentTarget.onerror = null;
-                    e.currentTarget.src = '/vessels/pacific_dawn.jpg';
+                    e.currentTarget.src = FALLBACK_REAL_PHOTO;
                   }}
                 />
               </div>

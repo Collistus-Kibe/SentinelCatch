@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getVesselPhoto, getVesselPhotoMetadata } from '../utils/vesselAssets.js';
+import { getVesselPhoto, getVesselPhotoMetadata, FALLBACK_REAL_PHOTO } from '../utils/vesselAssets.js';
 
 export default function EvidenceDossierModal({ caseItem, onClose }) {
   const [dossier, setDossier] = useState(null);
@@ -218,6 +218,10 @@ export default function EvidenceDossierModal({ caseItem, onClose }) {
                                 src={photoUrl}
                                 alt={cand.vesselName}
                                 className="cand-dossier-photo"
+                                onError={(e) => {
+                                  e.currentTarget.onerror = null;
+                                  e.currentTarget.src = FALLBACK_REAL_PHOTO;
+                                }}
                               />
                               <div className="cand-dossier-photo-tag">📷 Authentic Maritime Photo</div>
                             </div>

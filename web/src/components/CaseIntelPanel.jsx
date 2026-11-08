@@ -1,7 +1,13 @@
 import { useState } from 'react';
 import { getTranslation } from '../services/i18n.js';
 import EvidenceDossierModal from './EvidenceDossierModal.jsx';
-import { getVesselPhoto, getFlagEmoji, EVIDENCE_ASSETS } from '../utils/vesselAssets.js';
+import {
+  getVesselPhoto,
+  getVesselPhotoMetadata,
+  getFlagEmoji,
+  FALLBACK_REAL_PHOTO,
+  EVIDENCE_ASSETS,
+} from '../utils/vesselAssets.js';
 
 export default function CaseIntelPanel({
   caseItem,
@@ -50,7 +56,8 @@ export default function CaseIntelPanel({
   const lonStr = `${Math.abs(lon).toFixed(4)}°${lon < 0 ? 'W' : 'E'}`;
   const locFormatted = `${latStr}, ${lonStr}`;
 
-  const vesselPhoto = getVesselPhoto(vesselName, vesselType);
+  const photoMeta = getVesselPhotoMetadata(vesselName, vesselType, mmsi, imo);
+  const vesselPhoto = photoMeta?.image || getVesselPhoto(vesselName, vesselType, mmsi, imo);
   const flagEmoji = getFlagEmoji(flag);
 
   const dateUtc = createdAt
@@ -178,18 +185,42 @@ export default function CaseIntelPanel({
       </div>
 
       <div className="intel-scroll-body">
-        {/* 3. Main Vessel Surveillance Photo */}
-        <div className="intel-photo-wrapper">
-          <img
-            src={vesselPhoto}
-            alt={vesselName}
-            className="intel-vessel-photo-main"
-            loading="lazy"
-            onError={(e) => {
-              e.currentTarget.onerror = null;
-              e.currentTarget.src = '/vessels/pacific_dawn.jpg';
-            }}
-          />
+        {/* 3. Main Vessel Surveillance Photo with Authentic Provenance Attribution */}
+        <div className="intel-photo-block">
+          <div className="intel-photo-wrapper">
+            <img
+              src={vesselPhoto}
+              alt={vesselName}
+              className="intel-vessel-photo-main"
+              loading="lazy"
+              onError={(e) => {
+                e.currentTarget.onerror = null;
+                e.currentTarget.src = FALLBACK_REAL_PHOTO;
+              }}
+            />
+            <div className="intel-photo-provenance-tag">
+              {photoMeta.iuuListed ? 'RFMO IUU RECON ARCHIVE' : 'OPEN MARITIME ARCHIVE'}
+            </div>
+          </div>
+          <div className="intel-photo-caption-bar">
+            <div className="caption-text-main" title={photoMeta.photoTitle}>
+              <strong>Record:</strong> {photoMeta.photoTitle || 'Verified Reconnaissance Telephoto'}
+            </div>
+            <div className="caption-source-row">
+              <span className="caption-source-label">Source: {photoMeta.database || photoMeta.credit}</span>
+              {photoMeta.iuuUrl && (
+                <a
+                  href={photoMeta.iuuUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="caption-iuu-link"
+                  title="View official blacklisting dossier on Combined IUU List"
+                >
+                  View TMT Dossier ↗
+                </a>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* 4. Telemetry 2-Column Matrix */}

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { getTranslation } from '../services/i18n.js';
-import { getVesselPhoto, getFlagEmoji } from '../utils/vesselAssets.js';
+import { getVesselPhoto, getFlagEmoji, FALLBACK_REAL_PHOTO } from '../utils/vesselAssets.js';
 
 // Unified Master Style with both Satellite and Dark Ocean raster sources
 const MARITIME_MASTER_STYLE = {
@@ -644,9 +644,9 @@ export default function MapViewport({
                 alt="${vesselName}"
                 class="pin-vessel-img"
                 loading="lazy"
-                onerror="this.onerror=null;this.src='/vessels/pacific_dawn.jpg';"
+                onerror="this.onerror=null;this.src='${FALLBACK_REAL_PHOTO}';"
               />
-              <div class="pin-real-photo-badge">P-8A RECON // FLIR</div>
+              <div class="pin-real-photo-badge">${isIUU ? 'RFMO IUU RECON' : 'OPEN REGISTRY ARCHIVE'}</div>
               <div class="pin-band-chip ${(c.band || 'high').toLowerCase()}">
                 <span class="chip-pulse-dot"></span>
                 ${band} · ${score}
