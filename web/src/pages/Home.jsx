@@ -5,6 +5,7 @@ import CaseIntelPanel from '../components/CaseIntelPanel.jsx';
 import NotificationBell from '../components/NotificationBell.jsx';
 import PatrolPlannerModal from '../components/PatrolPlannerModal.jsx';
 import AskSentinelCatchModal from '../components/AskSentinelCatchModal.jsx';
+import ErrorBoundary from '../components/ErrorBoundary.jsx';
 import { useNotifications } from '../context/NotificationContext.jsx';
 import { getTranslation } from '../services/i18n.js';
 
@@ -280,17 +281,25 @@ export default function Home() {
 
         {/* Right Side: Vessel Intelligence Panel */}
         {selectedCase && (
-          <CaseIntelPanel
-            caseItem={selectedCase}
-            activeView={activeView}
-            onSwitchView={setActiveView}
-            onClose={() => {
+          <ErrorBoundary
+            title="Vessel Intelligence Panel"
+            onReset={() => {
               setSelectedCase(null);
               setSelectedCaseId(null);
             }}
-            onActionComplete={handleActionComplete}
-            language={language}
-          />
+          >
+            <CaseIntelPanel
+              caseItem={selectedCase}
+              activeView={activeView}
+              onSwitchView={setActiveView}
+              onClose={() => {
+                setSelectedCase(null);
+                setSelectedCaseId(null);
+              }}
+              onActionComplete={handleActionComplete}
+              language={language}
+            />
+          </ErrorBoundary>
         )}
       </div>
 

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { getTranslation } from '../services/i18n.js';
 import EvidenceDossierModal from './EvidenceDossierModal.jsx';
 import { FlagIcon } from './FlagIcon.jsx';
@@ -73,9 +73,21 @@ export default function CaseIntelPanel({
   const ownership = getVesselOwnership(vesselName, mmsi);
   const prosecutions = getVesselProsecutions(vesselName, mmsi);
 
-  const dateUtc = createdAt
-    ? new Date(createdAt).toISOString().replace('T', ' ').slice(0, 16) + ' UTC'
-    : 'Oct 27, 2026 14:58 UTC';
+  let dateUtc = 'Oct 27, 2026 14:58 UTC';
+  if (createdAt) {
+    try {
+      const d = new Date(createdAt);
+      if (!isNaN(d.getTime())) {
+        dateUtc = d.toISOString().replace('T', ' ').slice(0, 16) + ' UTC';
+      }
+    } catch {
+      // fallback to default
+    }
+  }
+
+  useEffect(() => {
+    setSelectedProsecutionIdx(0);
+  }, [caseId]);
 
   const toggleSection = (key) => {
     setExpandedSections((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -245,13 +257,13 @@ export default function CaseIntelPanel({
           </div>
           <div className="ai-classification-body">
             <div className="ai-match-bullet">
-              <strong>• Physical Displacement:</strong> Radar signature indicates an industrial {features.estimatedLengthM || candidateMatch.lengthM || 46}m steel hull (Distant Water Fishing Fleet), ruling out local inshore craft with 99.4% confidence.
+              <strong>• Physical Displacement:</strong> Radar signature indicates an industrial {features?.estimatedLengthM || primaryCandidate?.lengthM || 46}m steel hull (Distant Water Fishing Fleet), ruling out local inshore craft with 99.4% confidence.
             </div>
             <div className="ai-match-bullet">
-              <strong>• Operational Profile:</strong> Vessel superstructure matches commercial oceanic longliner architecture operating from {origin.country} ({origin.port}) across the Indian Ocean.
+              <strong>• Operational Profile:</strong> Vessel superstructure matches commercial oceanic longliner architecture operating from {origin?.country || 'Foreign Nation'} ({origin?.port || origin?.country || 'High Seas'}) across the Indian Ocean.
             </div>
             <div className="ai-match-bullet">
-              <strong>• Transponder Analysis:</strong> Intentional AIS transponder blackout {candidateMatch.hoursSinceAisOff ? `${candidateMatch.hoursSinceAisOff}h ago` : 'detected'} prior to entering sovereign Kenyan waters.
+              <strong>• Transponder Analysis:</strong> Intentional AIS transponder blackout {primaryCandidate?.hoursSinceAisOff ? `${primaryCandidate.hoursSinceAisOff}h ago` : 'detected'} prior to entering sovereign Kenyan waters.
             </div>
           </div>
         </div>
