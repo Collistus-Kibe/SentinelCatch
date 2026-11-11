@@ -550,7 +550,7 @@ export const KNOWN_VESSELS = {
   },
   'ZHOU YU 926': {
     name: 'ZHOU YU 926',
-    image: '/vessels/lu-rong-yuan-yu.jpg',
+    image: '/vessels/zhou-yu-926.jpg',
     flag: 'China',
     flagEmoji: '🇨🇳',
     type: 'Squid Jigger / Pelagic Longliner',
@@ -998,7 +998,7 @@ export function getVesselPhoto(vesselName = '', gearType = '', mmsi = '', imo = 
   if (lc.includes('lu rong') || lc.includes('yuan yu')) return '/vessels/lu-rong-yuan-yu.jpg';
   if (lc.includes('pacific') || lc.includes('dawn')) return '/vessels/sl-pacific-dawn.jpg';
   if (lc.includes('hai feng')) return '/vessels/hai-feng-68.jpg';
-  if (lc.includes('zhou yu')) return '/vessels/lu-rong-yuan-yu.jpg';
+  if (lc.includes('zhou yu')) return '/vessels/zhou-yu-926.jpg';
   if (lc.includes('al-hilal') || lc.includes('hilal')) return '/vessels/al-hilal-express.jpg';
   if (lc.includes('alpha trader')) return '/vessels/alphard-star.jpg';
   if (lc.includes('dragon')) return '/vessels/jin-hai-901.jpg';
