@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { NotificationProvider } from './context/NotificationContext.jsx';
+import { OfficerProvider } from './context/OfficerContext.jsx';
 import ToastContainer from './components/ToastContainer.jsx';
 import NotificationDrawer from './components/NotificationDrawer.jsx';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
@@ -9,14 +10,16 @@ export default function App() {
   return (
     <ErrorBoundary title="Maritime Operations System Recovered">
       <NotificationProvider>
-        <BrowserRouter>
-          <ToastContainer />
-          <NotificationDrawer />
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </BrowserRouter>
+        <OfficerProvider>
+          <BrowserRouter>
+            <ToastContainer />
+            <NotificationDrawer />
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </BrowserRouter>
+        </OfficerProvider>
       </NotificationProvider>
     </ErrorBoundary>
   );

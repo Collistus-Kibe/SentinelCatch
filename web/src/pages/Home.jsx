@@ -5,8 +5,10 @@ import CaseIntelPanel from '../components/CaseIntelPanel.jsx';
 import NotificationBell from '../components/NotificationBell.jsx';
 import PatrolPlannerModal from '../components/PatrolPlannerModal.jsx';
 import AskSentinelCatchModal from '../components/AskSentinelCatchModal.jsx';
+import OfficerAuthModal from '../components/OfficerAuthModal.jsx';
 import ErrorBoundary from '../components/ErrorBoundary.jsx';
 import { useNotifications } from '../context/NotificationContext.jsx';
+import { useOfficer } from '../context/OfficerContext.jsx';
 import { getTranslation } from '../services/i18n.js';
 
 export default function Home() {
@@ -18,6 +20,8 @@ export default function Home() {
     toggleLanguage,
     sendSystemTest,
   } = useNotifications();
+
+  const { officer, isAuthModalOpen, openAuthModal, closeAuthModal } = useOfficer();
 
   const t = getTranslation(language);
 
@@ -247,6 +251,19 @@ export default function Home() {
             <span>{language === 'en' ? 'EN' : 'SW'}</span>
           </button>
 
+          {/* Officer HUD Button */}
+          <button
+            className="btn-officer-hud"
+            onClick={openAuthModal}
+            title={`Officer Station: ${officer?.stationName || 'Sign In'}`}
+          >
+            <span className="officer-hud-crest">🇰🇪</span>
+            <span className="officer-hud-name">
+              {officer?.name ? officer.name.split(' ').slice(-1)[0] : 'Sign In'}
+            </span>
+            <span className="officer-hud-station">{officer?.stationCode || '--'}</span>
+          </button>
+
           <NotificationBell />
         </div>
       </header>
@@ -318,6 +335,9 @@ export default function Home() {
         onClose={() => setShowChatModal(false)}
         onSelectCase={handleSelectCase}
       />
+
+      {/* Officer Station Authentication Modal */}
+      <OfficerAuthModal isOpen={isAuthModalOpen} onClose={closeAuthModal} />
     </div>
   );
 }

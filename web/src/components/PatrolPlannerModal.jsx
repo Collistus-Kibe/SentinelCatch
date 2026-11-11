@@ -1,12 +1,16 @@
 import { useState, useEffect } from 'react';
+import { useOfficer } from '../context/OfficerContext.jsx';
 
 export default function PatrolPlannerModal({ isOpen, onClose, onSelectCase }) {
+  const { officer, dispatchPatrol } = useOfficer();
   const [baseId, setBaseId] = useState('mombasa');
   const [assetId, setAssetId] = useState('kcgs_doria');
   const [speedKnots, setSpeedKnots] = useState(22);
   const [plan, setPlan] = useState(null);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [deploying, setDeploying] = useState(false);
+  const [deployed, setDeployed] = useState(false);
 
   // Sync speed when asset changes
   const handleAssetChange = (newAssetId) => {
@@ -81,6 +85,31 @@ export default function PatrolPlannerModal({ isOpen, onClose, onSelectCase }) {
     setTimeout(() => setCopied(false), 3000);
   };
 
+  const handleDeployToStation = async () => {
+    if (!plan) return;
+    setDeploying(true);
+    try {
+      await dispatchPatrol({
+        assetId: plan.asset?.id || assetId,
+        assetName: plan.asset?.name || 'Patrol Interceptor',
+        targetVesselName: plan.legs?.[0]?.to || 'Coastal Surveillance Sweep',
+        targetCoords: `${plan.base?.lat?.toFixed(4) || '4.0000'}°S, ${plan.base?.lon?.toFixed(4) || '39.7000'}°E`,
+        totalDistanceNM: plan.totalDistanceNM,
+        estimatedFuelLiters: plan.estimatedFuelLiters,
+        etaFormatted: plan.totalTravelTimeFormatted,
+        speedKnots: plan.speedKnots,
+        legs: plan.legs || [],
+        notes: `Sea condition: ${plan.seaStateAssessment || 'Moderate'}. Boarding mandate: ${plan.statutoryAuthority || 'FMDA 2016'}`,
+      });
+      setDeployed(true);
+      setTimeout(() => setDeployed(false), 5000);
+    } catch (err) {
+      alert(`Station Patrol Dispatch failed: ${err.message}`);
+    } finally {
+      setDeploying(false);
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -145,6 +174,25 @@ export default function PatrolPlannerModal({ isOpen, onClose, onSelectCase }) {
             </button>
             <button className="btn btn-primary btn-sm" onClick={handleShareWhatsApp}>
               💬 WhatsApp Order
+            </button>
+            <button
+              className="btn btn-sm btn-station-broadcast"
+              onClick={handleDeployToStation}
+              disabled={deploying || !officer}
+              title={officer ? `Broadcast dispatch order to ${officer.stationName}` : 'Sign in as an officer to broadcast'}
+              style={{
+                background: deployed ? '#059669' : 'linear-gradient(135deg, #059669, #10b981)',
+                border: '1px solid #34d399',
+                color: '#fff',
+                fontWeight: 600,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '5px',
+                cursor: (deploying || !officer) ? 'not-allowed' : 'pointer',
+                opacity: (deploying || !officer) ? 0.6 : 1,
+              }}
+            >
+              {deploying ? 'Deploying...' : deployed ? '✓ Dispatched to Station' : '⚡ Broadcast to Station'}
             </button>
           </div>
         </div>

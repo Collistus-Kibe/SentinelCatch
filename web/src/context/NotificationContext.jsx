@@ -168,6 +168,35 @@ export function NotificationProvider({ children }) {
       }
     });
 
+    es.addEventListener('patrol_dispatch', (e) => {
+      setLastHeartbeat(Date.now());
+      try {
+        const data = JSON.parse(e.data);
+        window.dispatchEvent(new CustomEvent('sentinelcatch:patrol_dispatch', { detail: data }));
+        if (data.broadcastHeadline) {
+          addToast({
+            id: `pat-${Date.now()}`,
+            headline: data.broadcastHeadline,
+            body: data.broadcastBody,
+            band: 'High',
+            type: 'patrol_dispatch',
+          });
+        }
+      } catch (err) {
+        console.warn('Malformed patrol dispatch event:', err);
+      }
+    });
+
+    es.addEventListener('officer_presence', (e) => {
+      setLastHeartbeat(Date.now());
+      try {
+        const data = JSON.parse(e.data);
+        window.dispatchEvent(new CustomEvent('sentinelcatch:officer_presence', { detail: data }));
+      } catch (err) {
+        console.warn('Malformed officer presence event:', err);
+      }
+    });
+
     es.addEventListener('connected', () => {
       setConnectionStatus('connected');
       setLastHeartbeat(Date.now());

@@ -15,6 +15,7 @@ import patrolRouter from './routes/patrol.js';
 import chatRouter from './routes/chat.js';
 import objectivesRouter from './routes/objectives.js';
 import vesselsRouter from './routes/vessels.js';
+import officersRouter from './routes/officers.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -191,6 +192,7 @@ app.use('/api', chatRouter);
 app.use('/api', runRouter);
 app.use('/api', objectivesRouter);
 app.use('/api', vesselsRouter);
+app.use('/api', officersRouter);
 
 // ── Serve static frontend ────────────────────
 const staticDir = join(__dirname, '..', '..', 'web', 'dist');
