@@ -4809,6 +4809,14 @@ a.cand-tag:hover {
   display: flex;
   flex-direction: column;
   gap: 7px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(56, 189, 248, 0.25) transparent;
+}
+.watchlist-cards-scroll::-webkit-scrollbar { width: 3px; }
+.watchlist-cards-scroll::-webkit-scrollbar-track { background: transparent; }
+.watchlist-cards-scroll::-webkit-scrollbar-thumb {
+  background: rgba(56, 189, 248, 0.3);
+  border-radius: 9999px;
 }
 
 .watchlist-item-card {
@@ -7445,4 +7453,325 @@ a.cand-tag:hover {
 .btn-rotate-dismiss:hover {
   color: #cbd5e1;
   border-color: rgba(255, 255, 255, 0.3);
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   Pin "Inspect Full Intel" button — opens right-side CaseIntelPanel
+   ══════════════════════════════════════════════════════════════ */
+.btn-pin-open-details {
+  width: 100%;
+  background: linear-gradient(135deg, rgba(2, 132, 199, 0.28), rgba(16, 185, 129, 0.28));
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  color: #f8fafc;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+  letter-spacing: 0.03em;
+}
+.btn-pin-open-details:hover {
+  background: linear-gradient(135deg, rgba(2, 132, 199, 0.5), rgba(16, 185, 129, 0.5));
+  box-shadow: 0 0 14px rgba(56, 189, 248, 0.4);
+  transform: translateY(-1px);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   Notification distance pill — shows NM from officer station
+   ══════════════════════════════════════════════════════════════ */
+.notif-dist-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: #34d399;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 20px;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   Station Patrol Chat – floating panel & FAB
+   ══════════════════════════════════════════════════════════════ */
+.station-chat-fab {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 1200;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0ea5e9, #10b981);
+  border: 2px solid rgba(56, 189, 248, 0.5);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(14, 165, 233, 0.45);
+  transition: all 0.2s ease;
+  position: fixed;
+}
+.station-chat-fab:hover,
+.station-chat-fab.fab-active {
+  box-shadow: 0 6px 28px rgba(14, 165, 233, 0.65);
+  transform: scale(1.07);
+}
+.chat-fab-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  border: 1.5px solid #0a0f1a;
+}
+
+.station-chat-panel {
+  position: fixed;
+  bottom: 86px;
+  right: 24px;
+  z-index: 1199;
+  width: 320px;
+  max-width: calc(100vw - 32px);
+  max-height: 460px;
+  background: #0d1829;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: 14px;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(56, 189, 248, 0.08);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: chatPanelIn 0.22s ease;
+}
+@keyframes chatPanelIn {
+  from { opacity: 0; transform: translateY(16px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.chat-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: linear-gradient(90deg, rgba(14, 165, 233, 0.12), rgba(16, 185, 129, 0.08));
+  border-bottom: 1px solid rgba(56, 189, 248, 0.15);
+}
+.chat-panel-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #e2e8f0;
+}
+.chat-station-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 6px #10b981;
+  animation: pulse-green 1.6s infinite;
+}
+@keyframes pulse-green {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(0.85); }
+}
+.chat-panel-close {
+  background: none;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: color 0.15s;
+}
+.chat-panel-close:hover { color: #ef4444; }
+
+.chat-officer-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: rgba(255, 255, 255, 0.025);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 0.72rem;
+}
+.chat-you-label { color: #64748b; font-weight: 600; }
+.chat-officer-name { color: #38bdf8; font-weight: 700; }
+.chat-officer-role {
+  color: #475569;
+  font-size: 0.68rem;
+  margin-left: 2px;
+}
+
+.chat-messages-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(56, 189, 248, 0.2) transparent;
+}
+.chat-messages-list::-webkit-scrollbar { width: 3px; }
+.chat-messages-list::-webkit-scrollbar-track { background: transparent; }
+.chat-messages-list::-webkit-scrollbar-thumb {
+  background: rgba(56, 189, 248, 0.3);
+  border-radius: 9999px;
+}
+
+.chat-loading-row {
+  text-align: center;
+  color: #475569;
+  font-size: 0.75rem;
+  padding: 16px;
+}
+.chat-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 24px 12px;
+  color: #475569;
+  text-align: center;
+  font-size: 0.75rem;
+}
+.chat-empty-state span { font-size: 1.8rem; }
+
+.chat-msg-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.chat-msg-row.msg-mine { align-items: flex-end; }
+.chat-msg-row.msg-other { align-items: flex-start; }
+
+.chat-msg-sender {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #38bdf8;
+  padding: 0 6px;
+}
+.chat-msg-bubble {
+  max-width: 86%;
+  padding: 7px 11px;
+  border-radius: 10px;
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+.msg-mine .chat-msg-bubble {
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.22), rgba(16, 185, 129, 0.18));
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-bottom-right-radius: 2px;
+}
+.msg-other .chat-msg-bubble {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-bottom-left-radius: 2px;
+}
+.chat-msg-text {
+  font-size: 0.78rem;
+  color: #e2e8f0;
+  line-height: 1.4;
+  word-break: break-word;
+  flex: 1;
+}
+.chat-msg-time {
+  font-size: 0.6rem;
+  color: #475569;
+  white-space: nowrap;
+  margin-bottom: 1px;
+}
+
+.chat-input-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  padding: 10px 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(0, 0, 0, 0.2);
+}
+.chat-input {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  border-radius: 8px;
+  color: #f1f5f9;
+  font-size: 0.8rem;
+  padding: 8px 10px;
+  resize: none;
+  outline: none;
+  line-height: 1.4;
+  max-height: 80px;
+  overflow-y: auto;
+  scrollbar-width: none;
+  font-family: inherit;
+  transition: border-color 0.15s;
+}
+.chat-input:focus {
+  border-color: rgba(56, 189, 248, 0.5);
+  background: rgba(255, 255, 255, 0.07);
+}
+.chat-input::placeholder { color: #475569; }
+
+.chat-send-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0ea5e9, #10b981);
+  border: none;
+  color: #fff;
+  font-size: 0.95rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+.chat-send-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+.chat-send-btn:not(:disabled):hover {
+  box-shadow: 0 0 12px rgba(14, 165, 233, 0.5);
+  transform: scale(1.08);
+}
+
+/* Mobile adjustments for chat panel */
+@media (max-width: 600px) {
+  .station-chat-panel {
+    right: 12px;
+    bottom: 80px;
+    width: calc(100vw - 24px);
+    max-height: 50vh;
+  }
+  .station-chat-fab {
+    bottom: 16px;
+    right: 16px;
+    width: 48px;
+    height: 48px;
+  }
 }

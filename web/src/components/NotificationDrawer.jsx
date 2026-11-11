@@ -1,5 +1,21 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNotifications } from '../context/NotificationContext.jsx';
+import { useOfficer } from '../context/OfficerContext.jsx';
+
+function computeDistanceNM(lat1, lon1, lat2, lon2) {
+  if (lat1 == null || lon1 == null || lat2 == null || lon2 == null) return null;
+  const R = 3440.065; // Earth radius in NM
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return Math.round(R * c);
+}
 
 function timeAgo(dateString) {
   const seconds = Math.floor((Date.now() - new Date(dateString).getTime()) / 1000);
@@ -26,6 +42,12 @@ export default function NotificationDrawer() {
     toggleDesktopNotif,
     connectionStatus,
   } = useNotifications();
+
+  const { officer, stations } = useOfficer();
+
+  const activeStation = useMemo(() => {
+    return stations.find((s) => s.id === officer?.stationId) || stations[0] || null;
+  }, [stations, officer?.stationId]);
 
   const [testing, setTesting] = useState(false);
   const [testSuccess, setTestSuccess] = useState(false);
@@ -102,9 +124,9 @@ export default function NotificationDrawer() {
             <button
               className={`btn-sm ${desktopNotifEnabled ? 'btn-active' : 'btn-ghost'}`}
               onClick={toggleDesktopNotif}
-              title="Toggle Browser Desktop Alerts"
+              title="Toggle Phone & Desktop Alerts based on location"
             >
-              🖥️ Desktop
+              📲 {desktopNotifEnabled ? 'Phone Alerts On' : 'Enable Phone Alerts'}
             </button>
           </div>
 
@@ -140,6 +162,11 @@ export default function NotificationDrawer() {
               const isSystemTest = notif.type === 'system_test';
               const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(notif.body || notif.headline)}`;
 
+              const distNM =
+                activeStation && notif.lat != null && notif.lon != null
+                  ? computeDistanceNM(activeStation.lat, activeStation.lon, notif.lat, notif.lon)
+                  : null;
+
               return (
                 <article
                   key={notif.id}
@@ -150,6 +177,12 @@ export default function NotificationDrawer() {
                       {isHigh ? '🚨 High' : notif.band === 'Medium' ? '⚠️ Medium' : 'ℹ️ Low'}
                       {notif.score ? ` • ${notif.score}` : ''}
                     </span>
+
+                    {distNM !== null && (
+                      <span className="notif-dist-pill" title={`Distance from ${activeStation?.name || 'Station'}`}>
+                        📍 {distNM} NM from {activeStation?.code || 'Base'}
+                      </span>
+                    )}
 
                     {isSystemTest && <span className="badge badge-stage">System Test</span>}
 

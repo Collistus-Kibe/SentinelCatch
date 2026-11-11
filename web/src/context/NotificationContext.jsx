@@ -100,16 +100,33 @@ export function NotificationProvider({ children }) {
         addToast(notif);
       }
 
-      // Optional desktop notification
-      if (desktopNotifEnabled && 'Notification' in window && Notification.permission === 'granted') {
-        try {
-          new Notification(notif.headline || 'SentinelCatch Alert', {
-            body: notif.body?.slice(0, 140) || 'New dark vessel detection',
-            icon: '/favicon.svg',
-            tag: `case-${notif.case_id || notif.id}`,
-          });
-        } catch (e) {
-          console.warn('Desktop notification error:', e);
+      // Mobile & Desktop System Notification (Supports ServiceWorker for Android & iOS PWAs)
+      if ('Notification' in window && Notification.permission === 'granted') {
+        const notifTitle = notif.headline || 'SentinelCatch Alert';
+        const notifBody = notif.body?.slice(0, 160) || 'New dark vessel detection in Kenya EEZ';
+        const notifOptions = {
+          body: notifBody,
+          icon: '/icons/icon-192.png',
+          badge: '/icons/icon-192.png',
+          tag: `case-${notif.case_id || notif.id}`,
+          vibrate: [200, 100, 200],
+          data: { url: '/' },
+        };
+
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.ready
+            .then((reg) => {
+              reg.showNotification(notifTitle, notifOptions);
+            })
+            .catch(() => {
+              try {
+                new Notification(notifTitle, notifOptions);
+              } catch {}
+            });
+        } else {
+          try {
+            new Notification(notifTitle, notifOptions);
+          } catch {}
         }
       }
     },
@@ -194,6 +211,16 @@ export function NotificationProvider({ children }) {
         window.dispatchEvent(new CustomEvent('sentinelcatch:officer_presence', { detail: data }));
       } catch (err) {
         console.warn('Malformed officer presence event:', err);
+      }
+    });
+
+    es.addEventListener('station_chat_message', (e) => {
+      setLastHeartbeat(Date.now());
+      try {
+        const data = JSON.parse(e.data);
+        window.dispatchEvent(new CustomEvent('sentinelcatch:station_chat_message', { detail: data }));
+      } catch (err) {
+        console.warn('Malformed station chat message event:', err);
       }
     });
 

@@ -9,13 +9,12 @@
  * ZERO synthetic or AI-generated mockups are used.
  */
 
-export const FALLBACK_REAL_PHOTO =
-  'https://upload.wikimedia.org/wikipedia/commons/4/41/Coastal_Patrol_Command_140810-N-IZ292-016_%2814891119516%29.jpg';
+export const FALLBACK_REAL_PHOTO = '/vessels/fallback.jpg';
 
 export const KNOWN_VESSELS = {
   'LU RONG YUAN YU 188': {
     name: 'LU RONG YUAN YU 188',
-    image: 'https://tmtracking.blob.core.windows.net/resized/mfv_361099_28143.png',
+    image: '/vessels/lu-rong-yuan-yu.jpg',
     flag: 'China',
     flagEmoji: '🇨🇳',
     type: 'Tuna Longliner',
@@ -99,7 +98,7 @@ export const KNOWN_VESSELS = {
   },
   'SL PACIFIC DAWN 02': {
     name: 'SL PACIFIC DAWN 02',
-    image: 'https://upload.wikimedia.org/wikipedia/commons/5/51/2022-04-08_LADY_ROSEBAY_-_IMO_9412751%2C_Bellingham_WA_USA.jpg',
+    image: '/vessels/sl-pacific-dawn.jpg',
     flag: 'Sierra Leone',
     flagEmoji: '🇸🇱',
     type: 'Reefer / Bulk Carrier',
@@ -194,7 +193,7 @@ export const KNOWN_VESSELS = {
   },
   'PACIFIC DAWN 02': {
     name: 'SL PACIFIC DAWN 02',
-    image: 'https://upload.wikimedia.org/wikipedia/commons/5/51/2022-04-08_LADY_ROSEBAY_-_IMO_9412751%2C_Bellingham_WA_USA.jpg',
+    image: '/vessels/sl-pacific-dawn.jpg',
     flag: 'Sierra Leone',
     flagEmoji: '🇸🇱',
     type: 'Reefer / Bulk Carrier',
@@ -278,7 +277,7 @@ export const KNOWN_VESSELS = {
   },
   'KIUNGA MARINE': {
     name: 'KIUNGA MARINE',
-    image: 'https://upload.wikimedia.org/wikipedia/commons/e/e0/Cargo_ship_Lady_Giselle_passing_under_the_Burrard_Bridge_in_Vancouver.jpg',
+    image: '/vessels/generic-dark-vessel.jpg',
     flag: 'Kenya',
     flagEmoji: '🇰🇪',
     type: 'Coastal Cargo',
@@ -320,7 +319,7 @@ export const KNOWN_VESSELS = {
   },
   'ALPHA TRADER': {
     name: 'ALPHA TRADER',
-    image: 'https://upload.wikimedia.org/wikipedia/commons/f/f0/General_cargo_ship_Wilson_Hobart_in_Brest_harbour.jpg',
+    image: '/vessels/alphard-star.jpg',
     flag: 'Panama',
     flagEmoji: '🇵🇦',
     type: 'General Cargo',
@@ -388,7 +387,7 @@ export const KNOWN_VESSELS = {
   },
   'FJORD STAR': {
     name: 'FJORD STAR',
-    image: 'https://upload.wikimedia.org/wikipedia/commons/5/51/2022-04-08_LADY_ROSEBAY_-_IMO_9412751%2C_Bellingham_WA_USA.jpg',
+    image: '/vessels/sl-pacific-dawn.jpg',
     flag: 'Liberia',
     flagEmoji: '🇱🇷',
     type: 'Reefer Vessel',
@@ -443,7 +442,7 @@ export const KNOWN_VESSELS = {
   },
   'MV OCEAN SPIRIT': {
     name: 'MV OCEAN SPIRIT',
-    image: 'https://upload.wikimedia.org/wikipedia/commons/3/37/Coastal_freighter_in_the_English_Channel.jpg',
+    image: '/vessels/pescador-vii.jpg',
     flag: 'Tanzania',
     flagEmoji: '🇹🇿',
     type: 'General Cargo',
@@ -483,7 +482,7 @@ export const KNOWN_VESSELS = {
   },
   'HAI FENG 68': {
     name: 'HAI FENG 68',
-    image: 'https://upload.wikimedia.org/wikipedia/commons/d/d6/Two_trawlers_in_S%C3%A8te.jpg',
+    image: '/vessels/hai-feng-68.jpg',
     flag: 'Panama',
     flagEmoji: '🇵🇦',
     type: 'Industrial Trawler',
@@ -551,7 +550,7 @@ export const KNOWN_VESSELS = {
   },
   'ZHOU YU 926': {
     name: 'ZHOU YU 926',
-    image: 'https://tmtracking.blob.core.windows.net/resized/mfv_353084_17536.jpg',
+    image: '/vessels/lu-rong-yuan-yu.jpg',
     flag: 'China',
     flagEmoji: '🇨🇳',
     type: 'Squid Jigger / Pelagic Longliner',
@@ -626,7 +625,7 @@ export const KNOWN_VESSELS = {
   },
   'AL-MARWAH': {
     name: 'AL-MARWAH',
-    image: 'https://upload.wikimedia.org/wikipedia/commons/7/70/Fishing_boat_safely_parked_-_geograph.org.uk_-_775572.jpg',
+    image: '/vessels/al-hilal-express.jpg',
     flag: 'Cook Islands',
     flagEmoji: '🇨🇰',
     type: 'Inshore Craft',
@@ -678,7 +677,7 @@ export const KNOWN_VESSELS = {
   },
   'TAI YUAN 227': {
     name: 'TAI YUAN 227',
-    image: 'https://upload.wikimedia.org/wikipedia/commons/a/a8/Longliner_Argenova-XXI.jpg',
+    image: '/vessels/tai-yuan-227.jpg',
     flag: 'Taiwan',
     flagEmoji: '🇹🇼',
     type: 'Tuna Longliner',
@@ -727,7 +726,7 @@ export const KNOWN_VESSELS = {
   },
   'SEA LION 8': {
     name: 'SEA LION 8',
-    image: 'https://tmtracking.blob.core.windows.net/resized/mfv_353084_17535.jpg',
+    image: '/vessels/shun-de-819.jpg',
     flag: 'Togo',
     flagEmoji: '🇹🇬',
     type: 'Reefer / Fuel Bunkering',
@@ -794,7 +793,7 @@ export const KNOWN_VESSELS = {
   },
   'OCEAN DRAGON 9': {
     name: 'OCEAN DRAGON 9',
-    image: 'https://upload.wikimedia.org/wikipedia/commons/2/2b/Al_Rahma_%28IMO_8607141%29_Las_Palmas_2023.jpg',
+    image: '/vessels/jin-hai-901.jpg',
     flag: 'China',
     flagEmoji: '🇨🇳',
     type: 'Deep-Sea Longliner',
@@ -854,7 +853,7 @@ export const KNOWN_VESSELS = {
   },
   'MV AL-HILAL': {
     name: 'MV AL-HILAL',
-    image: 'https://tmtracking.blob.core.windows.net/resized/mfv_353084_17534.jpg',
+    image: '/vessels/al-hilal-express.jpg',
     flag: 'Iran',
     flagEmoji: '🇮🇷',
     type: 'Pelagic Driftnetter',
@@ -921,7 +920,7 @@ export const KNOWN_VESSELS = {
   },
   'BARAKA 04': {
     name: 'BARAKA 04',
-    image: 'https://upload.wikimedia.org/wikipedia/commons/e/ed/Bunkering-or-taking-fuel.jpg',
+    image: '/vessels/generic-dark-vessel.jpg',
     flag: 'Sierra Leone',
     flagEmoji: '🇸🇱',
     type: 'Inshore Bunkering Craft',
@@ -988,46 +987,28 @@ export const KNOWN_VESSELS = {
  */
 export function getVesselPhoto(vesselName = '', gearType = '', mmsi = '', imo = '') {
   const norm = (vesselName || '').toUpperCase();
-
-  // Direct name match first (most accurate)
   for (const [key, data] of Object.entries(KNOWN_VESSELS)) {
     if (norm.includes(key) || key.includes(norm)) {
       return data.image;
     }
   }
 
-  // Fallback: match by partial keywords to real open database photos
   const lc = (vesselName + ' ' + gearType).toLowerCase();
-  if (lc.includes('baraka')) return KNOWN_VESSELS['BARAKA 04'].image;
-  if (lc.includes('sea lion')) return KNOWN_VESSELS['SEA LION 8'].image;
-  if (lc.includes('al-hilal') || lc.includes('hilal')) return KNOWN_VESSELS['MV AL-HILAL'].image;
-  if (lc.includes('al-marwah') || lc.includes('marwah')) return KNOWN_VESSELS['AL-MARWAH'].image;
-  if (lc.includes('ocean dragon')) return KNOWN_VESSELS['OCEAN DRAGON 9'].image;
-  if (lc.includes('tai yuan')) return KNOWN_VESSELS['TAI YUAN 227'].image;
-  if (lc.includes('lu rong') || lc.includes('yuan yu')) return KNOWN_VESSELS['LU RONG YUAN YU 188'].image;
-  if (lc.includes('pacific') || lc.includes('dawn')) return KNOWN_VESSELS['PACIFIC DAWN 02'].image;
-  if (lc.includes('hai feng')) return KNOWN_VESSELS['HAI FENG 68'].image;
-  if (lc.includes('zhou yu')) return KNOWN_VESSELS['ZHOU YU 926'].image;
-  if (lc.includes('kiunga')) return KNOWN_VESSELS['KIUNGA MARINE'].image;
-  if (lc.includes('alpha trader') || lc.includes('trader')) return KNOWN_VESSELS['ALPHA TRADER'].image;
-  if (lc.includes('fjord')) return KNOWN_VESSELS['FJORD STAR'].image;
-  if (lc.includes('spirit')) return KNOWN_VESSELS['MV OCEAN SPIRIT'].image;
-
-  // Gear type fallback to verified open database photos
-  if (lc.includes('trawler')) return KNOWN_VESSELS['HAI FENG 68'].image;
-  if (lc.includes('reefer') || lc.includes('bunkering')) return KNOWN_VESSELS['SEA LION 8'].image;
-  if (lc.includes('cargo') || lc.includes('bulk') || lc.includes('carrier') || lc.includes('freighter')) return KNOWN_VESSELS['ALPHA TRADER'].image;
-  if (lc.includes('longliner') || lc.includes('jigger') || lc.includes('squid')) return KNOWN_VESSELS['ZHOU YU 926'].image;
-  if (lc.includes('driftnet')) return KNOWN_VESSELS['MV AL-HILAL'].image;
-  if (lc.includes('fishing') || lc.includes('craft')) return KNOWN_VESSELS['AL-MARWAH'].image;
-
-  // Real naval reconnaissance photograph fallback from open database
+  if (lc.includes('tai yuan')) return '/vessels/tai-yuan-227.jpg';
+  if (lc.includes('lu rong') || lc.includes('yuan yu')) return '/vessels/lu-rong-yuan-yu.jpg';
+  if (lc.includes('pacific') || lc.includes('dawn')) return '/vessels/sl-pacific-dawn.jpg';
+  if (lc.includes('hai feng')) return '/vessels/hai-feng-68.jpg';
+  if (lc.includes('zhou yu')) return '/vessels/lu-rong-yuan-yu.jpg';
+  if (lc.includes('al-hilal') || lc.includes('hilal')) return '/vessels/al-hilal-express.jpg';
+  if (lc.includes('alpha trader')) return '/vessels/alphard-star.jpg';
+  if (lc.includes('dragon')) return '/vessels/jin-hai-901.jpg';
+  if (lc.includes('sea lion')) return '/vessels/shun-de-819.jpg';
+  if (lc.includes('trawler')) return '/vessels/hai-feng-68.jpg';
+  if (lc.includes('longliner') || lc.includes('tuna')) return '/vessels/tai-yuan-227.jpg';
+  if (lc.includes('tanker') || lc.includes('bunker')) return '/vessels/alphard-star.jpg';
   return FALLBACK_REAL_PHOTO;
 }
 
-/**
- * Get comprehensive photo metadata record including verified photo credit & title
- */
 export function getVesselPhotoMetadata(vesselName = '', gearType = '', mmsi = '', imo = '') {
   const norm = (vesselName || '').toUpperCase();
   for (const [key, data] of Object.entries(KNOWN_VESSELS)) {

@@ -585,4 +585,56 @@ router.patch('/patrol/dispatches/:id/status', async (req, res) => {
   });
 });
 
+// Station Patrol Comms & Chat Store
+const memStationChats = new Map();
+
+/**
+ * GET /api/patrol/station/:stationId/chat
+ * Retrieve live tactical patrol messages for a specific station
+ */
+router.get('/patrol/station/:stationId/chat', (req, res) => {
+  const { stationId } = req.params;
+  const messages = memStationChats.get(stationId) || [];
+  res.json({ success: true, count: messages.length, messages });
+});
+
+/**
+ * POST /api/patrol/station/:stationId/chat
+ * Send a patrol coordination message to all officers at the same station
+ */
+router.post('/patrol/station/:stationId/chat', (req, res) => {
+  const { stationId } = req.params;
+  const { officerName, officerJobId, rank, message } = req.body;
+
+  if (!message || !message.trim()) {
+    return res.status(400).json({ error: 'Message cannot be empty' });
+  }
+
+  const stationObj = KENYA_STATIONS.find((s) => s.id === stationId);
+  const stationName = stationObj ? stationObj.name : stationId;
+
+  const chatItem = {
+    id: `msg-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
+    stationId,
+    stationName,
+    officerName: officerName || 'Duty Officer',
+    officerJobId: officerJobId || 'KCGS',
+    rank: rank || 'Tactical Officer',
+    message: message.trim(),
+    timestamp: new Date().toISOString(),
+  };
+
+  const existing = memStationChats.get(stationId) || [];
+  memStationChats.set(stationId, [...existing, chatItem].slice(-100)); // Keep last 100
+
+  // Broadcast real-time to all connected officers via SSE
+  try {
+    broker.emit('station_chat_message', chatItem);
+  } catch (err) {
+    logger.warn({ err: err.message }, 'Failed to broadcast station chat message');
+  }
+
+  res.status(201).json({ success: true, message: chatItem });
+});
+
 export default router;

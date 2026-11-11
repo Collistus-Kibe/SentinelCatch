@@ -73,12 +73,17 @@ router.get('/stream', async (req, res) => {
     res.write(`event: officer_presence\ndata: ${JSON.stringify(data)}\n\n`);
   };
 
+  const onStationChat = (data) => {
+    res.write(`event: station_chat_message\ndata: ${JSON.stringify(data)}\n\n`);
+  };
+
   broker.on('notification', onNotification);
   broker.on('case_update', onCaseUpdate);
   broker.on('status', onStatus);
   broker.on('ais_tick', onAisTick);
   broker.on('patrol_dispatch', onPatrolDispatch);
   broker.on('officer_presence', onOfficerPresence);
+  broker.on('station_chat_message', onStationChat);
 
   // 25-second keepalive heartbeat comment
   const heartbeatInterval = setInterval(() => {
@@ -94,6 +99,7 @@ router.get('/stream', async (req, res) => {
     broker.off('ais_tick', onAisTick);
     broker.off('patrol_dispatch', onPatrolDispatch);
     broker.off('officer_presence', onOfficerPresence);
+    broker.off('station_chat_message', onStationChat);
     const remaining = broker.decrementClients();
     logger.info({ clientId, remaining }, 'Client disconnected from SSE stream');
   });

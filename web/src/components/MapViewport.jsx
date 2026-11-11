@@ -167,6 +167,8 @@ function generateHeatmapGeoJson(cases = [], mapLayersData = null) {
 export default function MapViewport({
   selectedCaseId,
   onSelectCase,
+  onSelectPin,
+  onOpenCaseDetails,
   cases = [],
   activeSector = 'all',
   activeView = 'tactical',
@@ -183,6 +185,31 @@ export default function MapViewport({
   const [layersLoaded, setLayersLoaded] = useState(false);
   const [mapLayersData, setMapLayersData] = useState(null);
   const [cursorCoords, setCursorCoords] = useState({ lat: -3.3500, lon: 40.2000 });
+
+  // Responsive ResizeObserver to guarantee MapLibre canvas resizes on mobile & orientation change
+  useEffect(() => {
+    if (!mapContainerRef.current) return;
+    const ro = new ResizeObserver(() => {
+      if (mapRef.current) {
+        mapRef.current.resize();
+      }
+    });
+    ro.observe(mapContainerRef.current);
+
+    const handleWindowResize = () => {
+      if (mapRef.current) {
+        mapRef.current.resize();
+      }
+    };
+    window.addEventListener('resize', handleWindowResize);
+    window.addEventListener('orientationchange', handleWindowResize);
+
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', handleWindowResize);
+      window.removeEventListener('orientationchange', handleWindowResize);
+    };
+  }, []);
 
   // Layer Visibility Toolbar State (Heatmap is FALSE by default to keep coast clean)
   const [visibleLayers, setVisibleLayers] = useState({
@@ -858,6 +885,11 @@ export default function MapViewport({
                 <span class="pin-sector-tag">🎯 <strong>${locLabel}</strong></span>
               </div>
 
+              <!-- Button to open right-side intel panel and dismiss pin -->
+              <button class="btn-pin-open-details" type="button" title="Open full forensic intelligence dossier">
+                <span>📋 Inspect Full Vessel Intel & Dossier ➔</span>
+              </button>
+
               <div class="pin-status-banner">
                 <span class="status-pulse-dot"></span>
                 <span class="status-text">${inMPA ? '⚠️ INSIDE MARINE PROTECTED AREA' : isIUU ? '⚠️ SUSPECTED IUU TRANSSHIPMENT' : '⚠️ HIGH THREAT CONTACT'}</span>
@@ -890,12 +922,26 @@ export default function MapViewport({
           });
         }
 
+        // Wire up inspect button: closes pin popup and opens right-side details panel
+        const detailsBtn = el.querySelector('.btn-pin-open-details');
+        if (detailsBtn) {
+          detailsBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (onOpenCaseDetails) {
+              onOpenCaseDetails(c.id);
+            } else if (onSelectCase) {
+              onSelectCase(c.id);
+            }
+          });
+        }
+
         // Wire up close button
         const closeBtn = el.querySelector('.pin-close-btn');
         if (closeBtn) {
           closeBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            onSelectCase(null);
+            if (onSelectPin) onSelectPin(null);
+            else if (onSelectCase) onSelectCase(null);
           });
         }
       } else {
@@ -917,10 +963,14 @@ export default function MapViewport({
         `;
       }
 
-      // Clicking any ship opens its rich pin and activates intel
+      // Clicking any ship chevron ONLY opens its pin card on the map
       el.addEventListener('click', (e) => {
         e.stopPropagation();
-        onSelectCase(c.id);
+        if (onSelectPin) {
+          onSelectPin(c.id);
+        } else if (onSelectCase) {
+          onSelectCase(c.id);
+        }
       });
 
       const marker = new maplibregl.Marker({
@@ -937,7 +987,7 @@ export default function MapViewport({
       markersRef.current.forEach((m) => m.remove());
       markersRef.current = [];
     };
-  }, [cases, activeSector, selectedCaseId, visibleLayers.cases, layersLoaded, onSelectCase]);
+  }, [cases, activeSector, selectedCaseId, visibleLayers.cases, layersLoaded, onSelectCase, onSelectPin, onOpenCaseDetails]);
 
   // Recenter gently when flyToCoords changes without altering the zoom angle
   useEffect(() => {

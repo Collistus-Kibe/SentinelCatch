@@ -7,6 +7,7 @@ import PatrolPlannerModal from '../components/PatrolPlannerModal.jsx';
 import AskSentinelCatchModal from '../components/AskSentinelCatchModal.jsx';
 import OfficerAuthModal from '../components/OfficerAuthModal.jsx';
 import InstallAppPrompt from '../components/InstallAppPrompt.jsx';
+import StationPatrolChat from '../components/StationPatrolChat.jsx';
 import LandscapeNotice from '../components/LandscapeNotice.jsx';
 import ErrorBoundary from '../components/ErrorBoundary.jsx';
 import { useNotifications } from '../context/NotificationContext.jsx';
@@ -28,7 +29,8 @@ export default function Home() {
   const t = getTranslation(language);
 
   const [cases, setCases] = useState([]);
-  const [selectedCaseId, setSelectedCaseId] = useState(null);
+  const [selectedCaseId, setSelectedCaseId] = useState(null);  // drives right-side CaseIntelPanel
+  const [selectedPinId, setSelectedPinId] = useState(null);    // drives map pin popup only
   const [selectedCase, setSelectedCase] = useState(null);
   const [activeSector, setActiveSector] = useState('all');
   const [activeView, setActiveView] = useState('tactical'); // 'tactical' | 'traceback'
@@ -38,7 +40,9 @@ export default function Home() {
   const [testToast, setTestToast] = useState(null);
   const [showPatrolModal, setShowPatrolModal] = useState(false);
   const [showChatModal, setShowChatModal] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() =>
+    typeof window !== 'undefined' ? window.innerWidth <= 900 : false
+  );
   const [utcClock, setUtcClock] = useState(() => {
     const d = new Date();
     return {
@@ -80,9 +84,32 @@ export default function Home() {
     fetchCases();
   }, [fetchCases]);
 
-  // Handle case selection
+  // Handle case selection (opens right-side intel panel AND flies map)
   const handleSelectCase = useCallback(
     (caseId) => {
+      setSelectedCaseId(caseId);
+      const found = cases.find((c) => c.id === caseId);
+      if (found) {
+        setSelectedCase(found);
+        const lat = found.features?.lat ?? found.lat;
+        const lon = found.features?.lon ?? found.lon;
+        if (lat !== undefined && lon !== undefined) {
+          setFlyToCoords({ lat, lon, caseId });
+        }
+      }
+    },
+    [cases]
+  );
+
+  // Handle selecting a pin ONLY on the map (does NOT open intel panel)
+  const handleSelectPin = useCallback((pinId) => {
+    setSelectedPinId(pinId);
+  }, []);
+
+  // "Inspect" clicked inside pin: close pin popup, open right-side intel panel
+  const handleOpenCaseDetails = useCallback(
+    (caseId) => {
+      setSelectedPinId(null);   // dismiss pin card on map
       setSelectedCaseId(caseId);
       const found = cases.find((c) => c.id === caseId);
       if (found) {
@@ -291,8 +318,10 @@ export default function Home() {
         {/* Center / Main: MapLibre Viewport */}
         <main className="ops-map-area">
           <MapViewport
-            selectedCaseId={selectedCaseId}
+            selectedCaseId={selectedPinId}
             onSelectCase={handleSelectCase}
+            onSelectPin={handleSelectPin}
+            onOpenCaseDetails={handleOpenCaseDetails}
             cases={cases}
             activeSector={activeSector}
             activeView={activeView}
@@ -308,6 +337,7 @@ export default function Home() {
             onReset={() => {
               setSelectedCase(null);
               setSelectedCaseId(null);
+              setSelectedPinId(null);
             }}
           >
             <CaseIntelPanel
@@ -317,6 +347,7 @@ export default function Home() {
               onClose={() => {
                 setSelectedCase(null);
                 setSelectedCaseId(null);
+                setSelectedPinId(null);
               }}
               onActionComplete={handleActionComplete}
               language={language}
@@ -326,6 +357,9 @@ export default function Home() {
       </div>
 
       {testToast && <div className="ops-test-banner">{testToast}</div>}
+
+      {/* Station Live Patrol Chat (shared per station via TiDB) */}
+      <StationPatrolChat />
 
       {/* Patrol Planner Modal */}
       <PatrolPlannerModal
