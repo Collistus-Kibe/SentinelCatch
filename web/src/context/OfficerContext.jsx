@@ -4,20 +4,8 @@ const OfficerContext = createContext(null);
 
 const STORAGE_KEY = 'sentinelcatch_officer_session';
 
-const DEFAULT_OFFICER = {
-  id: 'off-lamu-1',
-  name: 'Insp. David Kiprono',
-  jobId: 'KCGS-84920',
-  stationId: 'lamu',
-  stationCode: 'LAM-01',
-  stationName: 'Lamu Archipelago Tactical Command',
-  stationSector: 'Northern Coast / Somali Border',
-  agency: 'Kenya Coast Guard Service (KCGS)',
-  rank: 'Inspector / Tactical Commander',
-  status: 'on_duty',
-};
-
 export function OfficerProvider({ children }) {
+  // Real authenticated officer session (starts as null if not signed in)
   const [officer, setOfficer] = useState(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
@@ -25,13 +13,21 @@ export function OfficerProvider({ children }) {
     } catch (e) {
       console.warn('Failed to parse officer session:', e);
     }
-    return DEFAULT_OFFICER;
+    return null;
   });
 
   const [stations, setStations] = useState([]);
   const [stationDispatches, setStationDispatches] = useState([]);
   const [stationOfficers, setStationOfficers] = useState([]);
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  // If not signed in, the authentication gate opens automatically
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      return !saved;
+    } catch {
+      return true;
+    }
+  });
   const [loadingDispatches, setLoadingDispatches] = useState(false);
 
   // Fetch available Kenya stations on mount
@@ -49,15 +45,20 @@ export function OfficerProvider({ children }) {
     if (!stationId) return;
     setLoadingDispatches(true);
     try {
-      const [dispRes, rosterRes] = await Promise.all([
+      const [dispatchesRes, rosterRes] = await Promise.all([
         fetch(`/api/patrol/station/${stationId}/dispatches`),
         fetch(`/api/officers/roster?station=${stationId}`),
       ]);
-      const dispData = await dispRes.json();
-      const rosterData = await rosterRes.json();
 
-      if (dispData.dispatches) setStationDispatches(dispData.dispatches);
-      if (rosterData.officers) setStationOfficers(rosterData.officers);
+      if (dispatchesRes.ok) {
+        const dData = await dispatchesRes.json();
+        setStationDispatches(dData.dispatches || []);
+      }
+
+      if (rosterRes.ok) {
+        const rData = await rosterRes.json();
+        setStationOfficers(rData.officers || []);
+      }
     } catch (err) {
       console.warn('Failed to fetch station patrol data:', err);
     } finally {
@@ -71,71 +72,125 @@ export function OfficerProvider({ children }) {
     }
   }, [officer?.stationId, fetchStationData]);
 
-  // Listen to SSE patrol_dispatch and officer_presence events via window custom event or direct fetch poll
+  // Listen for real-time SSE patrol updates
   useEffect(() => {
     const handleSseDispatch = (e) => {
       const data = e.detail;
-      if (data && data.stationId === officer?.stationId) {
-        if (data.type === 'new_dispatch' && data.dispatch) {
-          setStationDispatches((prev) => [data.dispatch, ...prev.filter((d) => d.id !== data.dispatch.id)]);
-        } else if (data.type === 'status_update' && data.dispatch) {
+      if (!data) return;
+
+      if (officer && data.stationId === officer.stationId) {
+        if (data.type === 'dispatch_created') {
+          setStationDispatches((prev) => [data.dispatch, ...prev]);
+        } else if (data.type === 'status_updated') {
           setStationDispatches((prev) =>
-            prev.map((d) => (d.id === data.dispatch.id ? { ...d, ...data.dispatch } : d))
+            prev.map((d) => (d.id === data.dispatch.id ? data.dispatch : d))
           );
         }
       }
     };
 
-    window.addEventListener('sentinelcatch:patrol_dispatch', handleSseDispatch);
-    return () => window.removeEventListener('sentinelcatch:patrol_dispatch', handleSseDispatch);
-  }, [officer?.stationId]);
-
-  // Sign In / Register Officer
-  const signInOfficer = async ({ name, jobId, stationId, agency, rank }) => {
-    try {
-      const res = await fetch('/api/officers/signin', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, jobId, stationId, agency, rank }),
-      });
-      if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.error || 'Sign-in failed');
+    const handleSsePresence = (e) => {
+      const data = e.detail;
+      if (!data || !officer) return;
+      if (data.stationId === officer.stationId) {
+        fetchStationData(officer.stationId);
       }
-      const data = await res.json();
-      setOfficer(data.officer);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data.officer));
-      setIsAuthModalOpen(false);
-      fetchStationData(data.officer.stationId);
-      return data.officer;
-    } catch (err) {
-      console.error('Sign-in error:', err);
-      throw err;
-    }
-  };
+    };
 
-  // Sign out / clear session
-  const signOutOfficer = () => {
-    localStorage.removeItem(STORAGE_KEY);
-    setOfficer(null);
-  };
+    window.addEventListener('sentinelcatch:patrol_dispatch', handleSseDispatch);
+    window.addEventListener('sentinelcatch:officer_presence', handleSsePresence);
 
-  // Quick switch station
-  const switchStation = async (stationId) => {
-    if (!officer) return;
-    const target = stations.find((s) => s.id === stationId);
-    if (!target) return;
+    return () => {
+      window.removeEventListener('sentinelcatch:patrol_dispatch', handleSseDispatch);
+      window.removeEventListener('sentinelcatch:officer_presence', handleSsePresence);
+    };
+  }, [officer, fetchStationData]);
 
-    return signInOfficer({
-      name: officer.name,
-      jobId: officer.jobId,
-      stationId,
-      agency: officer.agency,
-      rank: officer.rank,
+  // Real officer registration (Sign Up) against TiDB database
+  const signUpOfficer = async ({ name, jobId, stationId, agency, rank, pin }) => {
+    const res = await fetch('/api/officers/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, jobId, stationId, agency, rank, pin }),
     });
+
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error || 'Failed to complete officer registration');
+    }
+
+    const newOfficer = data.officer;
+    setOfficer(newOfficer);
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(newOfficer));
+      localStorage.setItem('sentinelcatch_officer_name', newOfficer.name);
+    } catch {}
+
+    setIsAuthModalOpen(false);
+    if (newOfficer.stationId) {
+      fetchStationData(newOfficer.stationId);
+    }
+    return newOfficer;
   };
 
-  // Dispatch a new patrol mission under officer's station
+  // Real officer authentication (Sign In) against TiDB database
+  const signInOfficer = async ({ jobId, pin, stationId }) => {
+    const res = await fetch('/api/officers/signin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ jobId, pin, stationId }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error || 'Failed to verify officer credentials');
+    }
+
+    const verifiedOfficer = data.officer;
+    setOfficer(verifiedOfficer);
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(verifiedOfficer));
+      localStorage.setItem('sentinelcatch_officer_name', verifiedOfficer.name);
+    } catch {}
+
+    setIsAuthModalOpen(false);
+    if (verifiedOfficer.stationId) {
+      fetchStationData(verifiedOfficer.stationId);
+    }
+    return verifiedOfficer;
+  };
+
+  // Sign out officer
+  const signOutOfficer = () => {
+    setOfficer(null);
+    setStationDispatches([]);
+    setStationOfficers([]);
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem('sentinelcatch_officer_name');
+    } catch {}
+    setIsAuthModalOpen(true);
+  };
+
+  // Switch Station assignment
+  const switchStation = async (newStationId) => {
+    if (!officer) return;
+    const stObj = stations.find((s) => s.id === newStationId);
+    const updated = {
+      ...officer,
+      stationId: newStationId,
+      stationName: stObj ? stObj.name : officer.stationName,
+      stationCode: stObj ? stObj.code : officer.stationCode,
+      stationSector: stObj ? stObj.sector : officer.stationSector,
+    };
+    setOfficer(updated);
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    } catch {}
+    fetchStationData(newStationId);
+  };
+
+  // Dispatch a new patrol mission to the current station
   const dispatchPatrol = async (dispatchPayload) => {
     if (!officer?.stationId) throw new Error('You must be signed into a station to dispatch a patrol');
 
@@ -154,46 +209,53 @@ export function OfficerProvider({ children }) {
       throw new Error(err.error || 'Failed to dispatch patrol');
     }
 
-    const data = await res.json();
-    setStationDispatches((prev) => [data.dispatch, ...prev.filter((d) => d.id !== data.dispatch.id)]);
-    return data.dispatch;
+    const result = await res.json();
+    if (result.dispatch) {
+      setStationDispatches((prev) => [result.dispatch, ...prev]);
+    }
+    return result;
   };
 
-  // Advance status of a patrol mission (DEPLOYED -> ON_SCENE -> BOARDING -> COMPLETED)
-  const updatePatrolStatus = async (dispatchId, newStatus, note = '') => {
+  // Update status of an active mission
+  const updatePatrolStatus = async (dispatchId, status, note = '') => {
     const res = await fetch(`/api/patrol/dispatches/${dispatchId}/status`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        status: newStatus,
-        note,
-        updatedBy: `${officer?.name || 'Officer'} (${officer?.jobId || 'DUTY'})`,
-      }),
+      body: JSON.stringify({ status, note }),
     });
 
     if (!res.ok) {
       const err = await res.json();
-      throw new Error(err.error || 'Failed to update status');
+      throw new Error(err.error || 'Failed to update dispatch status');
     }
 
-    const data = await res.json();
-    setStationDispatches((prev) =>
-      prev.map((d) => (d.id === data.dispatch.id ? { ...d, ...data.dispatch } : d))
-    );
-    return data.dispatch;
+    const result = await res.json();
+    if (result.dispatch) {
+      setStationDispatches((prev) =>
+        prev.map((d) => (d.id === dispatchId ? result.dispatch : d))
+      );
+    }
+    return result;
   };
 
   return (
     <OfficerContext.Provider
       value={{
         officer,
+        isAuthenticated: Boolean(officer && officer.jobId),
         stations,
         stationDispatches,
         stationOfficers,
         loadingDispatches,
         isAuthModalOpen,
         openAuthModal: () => setIsAuthModalOpen(true),
-        closeAuthModal: () => setIsAuthModalOpen(false),
+        closeAuthModal: () => {
+          // If officer is signed in, allow closing. If not signed in, keep gate open.
+          if (officer && officer.jobId) {
+            setIsAuthModalOpen(false);
+          }
+        },
+        signUpOfficer,
         signInOfficer,
         signOutOfficer,
         switchStation,
@@ -214,6 +276,3 @@ export function useOfficer() {
   }
   return context;
 }
-
-export default OfficerContext;
-

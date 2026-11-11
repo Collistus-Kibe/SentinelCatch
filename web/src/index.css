@@ -7061,66 +7061,50 @@ a.cand-tag:hover {
   color: #38bdf8;
 }
 
-/* Presets Section */
-.officer-presets-section {
-  padding: 14px 20px 0 20px;
-}
-
-.presets-label {
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: #fbbf24;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  display: block;
-  margin-bottom: 8px;
-}
-
-.presets-chips-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 8px;
-}
-
-.preset-chip-btn {
-  background: rgba(15, 23, 42, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 8px 10px;
-  border-radius: 6px;
-  cursor: pointer;
-  text-align: left;
+/* Tabs: Sign In vs Sign Up */
+.officer-tabs-row {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  margin: 14px 20px 0 20px;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 3px;
+  gap: 4px;
+}
+
+.officer-tab-btn {
+  flex: 1;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: #94a3b8;
+  font-family: inherit;
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
   transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 }
 
-.preset-chip-btn:hover {
-  background: rgba(16, 185, 129, 0.12);
-  border-color: rgba(16, 185, 129, 0.4);
+.officer-tab-btn:hover {
+  color: #f1f5f9;
+  background: rgba(255, 255, 255, 0.05);
 }
 
-.preset-chip-btn.active {
-  background: rgba(16, 185, 129, 0.2);
-  border-color: rgba(16, 185, 129, 0.7);
+.officer-tab-btn.active {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(2, 132, 199, 0.25));
+  border: 1px solid rgba(16, 185, 129, 0.5);
+  color: #f8fafc;
   box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
 }
 
-.preset-badge {
-  font-size: 0.68rem;
-  font-weight: 700;
-  color: #38bdf8;
-}
-
-.preset-name {
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: #f1f5f9;
-}
-
-.preset-role {
-  font-size: 0.65rem;
-  color: #94a3b8;
+.gate-notice {
+  background: linear-gradient(135deg, rgba(234, 88, 12, 0.15), rgba(2, 132, 199, 0.15)) !important;
+  border-color: rgba(249, 115, 22, 0.45) !important;
 }
 
 /* Form Styles */

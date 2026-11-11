@@ -206,6 +206,51 @@ async function initMysqlSchema() {
       ) ENGINE=InnoDB;
     `);
 
+    await mysqlPool.query(`
+      CREATE TABLE IF NOT EXISTS officers (
+        id VARCHAR(64) PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        job_id VARCHAR(100) NOT NULL UNIQUE,
+        station_id VARCHAR(50) NOT NULL,
+        station_name VARCHAR(255) NOT NULL,
+        station_code VARCHAR(50) NOT NULL,
+        agency VARCHAR(255) NOT NULL,
+        rank_role VARCHAR(255) NOT NULL,
+        pin VARCHAR(255) NOT NULL,
+        status VARCHAR(50) NOT NULL DEFAULT 'on_duty',
+        last_active DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX idx_station (station_id),
+        INDEX idx_job_id (job_id)
+      ) ENGINE=InnoDB;
+    `);
+
+    await mysqlPool.query(`
+      CREATE TABLE IF NOT EXISTS patrol_dispatches (
+        id VARCHAR(64) PRIMARY KEY,
+        dispatch_code VARCHAR(100) NOT NULL,
+        station_id VARCHAR(50) NOT NULL,
+        station_name VARCHAR(255) NOT NULL,
+        officer_name VARCHAR(255) NOT NULL,
+        officer_job_id VARCHAR(100) NOT NULL,
+        asset_id VARCHAR(100) NOT NULL,
+        asset_name VARCHAR(255) NOT NULL,
+        target_vessel_name VARCHAR(255),
+        target_coords VARCHAR(100),
+        total_distance_nm DOUBLE,
+        estimated_fuel_liters DOUBLE,
+        eta_formatted VARCHAR(100),
+        speed_knots DOUBLE,
+        legs JSON,
+        status VARCHAR(50) NOT NULL DEFAULT 'DEPLOYED',
+        notes TEXT,
+        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_dispatch_station (station_id),
+        INDEX idx_dispatch_status (status)
+      ) ENGINE=InnoDB;
+    `);
+
     dbInitialized = true;
     logger.info('TiDB schema initialized successfully');
   } catch (err) {
