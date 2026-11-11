@@ -1,25 +1,46 @@
 {
-  "name": "SentinelCatch",
+  "name": "SentinelCatch Maritime Tactical Operations",
   "short_name": "SentinelCatch",
-  "description": "Dark vessel detection and alerting for Kenya's EEZ",
+  "description": "Kenya EEZ Dark Vessel Tactical Surveillance & Intercept Platform",
   "start_url": "/",
+  "id": "/",
   "display": "standalone",
-  "background_color": "#0a0f1a",
-  "theme_color": "#0f172a",
-  "orientation": "portrait-primary",
+  "display_override": [
+    "fullscreen",
+    "standalone"
+  ],
+  "orientation": "landscape",
+  "background_color": "#070c18",
+  "theme_color": "#0b1324",
   "icons": [
     {
       "src": "/icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
     },
     {
       "src": "/icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ],
-  "categories": ["government", "productivity"]
+  "categories": [
+    "government",
+    "productivity",
+    "navigation"
+  ]
 }

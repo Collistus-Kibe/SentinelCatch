@@ -7287,3 +7287,162 @@ a.cand-tag:hover {
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+
+/* ==========================================================================
+   PWA & MOBILE HORIZONTAL GAME-MODE ROTATION STYLES
+   ========================================================================== */
+
+.btn-install-pwa {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, rgba(2, 132, 199, 0.25), rgba(16, 185, 129, 0.25));
+  border: 1px solid rgba(56, 189, 248, 0.5);
+  padding: 5px 10px;
+  border-radius: 6px;
+  color: #38bdf8;
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);
+}
+
+.btn-install-pwa:hover {
+  background: linear-gradient(135deg, rgba(2, 132, 199, 0.45), rgba(16, 185, 129, 0.45));
+  color: #ffffff;
+  border-color: #34d399;
+  box-shadow: 0 0 14px rgba(52, 211, 153, 0.4);
+}
+
+.pwa-icon {
+  font-size: 0.85rem;
+}
+
+.pwa-label {
+  white-space: nowrap;
+}
+
+/* Landscape Rotation Game-Mode Overlay for Mobile */
+.mobile-rotate-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(7, 12, 24, 0.94);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.rotate-content-box {
+  background: #0b1324;
+  border: 1.5px solid rgba(56, 189, 248, 0.4);
+  border-radius: 16px;
+  padding: 28px 24px;
+  max-width: 380px;
+  width: 100%;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(56, 189, 248, 0.2);
+}
+
+.rotate-animation-container {
+  position: relative;
+  width: 90px;
+  height: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+.phone-device-icon {
+  width: 44px;
+  height: 70px;
+  border: 2.5px solid #38bdf8;
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.4);
+  animation: phoneRotateAnim 3.2s ease-in-out infinite;
+  transform-origin: center center;
+}
+
+.phone-screen-radar {
+  font-size: 1.3rem;
+}
+
+.rotate-indicator-arrow {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  font-size: 1.4rem;
+  animation: spinArrow 4s linear infinite;
+}
+
+@keyframes phoneRotateAnim {
+  0%, 15% {
+    transform: rotate(0deg);
+  }
+  45%, 70% {
+    transform: rotate(90deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes spinArrow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.rotate-title {
+  color: #f8fafc;
+  font-size: 1.15rem;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: 0.3px;
+}
+
+.rotate-desc {
+  color: #94a3b8;
+  font-size: 0.76rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.rotate-action-row {
+  margin-top: 6px;
+  width: 100%;
+}
+
+.btn-rotate-dismiss {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #64748b;
+  font-size: 0.7rem;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-rotate-dismiss:hover {
+  color: #cbd5e1;
+  border-color: rgba(255, 255, 255, 0.3);
+}

@@ -6,6 +6,8 @@ import NotificationBell from '../components/NotificationBell.jsx';
 import PatrolPlannerModal from '../components/PatrolPlannerModal.jsx';
 import AskSentinelCatchModal from '../components/AskSentinelCatchModal.jsx';
 import OfficerAuthModal from '../components/OfficerAuthModal.jsx';
+import InstallAppPrompt from '../components/InstallAppPrompt.jsx';
+import LandscapeNotice from '../components/LandscapeNotice.jsx';
 import ErrorBoundary from '../components/ErrorBoundary.jsx';
 import { useNotifications } from '../context/NotificationContext.jsx';
 import { useOfficer } from '../context/OfficerContext.jsx';
@@ -251,6 +253,9 @@ export default function Home() {
             <span>{language === 'en' ? 'EN' : 'SW'}</span>
           </button>
 
+          {/* Web App Install Button for Mobile/Desktop */}
+          <InstallAppPrompt />
+
           {/* Officer HUD Button */}
           <button
             className="btn-officer-hud"
@@ -338,6 +343,9 @@ export default function Home() {
 
       {/* Officer Station Authentication Modal */}
       <OfficerAuthModal isOpen={isAuthModalOpen} onClose={closeAuthModal} />
+
+      {/* Mobile Landscape Game Mode Rotation Prompt */}
+      <LandscapeNotice />
     </div>
   );
 }
