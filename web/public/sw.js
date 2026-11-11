@@ -1,5 +1,5 @@
 // SentinelCatch Tactical Web App Service Worker
-const CACHE_NAME = 'sentinelcatch-v1';
+const CACHE_NAME = 'sentinelcatch-v2';
 const ASSETS_TO_CACHE = [
   '/',
   '/manifest.json',
@@ -34,6 +34,13 @@ self.addEventListener('activate', (event) => {
 // Network-first strategy for live operations and SSE feeds
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
+
+  // CRITICAL: NEVER intercept cross-origin requests (ArcGIS satellite tiles, MapLibre WebGL, external CDNs)
+  // Intercepting cross-origin requests in a ServiceWorker creates opaque responses
+  // which causes WebGL to fail with 'The cross-origin image may not be loaded' in mobile Chrome/Safari.
+  if (url.origin !== self.location.origin) {
+    return;
+  }
 
   // Skip caching API and SSE streaming endpoints so data is always real-time
   if (url.pathname.startsWith('/api') || event.request.headers.get('accept')?.includes('text/event-stream')) {

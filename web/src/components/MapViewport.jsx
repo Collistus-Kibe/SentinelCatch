@@ -14,31 +14,39 @@ const MARITIME_MASTER_STYLE = {
       type: 'raster',
       tiles: [
         'https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+        'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
       ],
       tileSize: 256,
       attribution: 'Esri, Maxar, Earthstar Geographics, CNES/Airbus DS',
+      maxzoom: 18,
     },
     'esri-satellite-labels': {
       type: 'raster',
       tiles: [
         'https://services.arcgisonline.com/arcgis/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
+        'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
       ],
       tileSize: 256,
+      maxzoom: 18,
     },
     'esri-dark-tiles': {
       type: 'raster',
       tiles: [
         'https://services.arcgisonline.com/arcgis/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+        'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
       ],
       tileSize: 256,
       attribution: 'Esri, HERE, Garmin, OpenStreetMap contributors',
+      maxzoom: 18,
     },
     'esri-dark-labels': {
       type: 'raster',
       tiles: [
         'https://services.arcgisonline.com/arcgis/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}',
+        'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}',
       ],
       tileSize: 256,
+      maxzoom: 18,
     },
   },
   layers: [
@@ -256,6 +264,9 @@ export default function MapViewport({
       attributionControl: false,
     });
 
+    // CRITICAL: Set mapRef immediately so ResizeObserver and orientation listeners can trigger map.resize()
+    mapRef.current = map;
+
     map.on('error', (e) => {
       console.warn('MapLibre event note:', e.error?.message || e);
     });
@@ -269,18 +280,45 @@ export default function MapViewport({
       }
     });
 
-    map.on('load', () => {
-      mapRef.current = map;
+    // Listen to BOTH style.load and load so layers and tiles render immediately on mobile
+    const onReady = () => {
       setLayersLoaded(true);
       map.resize();
-    });
+    };
 
-    const resizeTimer = setTimeout(() => {
+    if (map.isStyleLoaded()) {
+      onReady();
+    } else {
+      map.once('style.load', onReady);
+      map.once('load', onReady);
+    }
+
+    // WebGL Context Lost / Restored handling for mobile devices
+    const canvas = map.getCanvas();
+    const handleContextLost = (e) => {
+      e.preventDefault();
+      console.warn('MapLibre WebGL context lost on mobile');
+    };
+    const handleContextRestored = () => {
+      console.log('MapLibre WebGL context restored');
       map.resize();
-    }, 250);
+    };
+    canvas?.addEventListener('webglcontextlost', handleContextLost);
+    canvas?.addEventListener('webglcontextrestored', handleContextRestored);
+
+    // Staggered resize timeouts to handle mobile orientation change and layout settling
+    const timers = [
+      setTimeout(() => map.resize(), 50),
+      setTimeout(() => map.resize(), 150),
+      setTimeout(() => map.resize(), 350),
+      setTimeout(() => map.resize(), 800),
+      setTimeout(() => map.resize(), 1600),
+    ];
 
     return () => {
-      clearTimeout(resizeTimer);
+      timers.forEach(clearTimeout);
+      canvas?.removeEventListener('webglcontextlost', handleContextLost);
+      canvas?.removeEventListener('webglcontextrestored', handleContextRestored);
       markersRef.current.forEach((m) => m.remove());
       markersRef.current = [];
       map.remove();
