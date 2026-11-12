@@ -39,6 +39,18 @@ const MARITIME_MASTER_STYLE = {
       attribution: 'Esri, HERE, Garmin, OpenStreetMap contributors',
       maxzoom: 18,
     },
+    'carto-dark-tiles': {
+      type: 'raster',
+      tiles: [
+        'https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png',
+        'https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png',
+        'https://c.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png',
+        'https://d.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png',
+      ],
+      tileSize: 256,
+      attribution: '© CARTO, © OpenStreetMap contributors',
+      maxzoom: 19,
+    },
     'esri-dark-labels': {
       type: 'raster',
       tiles: [
@@ -76,7 +88,7 @@ const MARITIME_MASTER_STYLE = {
     {
       id: 'dark-base',
       type: 'raster',
-      source: 'esri-dark-tiles',
+      source: 'carto-dark-tiles',
       minzoom: 0,
       maxzoom: 19,
       layout: { visibility: 'none' },
@@ -280,8 +292,11 @@ export default function MapViewport({
       }
     });
 
-    // Listen to BOTH style.load and load so layers and tiles render immediately on mobile
+    // Listen to style events and load so layers and tiles render immediately on mobile
+    let readyFired = false;
     const onReady = () => {
+      if (readyFired) return;
+      readyFired = true;
       setLayersLoaded(true);
       map.resize();
     };
@@ -291,7 +306,14 @@ export default function MapViewport({
     } else {
       map.once('style.load', onReady);
       map.once('load', onReady);
+      map.once('styledata', onReady);
+      map.once('render', onReady);
     }
+
+    // Safety fallback timer guarantees layers & markers render even on slow cellular networks
+    const fallbackTimer = setTimeout(() => {
+      onReady();
+    }, 400);
 
     // WebGL Context Lost / Restored handling for mobile devices
     const canvas = map.getCanvas();
@@ -316,6 +338,7 @@ export default function MapViewport({
     ];
 
     return () => {
+      clearTimeout(fallbackTimer);
       timers.forEach(clearTimeout);
       canvas?.removeEventListener('webglcontextlost', handleContextLost);
       canvas?.removeEventListener('webglcontextrestored', handleContextRestored);
@@ -1042,8 +1065,8 @@ export default function MapViewport({
   }, [flyToCoords]);
 
   return (
-    <div className="map-wrapper" style={{ position: 'relative', width: '100%', height: '100%' }}>
-      <div ref={mapContainerRef} style={{ width: '100%', height: '100%' }} />
+    <div className="map-wrapper" style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden' }}>
+      <div ref={mapContainerRef} style={{ width: '100%', height: '100%', position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />
 
       {/* Floating Center-Top HUD Toolbar */}
       <div className="map-hud-toolbar">

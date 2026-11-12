@@ -1,5 +1,5 @@
 // SentinelCatch Tactical Web App Service Worker
-const CACHE_NAME = 'sentinelcatch-v2';
+const CACHE_NAME = 'sentinelcatch-v3';
 const ASSETS_TO_CACHE = [
   '/',
   '/manifest.json',

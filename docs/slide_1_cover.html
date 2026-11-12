@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SentinelCatch — Redesigned Slide 1 (High-Design Graphic)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background: #090e17;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+      padding: 24px;
+    }
+
+    .slide-canvas {
+      width: 1280px;
+      height: 720px;
+      max-width: 100%;
+      aspect-ratio: 16 / 9;
+      background: #ffffff;
+      border-radius: 20px;
+      overflow: hidden;
+      display: flex;
+      box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.1);
+      position: relative;
+    }
+
+    /* Left Half: Pure UI / Tactical Satellite Radar Graphic */
+    .slide-left {
+      width: 50%;
+      height: 100%;
+      background: #081120;
+      position: relative;
+      overflow: hidden;
+      padding: 48px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    /* Radar Rings Pattern */
+    .radar-background {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 50% 48%, transparent 80px, rgba(14, 165, 233, 0.08) 81px, transparent 82px),
+        radial-gradient(circle at 50% 48%, transparent 160px, rgba(14, 165, 233, 0.08) 161px, transparent 162px),
+        radial-gradient(circle at 50% 48%, transparent 240px, rgba(14, 165, 233, 0.08) 241px, transparent 242px),
+        radial-gradient(circle at 50% 48%, transparent 320px, rgba(14, 165, 233, 0.06) 321px, transparent 322px);
+      pointer-events: none;
+    }
+
+    .orbit-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(14, 165, 233, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.74rem;
+      font-weight: 700;
+      color: #38bdf8;
+      letter-spacing: 0.04em;
+      position: relative;
+      z-index: 2;
+      align-self: flex-start;
+    }
+
+    /* Smartphone Mockup Frame */
+    .phone-mockup {
+      width: 100%;
+      height: 380px;
+      background: #0d1a2d;
+      border-radius: 22px;
+      border: 2px solid rgba(56, 189, 248, 0.4);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 30px rgba(14, 165, 233, 0.15);
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      margin: auto 0;
+    }
+
+    .phone-top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 18px;
+      background: #0b1526;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #94a3b8;
+    }
+    .phone-top-bar .live-chip {
+      color: #10b981;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .phone-top-bar .pulse-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 8px #10b981;
+    }
+
+    .phone-screen-content {
+      flex: 1;
+      padding: 20px;
+      position: relative;
+      background: radial-gradient(circle at 70% 40%, rgba(14, 165, 233, 0.15) 0%, transparent 60%);
+    }
+
+    /* Suspect Target Alert Box */
+    .suspect-alert-box {
+      background: rgba(15, 23, 42, 0.94);
+      border: 1.5px solid #ef4444;
+      border-radius: 12px;
+      padding: 14px 16px;
+      box-shadow: 0 10px 30px rgba(239, 68, 68, 0.25);
+      max-width: 320px;
+      position: absolute;
+      right: 20px;
+      top: 30px;
+    }
+    .alert-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .alert-badge {
+      background: #ef4444;
+      color: #ffffff;
+      font-size: 0.68rem;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.03em;
+    }
+    .risk-score {
+      color: #ef4444;
+      font-weight: 800;
+      font-size: 0.82rem;
+    }
+    .target-name {
+      color: #f8fafc;
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+    .target-meta {
+      color: #38bdf8;
+      font-size: 0.72rem;
+      font-family: 'JetBrains Mono', monospace;
+      margin-top: 4px;
+    }
+    .target-action {
+      margin-top: 10px;
+      background: linear-gradient(135deg, #0284c7, #10b981);
+      color: #ffffff;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 6px 12px;
+      border-radius: 6px;
+      text-align: center;
+      cursor: pointer;
+    }
+
+    /* Radar Target Blip */
+    .target-blip {
+      position: absolute;
+      left: 70px;
+      top: 130px;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: rgba(239, 68, 68, 0.25);
+      border: 2px solid #ef4444;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .target-blip-core {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #ef4444;
+      box-shadow: 0 0 10px #ef4444;
+    }
+    .target-pointer-line {
+      position: absolute;
+      left: 94px;
+      top: 142px;
+      width: 140px;
+      height: 2px;
+      background: dashed 1px #ef4444;
+      border-top: 1.5px dashed rgba(239, 68, 68, 0.7);
+      transform: rotate(-18deg);
+      transform-origin: left center;
+    }
+
+    .bottom-promise-bar {
+      position: relative;
+      z-index: 2;
+      background: rgba(15, 23, 42, 0.75);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 12px 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .promise-text h5 {
+      color: #f8fafc;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+    .promise-text p {
+      color: #94a3b8;
+      font-size: 0.72rem;
+      margin-top: 2px;
+    }
+
+    /* Right Half: Airbnb Minimalist Typography */
+    .slide-right {
+      width: 50%;
+      height: 100%;
+      background: #ffffff;
+      padding: 64px 56px 52px 56px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .brand-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .brand-icon-box {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #0284c7, #10b981);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 20px rgba(2, 132, 199, 0.3);
+    }
+    .brand-icon-box svg {
+      width: 24px;
+      height: 24px;
+      stroke: #ffffff;
+    }
+    .brand-name {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.55rem;
+      font-weight: 700;
+      color: #0f172a;
+      letter-spacing: -0.02em;
+    }
+
+    .hero-copy-block {
+      margin-top: auto;
+      margin-bottom: auto;
+    }
+    .slide-category-tag {
+      font-size: 0.76rem;
+      font-weight: 700;
+      color: #0284c7;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 16px;
+    }
+    .pitch-deck-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 2.85rem;
+      font-weight: 700;
+      color: #0f172a;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      margin-bottom: 24px;
+    }
+
+    .punchy-airbnb-quote {
+      font-size: 1.35rem;
+      font-weight: 500;
+      line-height: 1.45;
+      color: #334155;
+      border-left: 4px solid #0284c7;
+      padding-left: 20px;
+      margin-bottom: 22px;
+    }
+    .punchy-airbnb-quote strong {
+      color: #0f172a;
+      font-weight: 700;
+    }
+
+    .subtitle-text {
+      font-size: 0.95rem;
+      color: #64748b;
+      line-height: 1.5;
+      margin-bottom: 22px;
+    }
+
+    .feature-pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .feature-pill {
+      background: #f1f5f9;
+      color: #1e293b;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 5px 12px;
+      border-radius: 20px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .slide-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid #e2e8f0;
+      padding-top: 18px;
+    }
+    .footer-item-label {
+      font-size: 0.68rem;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 600;
+    }
+    .footer-item-val {
+      font-size: 0.85rem;
+      color: #1e293b;
+      font-weight: 700;
+      margin-top: 2px;
+    }
+    .footer-badge {
+      background: #f1f5f9;
+      color: #0f172a;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="slide-canvas">
+
+    <!-- Left Half: Tactical Mobile Radar Visual -->
+    <div class="slide-left">
+      <div class="radar-background"></div>
+
+      <div class="orbit-tag">
+        <span>🛰️</span>
+        <span>SENTINEL-1 SAR SATELLITE ORBIT ACTIVE</span>
+      </div>
+
+      <!-- Smartphone Handheld HUD Mockup -->
+      <div class="phone-mockup">
+        <div class="phone-top-bar">
+          <div class="live-chip">
+            <span class="pulse-dot"></span>
+            <span>SentinelCatch Mobile HUD</span>
+          </div>
+          <span>UTC 16:40</span>
+          <span>LAM-01 📶</span>
+        </div>
+
+        <div class="phone-screen-content">
+          <!-- Radar Blip -->
+          <div class="target-blip">
+            <div class="target-blip-core"></div>
+          </div>
+          <div class="target-pointer-line"></div>
+
+          <!-- Alert Card -->
+          <div class="suspect-alert-box">
+            <div class="alert-header">
+              <span class="alert-badge">⚠️ DARK VESSEL INVASION</span>
+              <span class="risk-score">RISK: 92/100</span>
+            </div>
+            <div class="target-name">LU RONG YUAN YU 188</div>
+            <div class="target-meta">44.5m Longliner · 1.95°S, 41.32°E</div>
+            <div class="target-meta" style="color: #ef4444;">AIS Transponder: POWERED OFF</div>
+            <div class="target-action">⚡ DISPATCH PATROL INTERCEPT</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bottom-promise-bar">
+        <div class="promise-text">
+          <h5>100% Zero-Hardware Maritime Awareness</h5>
+          <p>Replaces expensive naval radar towers with orbital synthetic aperture radar.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Half: Airbnb Minimalist Copy -->
+    <div class="slide-right">
+      
+      <div class="brand-row">
+        <div class="brand-icon-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+        </div>
+        <span class="brand-name">SentinelCatch</span>
+      </div>
+
+      <div class="hero-copy-block">
+        <div class="slide-category-tag">Inter-University Hackathon Finals</div>
+        <h1 class="pitch-deck-title">SentinelCatch Pitch Deck</h1>
+
+        <p class="punchy-airbnb-quote">
+          “Catching illegal dark vessels from the <strong>palm of a Kenyan officer’s hand</strong>.”
+        </p>
+
+        <p class="subtitle-text">
+          Empowering Kenyan Maritime Enforcement with Zero-License Satellite Intelligence.
+        </p>
+
+        <div class="feature-pill-row">
+          <span class="feature-pill">🛰️ Zero Hardware</span>
+          <span class="feature-pill">📱 Smartphone PWA</span>
+          <span class="feature-pill">🛡️ Dark Vessel SAR</span>
+          <span class="feature-pill">⚡ Real-Time TiDB Mesh</span>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <div>
+          <div class="footer-item-label">Competition Track</div>
+          <div class="footer-item-val">Blue Economy & AI Geospatial Innovation</div>
+        </div>
+        <div>
+          <div class="footer-item-label">Deployment</div>
+          <div class="footer-item-val">Handheld PWA & Command HUD</div>
+        </div>
+        <div class="footer-badge">🇰🇪 Kenya EEZ</div>
+      </div>
+
+    </div>
+
+  </div>
+
+</body>
+</html>

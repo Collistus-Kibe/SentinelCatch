@@ -4466,6 +4466,19 @@ a.cand-tag:hover {
    Operational C2 Dark Theme · High-Density Geospatial Surveillance
    ═══════════════════════════════════════════════════════════════════════ */
 
+/* ── Global Operations C2 Layout ──────────────────────────────────── */
+.operations-layout {
+  display: flex;
+  flex-direction: column;
+  width: 100vw;
+  max-width: 100vw;
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+  position: relative;
+  background: #080d1a;
+}
+
 /* ── Global Header Redesign ────────────────────────────────────────── */
 .ops-header {
   height: 52px !important;
@@ -4476,6 +4489,17 @@ a.cand-tag:hover {
   align-items: center !important;
   justify-content: space-between !important;
   z-index: 100 !important;
+  width: 100% !important;
+  max-width: 100vw !important;
+  overflow: hidden !important;
+  flex-shrink: 0 !important;
+}
+
+.ops-header-right {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-shrink: 0;
 }
 
 .logo-brand-block {
@@ -4575,20 +4599,30 @@ a.cand-tag:hover {
   font-size: 0.76rem;
 }
 
-@media (max-width: 900px) {
-  .btn-label-desktop {
-    display: none;
-  }
+.tab-label-short {
+  display: none;
 }
 
 /* ── Workspace & Sidebar Layout ────────────────────────────────────── */
 .ops-workspace {
   display: flex;
   flex: 1;
+  width: 100%;
+  max-width: 100vw;
   height: calc(100dvh - 52px) !important;
   position: relative;
   overflow: hidden;
   background: #080d1a;
+}
+
+.ops-map-area {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  display: flex;
 }
 
 .ops-workspace.sidebar-is-collapsed .case-feed-sidebar:not(.is-collapsed-state) {
@@ -5151,13 +5185,146 @@ a.cand-tag:hover {
   letter-spacing: 0.03em;
 }
 
-@media (max-width: 900px) {
-  .map-hud-coordinates-bar {
-    display: none;
+/* ── Mobile Phone & Landscape Screen Surveillance Optimization ───── */
+@media (max-width: 960px), (max-height: 540px) {
+  .ops-header {
+    height: 46px !important;
+    padding: 0 8px !important;
   }
+
+  .ops-workspace {
+    height: calc(100dvh - 46px) !important;
+  }
+
+  .ops-title {
+    font-size: 1.15rem !important;
+  }
+
+  .ops-brand-divider,
+  .ops-subtitle-text {
+    display: none !important;
+  }
+
+  .utc-clock-block {
+    display: none !important;
+  }
+
+  .connection-chip-redesign {
+    padding: 2px 4px !important;
+    gap: 3px !important;
+  }
+
+  .connection-status-text {
+    display: none !important;
+  }
+
+  .header-v-divider {
+    display: none !important;
+  }
+
+  .view-mode-tabs {
+    padding: 2px !important;
+    gap: 2px !important;
+  }
+
+  .view-mode-tab {
+    padding: 3px 7px !important;
+    font-size: 0.7rem !important;
+  }
+
+  .view-mode-tab .tab-label-full {
+    display: none !important;
+  }
+
+  .view-mode-tab .tab-label-short {
+    display: inline !important;
+  }
+
+  .btn-label-desktop {
+    display: none !important;
+  }
+
+  .btn-header-tool {
+    padding: 5px 6px !important;
+  }
+
+  .btn-tool-test-alert {
+    display: none !important;
+  }
+
+  .btn-language-switch {
+    padding: 3px 6px !important;
+    font-size: 0.68rem !important;
+  }
+
+  .btn-officer-hud {
+    padding: 3px 6px !important;
+    gap: 3px !important;
+  }
+
+  .officer-hud-name {
+    display: none !important;
+  }
+
+  .officer-hud-station {
+    font-size: 0.68rem !important;
+  }
+
+  .case-feed-sidebar {
+    width: 250px !important;
+  }
+
+  .map-hud-toolbar {
+    top: 6px !important;
+    padding: 2px 4px !important;
+    gap: 2px !important;
+    max-width: calc(100% - 16px) !important;
+    overflow-x: auto !important;
+    scrollbar-width: none !important;
+  }
+
+  .map-hud-toolbar::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .hud-pill-btn {
+    font-size: 0.65rem !important;
+    padding: 2px 5px !important;
+    gap: 2px !important;
+    white-space: nowrap !important;
+  }
+
+  .hud-icon {
+    font-size: 0.7rem !important;
+  }
+
+  .map-hud-coordinates-bar {
+    display: none !important;
+  }
+
   .map-hud-controls-group {
-    bottom: 74px;
-    right: 14px;
+    bottom: 64px !important;
+    right: 10px !important;
+    z-index: 40 !important;
+  }
+
+  .map-hud-controls-group .map-control-btn {
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 13px !important;
+  }
+
+  .station-chat-fab {
+    bottom: 12px !important;
+    right: 10px !important;
+    width: 42px !important;
+    height: 42px !important;
+  }
+
+  .station-chat-panel {
+    bottom: 58px !important;
+    right: 10px !important;
+    max-height: calc(100dvh - 68px) !important;
   }
 }
 

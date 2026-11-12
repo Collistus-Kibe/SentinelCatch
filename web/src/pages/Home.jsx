@@ -41,7 +41,9 @@ export default function Home() {
   const [showPatrolModal, setShowPatrolModal] = useState(false);
   const [showChatModal, setShowChatModal] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() =>
-    typeof window !== 'undefined' ? window.innerWidth <= 900 : false
+    typeof window !== 'undefined'
+      ? window.innerWidth <= 820 || (window.innerHeight <= 520 && window.innerWidth <= 1024)
+      : false
   );
   const [utcClock, setUtcClock] = useState(() => {
     const d = new Date();
@@ -191,7 +193,8 @@ export default function Home() {
                 <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
                 <path d="M2 12h20" />
               </svg>
-              <span>Tactical Operations</span>
+              <span className="tab-label-full">Tactical Operations</span>
+              <span className="tab-label-short">Tactical</span>
             </button>
             <button
               className={`view-mode-tab ${activeView === 'traceback' ? 'active' : ''}`}
@@ -203,7 +206,8 @@ export default function Home() {
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
               </svg>
-              <span>Trajectory Trace-Back</span>
+              <span className="tab-label-full">Trajectory Trace-Back</span>
+              <span className="tab-label-short">Trace-Back</span>
             </button>
           </div>
 
@@ -234,7 +238,7 @@ export default function Home() {
           </button>
 
           <button
-            className="btn-header-tool"
+            className="btn-header-tool btn-tool-test-alert"
             onClick={handleTriggerTest}
             disabled={testSending}
             title={t.sendTestAlert}
